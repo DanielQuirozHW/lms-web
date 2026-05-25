@@ -277,6 +277,25 @@ export interface Rubric {
   criteria?: RubricCriterion[]
 }
 
+export interface RubricAssessmentAnswer {
+  id: string
+  criterionId: string
+  levelId: string
+  score: number
+  comment: string | null
+}
+
+export interface RubricAssessment {
+  id: string
+  rubricId: string
+  submissionId: string
+  score: number
+  assessorId: string
+  createdAt: string
+  updatedAt: string
+  answers: RubricAssessmentAnswer[]
+}
+
 // ─── Gradebook ────────────────────────────────────────────────────────────────
 
 export interface GradebookItem {

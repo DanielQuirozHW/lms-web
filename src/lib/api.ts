@@ -37,9 +37,20 @@ function onRefreshDone(token: string) {
   refreshSubscribers = []
 }
 
-// On 401: attempt one token refresh, retry original request, then sign out.
+// Unwrap the backend { data, timestamp } envelope so callers receive the
+// payload directly. Skipped for 204 (no body) and non-object bodies.
 api.interceptors.response.use(
-  (response) => response,
+  (response) => {
+    if (
+      response.status !== 204 &&
+      response.data !== null &&
+      typeof response.data === 'object' &&
+      'data' in response.data
+    ) {
+      response.data = (response.data as { data: unknown }).data
+    }
+    return response
+  },
   async (error: AxiosError) => {
     const original = error.config as (typeof error.config & { _retry?: boolean }) | undefined
     if (error.response?.status === 401 && original && !original._retry) {

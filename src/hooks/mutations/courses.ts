@@ -17,8 +17,7 @@ export function useCreateCourse() {
   const queryClient = useQueryClient()
 
   return useMutation({
-    mutationFn: (data: CreateCourseInput) =>
-      api.post<{ data: Course }>('/courses', data).then((r) => r.data.data),
+    mutationFn: (data: CreateCourseInput) => api.post<Course>('/courses', data).then((r) => r.data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: courseKeys.lists() })
       queryClient.invalidateQueries({ queryKey: courseKeys.my() })
@@ -31,7 +30,7 @@ export function useUpdateCourse(courseId: string) {
 
   return useMutation({
     mutationFn: (data: UpdateCourseInput) =>
-      api.patch<{ data: Course }>(`/courses/${courseId}`, data).then((r) => r.data.data),
+      api.patch<Course>(`/courses/${courseId}`, data).then((r) => r.data),
     onSuccess: (updated) => {
       queryClient.setQueryData(courseKeys.detail(courseId), updated)
       queryClient.invalidateQueries({ queryKey: courseKeys.lists() })
@@ -43,8 +42,7 @@ export function usePublishCourse(courseId: string) {
   const queryClient = useQueryClient()
 
   return useMutation({
-    mutationFn: () =>
-      api.patch<{ data: Course }>(`/courses/${courseId}/publish`).then((r) => r.data.data),
+    mutationFn: () => api.patch<Course>(`/courses/${courseId}/publish`).then((r) => r.data),
     onSuccess: (updated) => {
       queryClient.setQueryData(courseKeys.detail(courseId), updated)
       queryClient.invalidateQueries({ queryKey: courseKeys.lists() })

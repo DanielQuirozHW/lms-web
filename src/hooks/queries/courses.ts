@@ -22,9 +22,7 @@ export function useCourses(filters: CoursesFilter = {}) {
   return useQuery({
     queryKey: courseKeys.list(filters),
     queryFn: () =>
-      api
-        .get<{ data: PaginatedData<Course> }>('/courses', { params: filters })
-        .then((r) => r.data.data),
+      api.get<PaginatedData<Course>>('/courses', { params: filters }).then((r) => r.data),
     staleTime: 5 * 60 * 1000,
   })
 }
@@ -32,7 +30,7 @@ export function useCourses(filters: CoursesFilter = {}) {
 export function useCourse(id: string) {
   return useQuery({
     queryKey: courseKeys.detail(id),
-    queryFn: () => api.get<{ data: CourseDetail }>(`/courses/${id}`).then((r) => r.data.data),
+    queryFn: () => api.get<CourseDetail>(`/courses/${id}`).then((r) => r.data),
     enabled: !!id,
     staleTime: 5 * 60 * 1000,
   })
@@ -42,8 +40,6 @@ export function useMyCourses(filters: { page?: number; limit?: number } = {}) {
   return useQuery({
     queryKey: courseKeys.myList(filters),
     queryFn: () =>
-      api
-        .get<{ data: PaginatedData<Course> }>('/courses/my', { params: filters })
-        .then((r) => r.data.data),
+      api.get<PaginatedData<Course>>('/courses/my', { params: filters }).then((r) => r.data),
   })
 }
