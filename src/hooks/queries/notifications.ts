@@ -17,8 +17,8 @@ export function useNotifications(
     queryKey: notificationKeys.list(filters),
     queryFn: () =>
       api
-        .get<{ data: PaginatedData<Notification> }>('/notifications', { params: filters })
-        .then((r) => r.data.data),
+        .get<PaginatedData<Notification>>('/notifications', { params: filters })
+        .then((r) => r.data),
   })
 }
 
@@ -26,9 +26,7 @@ export function useUnreadNotificationCount() {
   return useQuery({
     queryKey: notificationKeys.unreadCount(),
     queryFn: () =>
-      api
-        .get<{ data: { count: number } }>('/notifications/unread-count')
-        .then((r) => r.data.data.count),
+      api.get<{ count: number }>('/notifications/unread-count').then((r) => r.data.count),
     staleTime: 30 * 1000,
     refetchInterval: 60 * 1000,
   })
