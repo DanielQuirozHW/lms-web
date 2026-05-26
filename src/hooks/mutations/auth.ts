@@ -1,5 +1,5 @@
 import { useMutation } from '@tanstack/react-query'
-import { signIn, signOut, useSession } from 'next-auth/react'
+import { signIn, signOut } from 'next-auth/react'
 import api from '@/lib/api'
 
 interface LoginInput {
@@ -44,16 +44,12 @@ export function useRegisterMutation() {
 }
 
 export function useLogoutMutation() {
-  const { data: session } = useSession()
-
   return useMutation({
     mutationFn: async () => {
       try {
-        if (session?.refreshToken) {
-          await api.post('/auth/logout', { refreshToken: session.refreshToken })
-        }
+        await fetch('/api/auth/logout', { method: 'POST' })
       } catch {
-        // Backend logout failed — clear local session regardless
+        // Backend revocation failed — clear local session regardless
       }
       await signOut({ callbackUrl: '/login' })
     },

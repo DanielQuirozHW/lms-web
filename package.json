@@ -12,6 +12,11 @@
     "type-check": "tsc --noEmit",
     "prepare": "husky"
   },
+  "pnpm": {
+    "overrides": {
+      "postcss": ">=8.5.10"
+    }
+  },
   "lint-staged": {
     "*.{ts,tsx}": [
       "eslint --fix",

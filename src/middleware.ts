@@ -12,10 +12,17 @@ export default auth((req: NextAuthRequest) => {
 
   // Auth routes: redirect signed-in users away
   if (PUBLIC_PATHS.has(pathname)) {
-    if (session) {
+    if (session && session.error !== 'RefreshTokenExpired') {
       return NextResponse.redirect(new URL('/dashboard', req.url))
     }
     return NextResponse.next()
+  }
+
+  // Expired refresh token — treat as unauthenticated even though session exists
+  if (session?.error === 'RefreshTokenExpired') {
+    const loginUrl = new URL('/login', req.url)
+    loginUrl.searchParams.set('callbackUrl', pathname)
+    return NextResponse.redirect(loginUrl)
   }
 
   // All other app routes require authentication

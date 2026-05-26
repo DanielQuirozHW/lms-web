@@ -4,7 +4,6 @@ import type { User as AppUser, UserRole } from './models'
 declare module 'next-auth' {
   interface Session extends DefaultSession {
     accessToken: string
-    refreshToken: string
     accessTokenExpiresAt: number
     error?: string
     user: {

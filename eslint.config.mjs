@@ -14,6 +14,8 @@ const eslintConfig = defineConfig([
       '@typescript-eslint/explicit-module-boundary-types': 'off',
       // Prevent accidental console logs in production
       'no-console': ['warn', { allow: ['error', 'warn'] }],
+      // Require explicit sanitization before dangerouslySetInnerHTML — use sanitize() from @/lib/sanitize
+      'react/no-danger': 'error',
       // Prefer const
       'prefer-const': 'error',
       // No unused vars (TypeScript handles this, but ESLint catches more cases)

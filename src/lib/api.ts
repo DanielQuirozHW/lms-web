@@ -26,14 +26,22 @@ api.interceptors.request.use(async (config) => {
 })
 
 let isRefreshing = false
-let refreshSubscribers: Array<(token: string) => void> = []
+let refreshSubscribers: Array<{
+  onDone: (token: string) => void
+  onFail: (err: unknown) => void
+}> = []
 
-function subscribeRefresh(cb: (token: string) => void) {
-  refreshSubscribers.push(cb)
+function subscribeRefresh(onDone: (token: string) => void, onFail: (err: unknown) => void) {
+  refreshSubscribers.push({ onDone, onFail })
 }
 
 function onRefreshDone(token: string) {
-  refreshSubscribers.forEach((cb) => cb(token))
+  refreshSubscribers.forEach(({ onDone }) => onDone(token))
+  refreshSubscribers = []
+}
+
+function onRefreshFailed(err: unknown) {
+  refreshSubscribers.forEach(({ onFail }) => onFail(err))
   refreshSubscribers = []
 }
 
@@ -55,11 +63,11 @@ api.interceptors.response.use(
     const original = error.config as (typeof error.config & { _retry?: boolean }) | undefined
     if (error.response?.status === 401 && original && !original._retry) {
       if (isRefreshing) {
-        return new Promise((resolve) => {
+        return new Promise((resolve, reject) => {
           subscribeRefresh((token) => {
             if (original.headers) original.headers.Authorization = `Bearer ${token}`
             resolve(api(original))
-          })
+          }, reject)
         })
       }
       original._retry = true
@@ -72,8 +80,8 @@ api.interceptors.response.use(
         onRefreshDone(accessToken)
         return api(original)
       } catch {
-        // Refresh failed — sign the user out
-        refreshSubscribers = []
+        // Refresh failed — reject all queued requests then sign the user out
+        onRefreshFailed(error)
         if (typeof window !== 'undefined') {
           const { signOut } = await import('next-auth/react')
           await signOut({ callbackUrl: '/login' })

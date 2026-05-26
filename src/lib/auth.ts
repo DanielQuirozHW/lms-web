@@ -79,7 +79,8 @@ export const { auth, signIn, signOut, handlers } = NextAuth({
       return {
         ...session,
         accessToken: token.accessToken as string,
-        refreshToken: token.refreshToken as string,
+        // refreshToken is intentionally excluded — never expose it to client JS.
+        // Server-side logout reads it via getToken() in /api/auth/logout.
         accessTokenExpiresAt: token.accessTokenExpiresAt as number,
         user: {
           ...(token.appUser as AppUser),

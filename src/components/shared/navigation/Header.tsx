@@ -3,7 +3,6 @@
 import { useRouter } from 'next/navigation'
 import { Bell, LogOut, User } from 'lucide-react'
 import { useSession, signOut } from 'next-auth/react'
-import api from '@/lib/api'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -30,11 +29,9 @@ export function Header() {
 
   async function handleLogout() {
     try {
-      if (session?.refreshToken) {
-        await api.post('/auth/logout', { refreshToken: session.refreshToken })
-      }
+      await fetch('/api/auth/logout', { method: 'POST' })
     } catch {
-      // Backend logout failed — proceed with signOut to clear the local session
+      // Backend revocation failed — proceed with signOut to clear the local session
     }
     await signOut({ callbackUrl: '/login' })
   }

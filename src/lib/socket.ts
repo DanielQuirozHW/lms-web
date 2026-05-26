@@ -5,11 +5,22 @@ const WS_URL = process.env.NEXT_PUBLIC_WS_URL ?? 'http://localhost:3000'
 let forumSocket: Socket | null = null
 let messagesSocket: Socket | null = null
 
-export function getForumSocket(accessToken: string): Socket {
+// Called by socket.io on every connect and auto-reconnect attempt,
+// so the token is always fresh rather than the one captured at construction time.
+function tokenAuth(callback: (data: { token: string }) => void): void {
+  fetch('/api/auth/token')
+    .then((r) => r.json())
+    .then(({ accessToken }: { accessToken: string | null }) =>
+      callback({ token: accessToken ?? '' })
+    )
+    .catch(() => callback({ token: '' }))
+}
+
+export function getForumSocket(): Socket {
   if (forumSocket?.connected) return forumSocket
   forumSocket?.disconnect()
   forumSocket = io(`${WS_URL}/forum`, {
-    auth: { token: accessToken },
+    auth: tokenAuth,
     reconnectionAttempts: 5,
     reconnectionDelay: 1000,
     transports: ['websocket'],
@@ -17,11 +28,11 @@ export function getForumSocket(accessToken: string): Socket {
   return forumSocket
 }
 
-export function getMessagesSocket(accessToken: string): Socket {
+export function getMessagesSocket(): Socket {
   if (messagesSocket?.connected) return messagesSocket
   messagesSocket?.disconnect()
   messagesSocket = io(`${WS_URL}/messages`, {
-    auth: { token: accessToken },
+    auth: tokenAuth,
     reconnectionAttempts: 5,
     reconnectionDelay: 1000,
     transports: ['websocket'],
