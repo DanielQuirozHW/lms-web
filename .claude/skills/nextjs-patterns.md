@@ -91,17 +91,26 @@ export function CourseList() {
 
 ## Passing session data to Client Components
 
-```tsx
-// layout.tsx (Server Component)
-import { auth } from '@/lib/auth'
-import { SessionProvider } from 'next-auth/react'
+The root `app/providers.tsx` wraps the entire app in `SessionProvider`, `QueryClientProvider`, and mounts `AuthErrorHandler`. Session is available everywhere via `useSession()`:
 
-export default async function DashboardLayout({ children }) {
-  const session = await auth()
-  return <SessionProvider session={session}>{children}</SessionProvider>
+```tsx
+// app/providers.tsx — already set up, do not duplicate
+'use client'
+import { SessionProvider } from 'next-auth/react'
+import { QueryClientProvider } from '@tanstack/react-query'
+import { AuthErrorHandler } from '@/components/shared/auth/AuthErrorHandler'
+import { getQueryClient } from '@/lib/query-client'
+
+export function Providers({ children }: { children: React.ReactNode }) {
+  return (
+    <SessionProvider>
+      <AuthErrorHandler />
+      <QueryClientProvider client={getQueryClient()}>{children}</QueryClientProvider>
+    </SessionProvider>
+  )
 }
 
-// any client component
+// In any client component:
 ;('use client')
 import { useSession } from 'next-auth/react'
 const { data: session } = useSession()
@@ -147,25 +156,30 @@ export default async function Page({ searchParams }: PageProps) {
 
 ## Loading states
 
-Always create `loading.tsx` next to `page.tsx` for route segments that fetch data:
+Every route group and every page that fetches data has a `loading.tsx` sibling. Use the shared `PageSpinner` component:
 
 ```tsx
-// loading.tsx
-import { Skeleton } from '@/components/ui/skeleton'
+// loading.tsx — exact pattern used in this project
+import { PageSpinner } from '@/components/shared/feedback/LoadingSpinner'
 
 export default function Loading() {
-  return <Skeleton className="h-96 w-full" />
+  return <PageSpinner />
 }
 ```
+
+All route groups have `(auth)/loading.tsx`, `(dashboard)/loading.tsx`, `(instructor)/loading.tsx`, and `(admin)/loading.tsx` with this same pattern.
 
 ---
 
 ## Error boundaries
 
-`error.tsx` must be `'use client'`. Always provide a retry button:
+`error.tsx` must be `'use client'`. Use the shared `ErrorMessage` component:
 
 ```tsx
+// error.tsx — exact pattern used in this project
 'use client'
+import { ErrorMessage } from '@/components/shared/feedback/ErrorMessage'
+
 export default function Error({
   error,
   reset,
@@ -173,14 +187,39 @@ export default function Error({
   error: Error & { digest?: string }
   reset: () => void
 }) {
+  return <ErrorMessage message={error.message} onRetry={reset} />
+}
+```
+
+All route groups share this same `error.tsx` pattern. The root `app/error.tsx` uses the same component.
+
+---
+
+## Not-found page
+
+`not-found.tsx` must be `'use client'` if it uses hooks (router). Use the shared `EmptyState` component:
+
+```tsx
+// app/not-found.tsx
+'use client'
+import { Search } from 'lucide-react'
+import { useRouter } from 'next/navigation'
+import { EmptyState } from '@/components/shared/feedback/EmptyState'
+
+export default function NotFound() {
+  const router = useRouter()
   return (
-    <div>
-      <h2>Something went wrong</h2>
-      <button onClick={reset}>Try again</button>
-    </div>
+    <EmptyState
+      icon={Search}
+      title="Page not found"
+      description="The page you are looking for does not exist."
+      action={{ label: 'Go home', onClick: () => router.push('/') }}
+    />
   )
 }
 ```
+
+Trigger it from a page: `import { notFound } from 'next/navigation'; notFound()`
 
 ---
 

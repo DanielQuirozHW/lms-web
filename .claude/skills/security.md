@@ -13,23 +13,26 @@ Read this before writing any component that renders user-generated content, hand
 | `sessionStorage`                  | ❌ NO                       | Accessible to JS; XSS risk                       |
 | `localStorage`                    | ❌ NEVER                    | Accessible to JS; persists across tabs; XSS risk |
 
-**The access token must never appear in any JS variable in Client Components.** It is read on the server by the axios interceptor (via Auth.js session server-side) or via `auth()` in Server Components.
+**The access token must never appear in any JS variable in Client Components.** It is read on the server by the axios interceptor (via `/api/auth/token`, an internal route) or via `auth()` in Server Components.
+
+**The refresh token must never appear in the session or in any client code.** It lives in the server-side JWT only. Server-side revocation uses `getToken()` from `next-auth/jwt` inside the `/api/auth/logout` route handler. See MISTAKES.md [001].
 
 ---
 
 ## XSS prevention — dangerouslySetInnerHTML
 
-**NEVER** use `dangerouslySetInnerHTML` without sanitizing through DOMPurify:
+**NEVER** use `dangerouslySetInnerHTML` without sanitizing through DOMPurify. ESLint (`react/no-danger`) is configured to catch any unguarded usage — it is a build error.
 
 ```typescript
 // ❌ WRONG — raw HTML from database
 <div dangerouslySetInnerHTML={{ __html: lesson.content }} />
 
-// ✅ CORRECT — sanitized first
-import DOMPurify from 'dompurify'
-const clean = DOMPurify.sanitize(lesson.content)
-<div dangerouslySetInnerHTML={{ __html: clean }} />
+// ✅ CORRECT — sanitized first, in a Client Component
+import { sanitize } from '@/lib/sanitize'
+<div dangerouslySetInnerHTML={{ __html: sanitize(lesson.content) }} />
 ```
+
+**`sanitize()` is a no-op on the server** (SSR context, no DOM). Only use `dangerouslySetInnerHTML` in `'use client'` components. Never in Server Components.
 
 Use cases that require DOMPurify:
 
@@ -37,6 +40,8 @@ Use cases that require DOMPurify:
 - Forum post `content` (markdown/HTML)
 - Announcement `body`
 - Any field sourced from user input rendered as HTML
+
+See MISTAKES.md [009].
 
 ---
 
@@ -106,19 +111,129 @@ console.log('component mounted')
 
 ## Content Security Policy
 
-The `next.config.ts` must define a CSP header. Minimum:
+Defined in `next.config.ts`. **The `'unsafe-eval'` directive is development-only** — it is required by Next.js HMR but enables `eval()`-based XSS in production.
+
+```typescript
+// next.config.ts pattern
+const isDev = process.env.NODE_ENV === 'development'
+
+const scriptSrc = isDev
+  ? "script-src 'self' 'unsafe-eval' 'unsafe-inline'"
+  : "script-src 'self' 'unsafe-inline'" // no unsafe-eval in prod
+```
+
+Minimum production CSP:
 
 ```
 default-src 'self';
-script-src 'self' 'nonce-{nonce}';
-style-src 'self' 'unsafe-inline';  // Tailwind requires this
-img-src 'self' data: https://cdn.example.com;
-connect-src 'self' http://localhost:3000 wss://localhost:3000;
+script-src 'self' 'unsafe-inline';
+style-src 'self' 'unsafe-inline';
+img-src 'self' blob: data: https:;
+connect-src 'self' <api-origin> <ws-origin>;
 font-src 'self';
 frame-ancestors 'none';
 ```
 
-Adjust `connect-src` and `img-src` for production CDN and API domains.
+See MISTAKES.md [004].
+
+---
+
+## Security headers
+
+All headers are set in `next.config.ts`. Key rules:
+
+**`X-Frame-Options` must match `frame-ancestors`** — if CSP says `frame-ancestors 'none'`, set `X-Frame-Options: DENY`. Setting `SAMEORIGIN` contradicts it and older browsers may use the more permissive value. See MISTAKES.md [005].
+
+**HSTS is production-only** — `Strict-Transport-Security` breaks local HTTP dev servers. Gate on `isDev`:
+
+```typescript
+...(isDev ? [] : [{
+  key: 'Strict-Transport-Security',
+  value: 'max-age=63072000; includeSubDomains; preload',
+}])
+```
+
+See MISTAKES.md [006].
+
+Full header set in `next.config.ts`:
+
+| Header                      | Value                                                            |
+| --------------------------- | ---------------------------------------------------------------- |
+| `X-DNS-Prefetch-Control`    | `on`                                                             |
+| `X-Frame-Options`           | `DENY`                                                           |
+| `X-Content-Type-Options`    | `nosniff`                                                        |
+| `Referrer-Policy`           | `strict-origin-when-cross-origin`                                |
+| `Permissions-Policy`        | `camera=(), microphone=(), geolocation=()`                       |
+| `Content-Security-Policy`   | (see above)                                                      |
+| `Strict-Transport-Security` | `max-age=63072000; includeSubDomains; preload` (production only) |
+
+---
+
+## Session error handling
+
+When Auth.js cannot refresh the token, it sets `session.error = 'RefreshTokenExpired'`. This must be treated as unauthenticated in two places:
+
+1. **Middleware** — check before role guards:
+   ```typescript
+   if (session?.error === 'RefreshTokenExpired') {
+     const loginUrl = new URL('/login', req.url)
+     loginUrl.searchParams.set('callbackUrl', pathname)
+     return NextResponse.redirect(loginUrl)
+   }
+   ```
+2. **`AuthErrorHandler`** (client-side) — calls `signOut()` when the session error is detected in the React tree
+
+See MISTAKES.md [002].
+
+---
+
+## Refresh token — never in client code
+
+```typescript
+// ❌ WRONG — refreshToken is not in the Session type
+const token = session?.refreshToken
+await api.post('/auth/logout', { refreshToken: token })
+
+// ✅ CORRECT — let the server-side route handler do it
+await fetch('/api/auth/logout', { method: 'POST' })
+// /api/auth/logout uses getToken() to read refreshToken server-side
+```
+
+See MISTAKES.md [001].
+
+---
+
+## React Query retry policy
+
+Never retry 401, 403, 404, or 429:
+
+- **401** — axios interceptor already retried once; if it propagates, retry won't help
+- **403** — wrong role; retrying won't change authorization
+- **404** — resource doesn't exist; retrying won't create it
+- **429** — rate limited; retrying immediately makes rate limiting worse
+
+See MISTAKES.md [007].
+
+---
+
+## WebSocket token — always use auth callback
+
+```typescript
+// ❌ WRONG — static token string goes stale after 15 min
+io(url, { auth: { token: accessToken } })
+
+// ✅ CORRECT — callback form fetches fresh token on every connect/reconnect
+io(url, {
+  auth: (callback) => {
+    fetch('/api/auth/token')
+      .then((r) => r.json())
+      .then(({ accessToken }) => callback({ token: accessToken ?? '' }))
+      .catch(() => callback({ token: '' }))
+  },
+})
+```
+
+See MISTAKES.md [008].
 
 ---
 

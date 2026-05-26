@@ -15,35 +15,53 @@ Read this before writing any real-time / WebSocket code.
 
 ## Socket factory — `lib/socket.ts`
 
-One factory function. Never create `io()` calls directly in components.
+One factory per namespace. Never create `io()` calls directly in components.
+
+**Critical**: `auth` is a **callback function**, not a static token object. Socket.io calls this callback on every connect and auto-reconnect, so the token is always fresh. A static `auth: { token }` string goes stale after 15 minutes. See MISTAKES.md [008].
 
 ```typescript
-import { io, Socket } from 'socket.io-client'
+import { io, type Socket } from 'socket.io-client'
+
+const WS_URL = process.env.NEXT_PUBLIC_WS_URL ?? 'http://localhost:3000'
+
+// Called by socket.io on every connect and reconnect — always fetches a fresh token
+function tokenAuth(callback: (data: { token: string }) => void): void {
+  fetch('/api/auth/token')
+    .then((r) => r.json())
+    .then(({ accessToken }: { accessToken: string | null }) =>
+      callback({ token: accessToken ?? '' })
+    )
+    .catch(() => callback({ token: '' }))
+}
 
 let forumSocket: Socket | null = null
 let messagesSocket: Socket | null = null
 
-export function getForumSocket(accessToken: string): Socket {
+export function getForumSocket(): Socket {
   if (forumSocket?.connected) return forumSocket
-  forumSocket = io(`${process.env.NEXT_PUBLIC_WS_URL}/forum`, {
-    auth: { token: accessToken },
+  forumSocket?.disconnect()
+  forumSocket = io(`${WS_URL}/forum`, {
+    auth: tokenAuth, // ← callback form, not static object
     reconnectionAttempts: 5,
     reconnectionDelay: 1000,
+    transports: ['websocket'],
   })
   return forumSocket
 }
 
-export function getMessagesSocket(accessToken: string): Socket {
+export function getMessagesSocket(): Socket {
   if (messagesSocket?.connected) return messagesSocket
-  messagesSocket = io(`${process.env.NEXT_PUBLIC_WS_URL}/messages`, {
-    auth: { token: accessToken },
+  messagesSocket?.disconnect()
+  messagesSocket = io(`${WS_URL}/messages`, {
+    auth: tokenAuth,
     reconnectionAttempts: 5,
     reconnectionDelay: 1000,
+    transports: ['websocket'],
   })
   return messagesSocket
 }
 
-export function disconnectAll() {
+export function disconnectAll(): void {
   forumSocket?.disconnect()
   messagesSocket?.disconnect()
   forumSocket = null
@@ -55,24 +73,19 @@ export function disconnectAll() {
 
 ## Using sockets in components
 
-Always clean up in `useEffect` return:
+No `accessToken` parameter — the factory fetches the token internally. Always clean up event listeners in the `useEffect` return:
 
 ```tsx
 'use client'
 import { useEffect } from 'react'
-import { useSession } from 'next-auth/react'
 import { getMessagesSocket } from '@/lib/socket'
-import type { MessageResponse } from '@/types/models'
+import type { Message } from '@/types/models'
 
 export function MessagesProvider() {
-  const { data: session } = useSession()
-
   useEffect(() => {
-    if (!session?.accessToken) return
+    const socket = getMessagesSocket()
 
-    const socket = getMessagesSocket(session.accessToken)
-
-    socket.on('newMessage', (msg: MessageResponse) => {
+    socket.on('newMessage', (msg: Message) => {
       // Update React Query cache or Zustand store
     })
 
@@ -84,7 +97,7 @@ export function MessagesProvider() {
       socket.off('newMessage')
       socket.off('messagesRead')
     }
-  }, [session?.accessToken])
+  }, []) // no session dependency — token is fetched by tokenAuth callback
 
   return null
 }
@@ -127,21 +140,19 @@ The server disconnects a client that exceeds **20 events per 10 seconds**. Do no
 
 ## Token refresh and reconnection
 
-When the access token is refreshed (Auth.js session update), the socket must reconnect with the new token:
+Because `auth` is a callback function, **reconnections automatically use a fresh token** — no manual action required. The socket factory handles this transparently.
+
+If you need to force a reconnection (e.g., after explicit sign-out):
 
 ```typescript
-useEffect(() => {
-  if (!session?.accessToken) return
-  // Disconnect old socket and create a new one with the refreshed token
-  disconnectAll()
-  const socket = getMessagesSocket(session.accessToken)
-  // re-attach listeners...
-  return () => {
-    socket.off('newMessage')
-    socket.off('messagesRead')
-  }
-}, [session?.accessToken]) // dependency on token — reconnects on refresh
+import { disconnectAll } from '@/lib/socket'
+
+// On logout, disconnect all sockets — they won't reconnect automatically
+// because the user is signing out
+disconnectAll()
 ```
+
+Do not call `disconnectAll()` on token refresh — the auto-reconnect callback will fetch the new token on its own.
 
 ---
 
@@ -155,14 +166,24 @@ import { useSocketStore } from '@/store/socket.store'
 const isConnected = useSocketStore((s) => s.isMessagesConnected)
 ```
 
+Update it in `connect` / `disconnect` event handlers:
+
+```typescript
+const { setMessagesConnected } = useSocketStore.getState()
+socket.on('connect', () => setMessagesConnected(true))
+socket.on('disconnect', () => setMessagesConnected(false))
+```
+
 ---
 
 ## Common mistakes
 
 | Mistake                                             | Fix                                                                 |
 | --------------------------------------------------- | ------------------------------------------------------------------- |
-| Creating `io()` directly in a component             | Use `getForumSocket()` / `getMessagesSocket()` from `lib/socket.ts` |
+| `io()` called directly in a component               | Use `getForumSocket()` / `getMessagesSocket()` from `lib/socket.ts` |
+| `auth: { token: accessToken }` (static string)      | Use `auth: tokenAuth` (callback) — static tokens expire in 15 min   |
+| Passing `accessToken` as a parameter to the factory | Factories no longer accept a token param — `tokenAuth` fetches it   |
 | Not removing event listeners on unmount             | Always return cleanup function from `useEffect`                     |
-| Passing `accessToken` from `localStorage`           | Read from Auth.js session only                                      |
+| Calling `disconnectAll()` on token refresh          | Not needed — the auth callback fetches a fresh token automatically  |
 | Emitting events without checking `socket.connected` | Check before emit or handle in `connect` callback                   |
 | One socket instance for both namespaces             | Each namespace needs its own socket instance                        |

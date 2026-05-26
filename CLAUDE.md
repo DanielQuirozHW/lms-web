@@ -106,6 +106,20 @@ Errors:
 { "statusCode": 404, "message": "...", "error": "Not Found", "path": "...", "timestamp": "..." }
 ```
 
+**Envelope is automatically unwrapped by the axios interceptor in `lib/api.ts`.** Callers receive the payload directly — `r.data` is already the payload, not the envelope. Examples:
+
+```typescript
+// Scalar endpoint → r.data is the payload object
+api.get<{ count: number }>('/notifications/unread-count').then((r) => r.data.count)
+
+// Paginated endpoint → r.data is PaginatedData<T> = { data: T[], meta: {...} }
+api.get<PaginatedData<Course>>('/courses').then((r) => r.data)
+// r.data.data is the items array; r.data.meta has total, page, limit, totalPages
+
+// ❌ NEVER double-unwrap — the envelope is already gone
+api.get<{ data: PaginatedData<Course> }>('/courses').then((r) => r.data.data) // WRONG
+```
+
 ### User Roles
 
 | Role         | Description                                                      |
@@ -148,7 +162,7 @@ type CalendarEventType =
 
 - `/forum` — joinThread, leaveThread events
 - `/messages` — sendMessage, markRead events; receives newMessage, messagesRead
-- Auth: `io(url, { auth: { token: accessToken } })`
+- Auth: callback form — `io(url, { auth: tokenAuth })` where `tokenAuth` fetches `/api/auth/token` at connect/reconnect time. **Never pass a static token string** — it goes stale after 15 min (see MISTAKES.md [008])
 - Rate limit: 20 events / 10 seconds per connection
 
 ---
@@ -158,11 +172,13 @@ type CalendarEventType =
 ```
 src/
 ├── app/
-│   ├── (auth)/                   # Unauthenticated routes (login, register)
+│   ├── (auth)/                   # Unauthenticated routes; redirects to /dashboard if signed in
 │   │   ├── login/page.tsx
 │   │   ├── register/page.tsx
 │   │   ├── verify-email/page.tsx
-│   │   └── layout.tsx
+│   │   ├── error.tsx             # 'use client' error boundary
+│   │   ├── loading.tsx           # Suspense fallback
+│   │   └── layout.tsx            # Checks session → redirect to /dashboard
 │   ├── (dashboard)/              # Authenticated student/shared routes
 │   │   ├── dashboard/page.tsx
 │   │   ├── courses/
@@ -178,7 +194,9 @@ src/
 │   │   │   └── [userId]/page.tsx
 │   │   ├── notifications/page.tsx
 │   │   ├── profile/page.tsx
-│   │   └── layout.tsx
+│   │   ├── error.tsx
+│   │   ├── loading.tsx
+│   │   └── layout.tsx            # Checks session → redirect to /login
 │   ├── (instructor)/             # Instructor-only routes
 │   │   ├── instructor/
 │   │   │   ├── courses/
@@ -190,23 +208,43 @@ src/
 │   │   │   │       ├── students/page.tsx
 │   │   │   │       └── gradebook/page.tsx
 │   │   │   └── page.tsx
-│   │   └── layout.tsx
+│   │   ├── error.tsx
+│   │   ├── loading.tsx
+│   │   └── layout.tsx            # Checks session + INSTRUCTOR/ADMIN role
 │   ├── (admin)/                  # Admin-only routes
 │   │   ├── admin/
 │   │   │   ├── users/page.tsx
 │   │   │   ├── courses/page.tsx
 │   │   │   └── categories/page.tsx
-│   │   └── layout.tsx
-│   ├── api/auth/[...nextauth]/route.ts
+│   │   ├── error.tsx
+│   │   ├── loading.tsx
+│   │   └── layout.tsx            # Checks session + ADMIN role
+│   ├── api/
+│   │   └── auth/
+│   │       ├── [...nextauth]/route.ts  # Auth.js handler (GET/POST)
+│   │       ├── token/route.ts          # GET — returns current accessToken for axios interceptor
+│   │       ├── refresh/route.ts        # POST — triggers JWT refresh, returns refreshed accessToken
+│   │       └── logout/route.ts         # POST — revokes refreshToken server-side via getToken()
+│   ├── providers.tsx             # SessionProvider + QueryClientProvider + AuthErrorHandler
+│   ├── error.tsx                 # Root error boundary ('use client')
+│   ├── loading.tsx               # Root Suspense fallback
+│   ├── not-found.tsx             # Root 404 ('use client')
 │   ├── globals.css
 │   ├── layout.tsx
-│   └── page.tsx
+│   └── page.tsx                  # Redirect: session → /dashboard, else → /login
 ├── components/
 │   ├── ui/                       # shadcn/ui (auto-generated — do not hand-edit)
 │   ├── shared/                   # Reusable across all roles
+│   │   ├── auth/
+│   │   │   └── AuthErrorHandler.tsx  # Detects session.error === 'RefreshTokenExpired' → signOut
 │   │   ├── navigation/
+│   │   │   ├── Header.tsx        # Top bar: notifications badge, user avatar dropdown, logout
+│   │   │   └── Sidebar.tsx       # Side nav with active-link highlighting
 │   │   ├── layouts/
-│   │   └── feedback/             # Loading, error, empty states
+│   │   └── feedback/
+│   │       ├── ErrorMessage.tsx  # Used by all error.tsx boundaries
+│   │       ├── EmptyState.tsx    # Used by not-found.tsx and empty list states
+│   │       └── LoadingSpinner.tsx # PageSpinner used by all loading.tsx files
 │   └── features/                 # Domain-specific components
 │       ├── auth/
 │       ├── courses/
@@ -219,21 +257,23 @@ src/
 │       ├── calendar/
 │       └── gradebook/
 ├── hooks/
-│   ├── queries/                  # useQuery hooks per domain
+│   ├── queries/                  # useQuery hooks per domain (one file per domain)
 │   └── mutations/                # useMutation hooks per domain
 ├── lib/
-│   ├── api.ts                    # Axios instance + request/response interceptors
-│   ├── auth.ts                   # Auth.js (next-auth) config
-│   ├── socket.ts                 # Socket.io client factory
-│   ├── query-client.ts           # React Query client configuration
-│   └── utils.ts                  # cn(), formatDate(), etc.
+│   ├── api.ts                    # Axios instance + envelope-unwrap + 401-retry interceptors
+│   ├── auth.ts                   # Auth.js config (credentials provider, JWT/session callbacks)
+│   ├── sanitize.ts               # DOMPurify wrapper — SSR-safe, client-only lazy load
+│   ├── socket.ts                 # Socket.io factory (token callback pattern — no static token)
+│   ├── query-client.ts           # React Query client (retry policy: no retry on 401/403/404/429)
+│   └── utils.ts                  # cn(), formatDate(), formatPrice(), formatDuration(), etc.
 ├── store/
-│   ├── notifications.store.ts    # Zustand: unread count, WS notifications
-│   └── socket.store.ts           # Zustand: socket connection state
+│   ├── notifications.store.ts    # Zustand: unread count, recent notifications list
+│   └── socket.store.ts           # Zustand: forum/messages connection state
 ├── types/
-│   ├── api.ts                    # ApiResponse<T>, PaginatedResponse<T>, ApiError
-│   └── models.ts                 # All domain model types (match backend DTOs exactly)
-└── middleware.ts                 # Auth route protection
+│   ├── api.ts                    # ApiResponse<T>, PaginatedData<T>, PaginatedResponse<T>, ApiError
+│   ├── models.ts                 # All domain model types (match backend DTOs exactly)
+│   └── next-auth.d.ts            # NextAuth module augmentation — Session has no refreshToken
+└── middleware.ts                 # Route protection + RefreshTokenExpired redirect
 ```
 
 **Where each type of code goes:**
@@ -265,9 +305,25 @@ src/
 
 8. **Role checks are display-only**. Hiding a button or route from a STUDENT is for UX — it is not a security guarantee. The backend enforces real access control. Never assume a UI role check prevents data access.
 
-9. **Never use `dangerouslySetInnerHTML` without DOMPurify**. No exceptions. Add an ESLint rule to flag unguarded usage.
+9. **Never use `dangerouslySetInnerHTML` without DOMPurify**. ESLint (`react/no-danger`) is configured to catch this. The `sanitize()` helper in `lib/sanitize.ts` must be called first. `dangerouslySetInnerHTML` must only appear in `'use client'` components — `sanitize()` is a no-op on the server. See MISTAKES.md [009].
 
 10. **Validate redirect URLs on login**. The `callbackUrl` parameter on the login page must be validated against the app's own origin before redirecting. Never redirect to external URLs from the auth flow.
+
+11. **Never put `refreshToken` in the session callback**. The refresh token must remain in the JWT only. Server-side revocation uses `getToken()` from `next-auth/jwt` in the `/api/auth/logout` route handler. Client code calls `POST /api/auth/logout` then `signOut()`. See MISTAKES.md [001].
+
+12. **Treat `session.error === 'RefreshTokenExpired'` as unauthenticated in middleware**. A truthy session with an error field still passes `if (!session)` — add an explicit error check before all role guards. See MISTAKES.md [002].
+
+13. **On token refresh failure, reject all queued requests** by calling `onRefreshFailed(err)`. Never just clear the subscriber array — queued Promises will hang forever. See MISTAKES.md [003].
+
+14. **Never include `'unsafe-eval'` in the production CSP**. Gate it on `NODE_ENV === 'development'` (required by Next.js HMR). Production uses `"script-src 'self' 'unsafe-inline'"`. See MISTAKES.md [004].
+
+15. **`X-Frame-Options` and `frame-ancestors` must agree**. If CSP says `frame-ancestors 'none'`, set `X-Frame-Options: DENY`. SAMEORIGIN conflicts. See MISTAKES.md [005].
+
+16. **HSTS must be production-only**. `Strict-Transport-Security` breaks local HTTP dev servers. Gate on `NODE_ENV !== 'development'`. See MISTAKES.md [006].
+
+17. **Add 429 to React Query's no-retry list** alongside 401/403/404. Retrying a rate-limited request immediately makes rate limiting worse. See MISTAKES.md [007].
+
+18. **Socket.io `auth` must use the callback form** so every connect and auto-reconnect fetches a fresh token. A static token string goes stale after 15 minutes. See MISTAKES.md [008].
 
 ---
 
