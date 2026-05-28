@@ -1,24 +1,167 @@
 import type { Metadata } from 'next'
+import { cache } from 'react'
 import { notFound } from 'next/navigation'
+import { auth } from '@/lib/auth'
+import api, { isApiError } from '@/lib/api'
+import type { PaginatedData } from '@/types/api'
+import type { CourseModuleDetail, Enrollment, RatingSummary } from '@/types/models'
+import { LoadingSpinner } from '@/components/shared/feedback/LoadingSpinner'
+import { Suspense } from 'react'
+import { CourseHero, type CourseDetailFull } from '@/components/features/courses/CourseHero'
+import { CourseModules } from '@/components/features/courses/CourseModules'
+import { EnrollButton } from '@/components/features/courses/EnrollButton'
+import { Star, BookOpen, Users } from 'lucide-react'
+import { formatPrice } from '@/lib/utils'
 
 interface PageProps {
   params: Promise<{ courseId: string }>
 }
 
+// React.cache deduplicates this fetch between generateMetadata and the page
+// within the same server request.
+const fetchCourse = cache(
+  async (courseId: string, token: string | undefined): Promise<CourseDetailFull> => {
+    const headers = token ? { Authorization: `Bearer ${token}` } : {}
+    return api.get<CourseDetailFull>(`/courses/${courseId}`, { headers }).then((r) => r.data)
+  }
+)
+
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   const { courseId } = await params
-  return { title: `Course ${courseId}` }
+  const session = await auth()
+  try {
+    const course = await fetchCourse(courseId, session?.accessToken)
+    return { title: `${course.title} | NexusLMS` }
+  } catch {
+    return { title: 'Curso | NexusLMS' }
+  }
 }
 
 export default async function CourseDetailPage({ params }: PageProps) {
   const { courseId } = await params
+  const session = await auth()
+  const token = session?.accessToken
+  const headers = token ? { Authorization: `Bearer ${token}` } : {}
 
-  if (!courseId) notFound()
+  // Fetch course first — call notFound() on 404 or non-published status
+  let course: CourseDetailFull
+  try {
+    course = await fetchCourse(courseId, token)
+  } catch (err) {
+    if (isApiError(err) && err.response?.data.statusCode === 404) notFound()
+    throw err
+  }
+  if (course.status !== 'PUBLISHED') notFound()
+
+  // Remaining fetches in parallel
+  const [modulesResult, ratingResult, enrollmentResult] = await Promise.allSettled([
+    api.get<CourseModuleDetail[]>(`/courses/${courseId}/modules`, { headers }),
+    api.get<RatingSummary>(`/ratings/course/${courseId}/summary`, { headers }),
+    api.get<PaginatedData<Enrollment>>('/enrollments', {
+      params: { courseId, limit: 1 },
+      headers,
+    }),
+  ])
+
+  const modules: CourseModuleDetail[] =
+    modulesResult.status === 'fulfilled' ? (modulesResult.value.data ?? []) : []
+
+  const rating: RatingSummary | null =
+    ratingResult.status === 'fulfilled' ? ratingResult.value.data : null
+
+  const isEnrolled: boolean =
+    enrollmentResult.status === 'fulfilled'
+      ? (enrollmentResult.value.data.data?.length ?? 0) > 0
+      : false
+
+  // First lesson ID for the "Continue learning" link
+  const firstLessonId = modules[0]?.lessons[0]?.id
 
   return (
-    <div className="space-y-6">
-      <h1 className="text-3xl font-bold tracking-tight">Course Detail</h1>
-      {/* CourseDetail will go here */}
+    <div className="space-y-0">
+      {/* Hero — full-width, flush with layout edges */}
+      <div className="-mx-4 -mt-4 lg:-mx-6 lg:-mt-6">
+        <CourseHero course={course} rating={rating} />
+      </div>
+
+      {/* Two-column body */}
+      <div className="mt-6 flex flex-col gap-6 lg:flex-row lg:items-start">
+        {/* Modules — 60% desktop, order-2 on mobile */}
+        <section className="order-2 min-w-0 flex-1 lg:order-1" aria-labelledby="modules-heading">
+          {course.description && (
+            <div className="mb-6">
+              <h2 className="text-nexus-text mb-2 text-lg font-semibold">Sobre este curso</h2>
+              <p className="text-nexus-muted text-sm leading-relaxed">{course.description}</p>
+            </div>
+          )}
+
+          <h2 id="modules-heading" className="text-nexus-text mb-3 text-lg font-semibold">
+            Contenido del curso
+          </h2>
+          <Suspense fallback={<LoadingSpinner rows={4} />}>
+            <CourseModules modules={modules} isEnrolled={isEnrolled} />
+          </Suspense>
+        </section>
+
+        {/* Enrollment card — order-1 on mobile (below hero), order-2 on desktop */}
+        <aside
+          className="order-1 w-full lg:order-2 lg:w-[38%] lg:shrink-0"
+          aria-label="Inscripción al curso"
+        >
+          <div className="border-nexus-border bg-nexus-card rounded-2xl border p-6 lg:sticky lg:top-20">
+            {/* Price */}
+            <p
+              className={
+                course.price === null
+                  ? 'text-nexus-success mb-4 text-3xl font-bold'
+                  : 'text-nexus-text mb-4 text-3xl font-bold'
+              }
+            >
+              {course.price === null ? 'Gratis' : formatPrice(course.price)}
+            </p>
+
+            {/* Enroll / continue button */}
+            <EnrollButton
+              courseId={courseId}
+              isEnrolled={isEnrolled}
+              price={course.price}
+              firstLessonId={firstLessonId}
+            />
+
+            {/* Course stats */}
+            <ul className="mt-5 space-y-2.5 text-sm" aria-label="Información del curso">
+              <li className="text-nexus-muted flex items-center gap-2">
+                <BookOpen className="text-nexus-accent h-4 w-4 shrink-0" aria-hidden="true" />
+                <span>
+                  <span className="text-nexus-text font-semibold">{course.lessonsCount}</span>{' '}
+                  lecciones
+                </span>
+              </li>
+              <li className="text-nexus-muted flex items-center gap-2">
+                <Users className="text-nexus-accent h-4 w-4 shrink-0" aria-hidden="true" />
+                <span>
+                  <span className="text-nexus-text font-semibold">{course.enrollmentsCount}</span>{' '}
+                  estudiantes inscritos
+                </span>
+              </li>
+              {rating && (
+                <li className="text-nexus-muted flex items-center gap-2">
+                  <Star
+                    className="h-4 w-4 shrink-0 fill-amber-400 text-amber-400"
+                    aria-hidden="true"
+                  />
+                  <span>
+                    <span className="text-nexus-text font-semibold">
+                      {rating.averageScore.toFixed(1)}
+                    </span>{' '}
+                    promedio ({rating.totalRatings} valoraciones)
+                  </span>
+                </li>
+              )}
+            </ul>
+          </div>
+        </aside>
+      </div>
     </div>
   )
 }
