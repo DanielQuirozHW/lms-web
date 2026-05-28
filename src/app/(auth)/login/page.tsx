@@ -96,7 +96,7 @@ export default function LoginPage() {
         </div>
 
         {/* Form card */}
-        <div className="w-full max-w-[400px] space-y-6">
+        <div className="w-full max-w-100 space-y-6">
           <div>
             <h1 className="text-nexus-text text-2xl font-bold">Bienvenido de nuevo</h1>
             <p className="text-nexus-muted mt-1 text-sm">
