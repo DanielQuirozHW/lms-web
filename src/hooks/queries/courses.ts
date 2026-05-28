@@ -1,12 +1,26 @@
 import { useQuery } from '@tanstack/react-query'
 import api from '@/lib/api'
-import type { Course, CourseDetail } from '@/types/models'
+import type { Course, CourseDetail, Category } from '@/types/models'
 import type { PaginatedData } from '@/types/api'
 
 interface CoursesFilter {
   page?: number
   limit?: number
   categoryId?: string
+  search?: string
+}
+
+export const categoryKeys = {
+  all: ['categories'] as const,
+  list: () => [...categoryKeys.all, 'list'] as const,
+}
+
+export function useCategories() {
+  return useQuery({
+    queryKey: categoryKeys.list(),
+    queryFn: () => api.get<Category[]>('/categories').then((r) => r.data),
+    staleTime: 10 * 60 * 1000,
+  })
 }
 
 export const courseKeys = {
