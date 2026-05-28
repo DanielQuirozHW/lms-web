@@ -1,14 +1,24 @@
 import { auth } from '@/lib/auth'
 import { redirect } from 'next/navigation'
-import { Users, BookOpen, Tag } from 'lucide-react'
-import { Sidebar } from '@/components/shared/navigation/Sidebar'
-import { Header } from '@/components/shared/navigation/Header'
-import type { NavItem } from '@/components/shared/navigation/Sidebar'
+import { LayoutDashboard, Users, BookOpen, Tag } from 'lucide-react'
+import { NavigationShell } from '@/components/shared/navigation/NavigationShell'
+import type { NavGroup } from '@/components/shared/navigation/Sidebar'
 
-const navItems: NavItem[] = [
-  { label: 'Users', href: '/admin/users', icon: Users },
-  { label: 'Courses', href: '/admin/courses', icon: BookOpen },
-  { label: 'Categories', href: '/admin/categories', icon: Tag },
+const navGroups: NavGroup[] = [
+  {
+    items: [{ label: 'Dashboard', href: '/admin', icon: LayoutDashboard, exact: true }],
+  },
+  {
+    label: 'USUARIOS',
+    items: [{ label: 'Todos los usuarios', href: '/admin/users', icon: Users }],
+  },
+  {
+    label: 'PLATAFORMA',
+    items: [
+      { label: 'Cursos', href: '/admin/courses', icon: BookOpen },
+      { label: 'Categorías', href: '/admin/categories', icon: Tag },
+    ],
+  },
 ]
 
 export default async function AdminLayout({ children }: { children: React.ReactNode }) {
@@ -18,13 +28,5 @@ export default async function AdminLayout({ children }: { children: React.ReactN
   const roles = session.user.roles ?? []
   if (!roles.includes('ADMIN')) redirect('/dashboard')
 
-  return (
-    <div className="flex min-h-screen">
-      <Sidebar navItems={navItems} />
-      <div className="flex min-w-0 flex-1 flex-col">
-        <Header />
-        <main className="flex-1 p-6">{children}</main>
-      </div>
-    </div>
-  )
+  return <NavigationShell navGroups={navGroups}>{children}</NavigationShell>
 }
