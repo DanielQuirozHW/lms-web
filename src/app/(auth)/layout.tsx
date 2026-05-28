@@ -3,11 +3,8 @@ import { redirect } from 'next/navigation'
 
 export default async function AuthLayout({ children }: { children: React.ReactNode }) {
   const session = await auth()
-  if (session) redirect('/dashboard')
+  // Only redirect when the session is valid — RefreshTokenExpired is treated as unauthenticated
+  if (session && session.error !== 'RefreshTokenExpired') redirect('/dashboard')
 
-  return (
-    <div className="bg-muted/40 flex min-h-screen items-center justify-center p-4">
-      <div className="w-full max-w-md">{children}</div>
-    </div>
-  )
+  return <div className="bg-nexus-bg min-h-screen">{children}</div>
 }
