@@ -407,3 +407,33 @@ pnpm dlx shadcn@latest add <component>   # add a new shadcn component
 | `NEXT_PUBLIC_WS_URL`  | ✅        | WebSocket server URL (e.g. `http://localhost:3000`)                    |
 | `AUTH_SECRET`         | ✅        | Auth.js secret — min 32 chars; generate with `openssl rand -base64 32` |
 | `AUTH_URL`            | ✅ (prod) | Canonical URL for Auth.js — must match `NEXT_PUBLIC_APP_URL`           |
+
+---
+
+## Completed Features
+
+| Area                  | Feature                                                                  | Status |
+| --------------------- | ------------------------------------------------------------------------ | ------ |
+| Auth                  | Login, Register, Email Verification (OTP)                                | ✅     |
+| Navigation            | Sidebar (mobile bottom nav), Header, Breadcrumbs, theme toggle           | ✅     |
+| Design System         | Nexus tokens (globals.css), light/dark via next-themes                   | ✅     |
+| Landing               | Public landing page at `/` with hero, features, stats, CTA               | ✅     |
+| Dashboard             | Stats cards, in-progress courses, upcoming calendar events               | ✅     |
+| Courses               | Catalog with category filter + search, Course detail, Enrollment         | ✅     |
+| My Courses            | Status filter tabs, progress cards, CSV export                           | ✅     |
+| Lesson Player         | Video (HTML5 + keyboard shortcuts), Text (DOMPurify), Quiz, Assignment   | ✅     |
+| Forum                 | Thread list, detail, flat replies, voting, accept answer, WebSocket room | ✅     |
+| Messages              | Inbox, real-time chat, read receipts, WebSocket                          | ✅     |
+| Notifications         | Badge sync with Zustand store                                            | ✅     |
+| Profile               | Edit profile/avatar, change password, delete account                     | ✅     |
+| Calendar              | Upcoming events view                                                     | ✅     |
+| Instructor Dashboard  | Stats, course grid with publish/archive, pagination                      | ✅     |
+| Course Editor         | Create/edit form with cover upload, publish/archive/delete               | ✅     |
+| Module Editor         | Module/Lesson CRUD with HTML5 DnD reorder                                | ✅     |
+| Quiz Management       | Settings (max attempts, passing score, shuffle), 5 question types        | ✅     |
+| Assignment Management | Settings (grading type, due date), file upload, manual grading           | ✅     |
+| Students Page         | Enrollment table, progress detail, CSV export, ADMIN cancel              | ✅     |
+| Gradebook             | Grade matrix table, initial setup, manual grading dialog                 | ✅     |
+| Admin Users           | List + profile view with role display                                    | ✅     |
+| Admin Courses         | All-courses table with status filter + publish/archive                   | ✅     |
+| Admin Categories      | Inline CRUD with 409 protection                                          | ✅     |

@@ -10,7 +10,15 @@ import { EmptyState } from '@/components/shared/feedback/EmptyState'
 import { InstructorStatsCards } from '@/components/features/instructor/InstructorStatsCards'
 import { InstructorCourseCard } from '@/components/features/instructor/InstructorCourseCard'
 
-export const metadata: Metadata = { title: 'Dashboard instructor | NexusLMS' }
+export const metadata: Metadata = {
+  title: 'Dashboard instructor | NexusLMS',
+  description: 'Panel de instructor — gestioná tus cursos, estudiantes y calificaciones.',
+  openGraph: {
+    title: 'Dashboard instructor | NexusLMS',
+    description: 'Panel de instructor — gestioná tus cursos, estudiantes y calificaciones.',
+    type: 'website',
+  },
+}
 
 const LIMIT = 9
 

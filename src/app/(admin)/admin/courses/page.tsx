@@ -6,7 +6,15 @@ import type { CourseStatus } from '@/types/models'
 import type { CatalogCourse } from '@/components/features/courses/CourseCard'
 import { AdminCourseTable } from '@/components/features/admin/AdminCourseTable'
 
-export const metadata: Metadata = { title: 'Cursos | NexusLMS' }
+export const metadata: Metadata = {
+  title: 'Cursos | NexusLMS',
+  description: 'Gestión de todos los cursos de la plataforma NexusLMS.',
+  openGraph: {
+    title: 'Cursos | NexusLMS',
+    description: 'Gestión de todos los cursos de la plataforma NexusLMS.',
+    type: 'website',
+  },
+}
 
 const LIMIT = 20
 

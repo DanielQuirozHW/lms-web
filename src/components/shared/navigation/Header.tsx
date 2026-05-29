@@ -1,8 +1,9 @@
 'use client'
 
 import { useRouter } from 'next/navigation'
-import { Bell, LogOut, Menu, User } from 'lucide-react'
+import { Bell, LogOut, Menu, User, Sun, Moon } from 'lucide-react'
 import { useSession, signOut } from 'next-auth/react'
+import { useTheme } from 'next-themes'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Button } from '@/components/ui/button'
 import {
@@ -25,6 +26,7 @@ export function Header({ onMobileMenuOpen, className }: HeaderProps) {
   const router = useRouter()
   const { data: session } = useSession()
   const unreadCount = useNotificationsStore((s) => s.unreadCount)
+  const { theme, setTheme } = useTheme()
 
   const user = session?.user
   const firstName = user?.firstName ?? user?.name?.split(' ')[0] ?? ''
@@ -71,6 +73,24 @@ export function Header({ onMobileMenuOpen, className }: HeaderProps) {
 
       {/* Right actions */}
       <div className="flex shrink-0 items-center gap-1">
+        {/* Theme toggle — CSS icon-swap avoids hydration mismatch */}
+        <Button
+          variant="ghost"
+          size="icon"
+          onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
+          className="text-nexus-muted hover:text-nexus-text hover:bg-nexus-card relative"
+          aria-label="Cambiar tema"
+        >
+          <Sun
+            className="h-5 w-5 scale-100 rotate-0 transition-all dark:scale-0 dark:-rotate-90"
+            aria-hidden="true"
+          />
+          <Moon
+            className="absolute h-5 w-5 scale-0 rotate-90 transition-all dark:scale-100 dark:rotate-0"
+            aria-hidden="true"
+          />
+        </Button>
+
         {/* Notification bell */}
         <Button
           variant="ghost"

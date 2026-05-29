@@ -1,7 +1,15 @@
 import type { Metadata } from 'next'
 import { RegisterForm } from '@/components/features/auth/RegisterForm'
 
-export const metadata: Metadata = { title: 'Crear cuenta | NexusLMS' }
+export const metadata: Metadata = {
+  title: 'Crear cuenta | NexusLMS',
+  description: 'Creá tu cuenta gratuita en NexusLMS y empezá a aprender hoy.',
+  openGraph: {
+    title: 'Crear cuenta | NexusLMS',
+    description: 'Creá tu cuenta gratuita en NexusLMS y empezá a aprender hoy.',
+    type: 'website',
+  },
+}
 
 // ─── Left branding panel (identical to login page) ───────────────────────────
 

@@ -5,7 +5,15 @@ import type { User } from '@/types/models'
 import type { PaginatedData, PaginationMeta } from '@/types/api'
 import { UserTable } from '@/components/features/admin/UserTable'
 
-export const metadata: Metadata = { title: 'Usuarios | NexusLMS' }
+export const metadata: Metadata = {
+  title: 'Usuarios | NexusLMS',
+  description: 'Gestión de usuarios de la plataforma NexusLMS.',
+  openGraph: {
+    title: 'Usuarios | NexusLMS',
+    description: 'Gestión de usuarios de la plataforma NexusLMS.',
+    type: 'website',
+  },
+}
 
 const LIMIT = 20
 

@@ -16,15 +16,26 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   title: {
-    template: '%s | LMS',
-    default: 'LMS — Learning Management System',
+    template: '%s | NexusLMS',
+    default: 'NexusLMS — Plataforma de aprendizaje online',
   },
-  description: 'Learn, teach, and grow with our LMS platform.',
+  description:
+    'Plataforma de aprendizaje online con cursos en video, evaluaciones interactivas y certificados reconocidos.',
+  openGraph: {
+    type: 'website',
+    siteName: 'NexusLMS',
+    title: 'NexusLMS — Aprendizaje sin límites',
+    description: 'Plataforma de aprendizaje online con cursos, evaluaciones y certificados.',
+  },
 }
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en" className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}>
+    <html
+      lang="es"
+      suppressHydrationWarning
+      className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
+    >
       <body className="flex min-h-full flex-col">
         <Providers>{children}</Providers>
         <Toaster />

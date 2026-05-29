@@ -10,7 +10,15 @@ import { ProfileForm } from '@/components/features/profile/ProfileForm'
 import { PasswordForm } from '@/components/features/profile/PasswordForm'
 import { DeleteAccountDialog } from '@/components/features/profile/DeleteAccountDialog'
 
-export const metadata: Metadata = { title: 'Mi perfil | NexusLMS' }
+export const metadata: Metadata = {
+  title: 'Mi perfil | NexusLMS',
+  description: 'Gestioná tu perfil, contraseña y preferencias de cuenta.',
+  openGraph: {
+    title: 'Mi perfil | NexusLMS',
+    description: 'Gestioná tu perfil, contraseña y preferencias de cuenta.',
+    type: 'website',
+  },
+}
 
 export default async function ProfilePage() {
   const session = await auth()

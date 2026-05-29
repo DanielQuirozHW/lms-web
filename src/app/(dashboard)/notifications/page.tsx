@@ -1,6 +1,14 @@
 import type { Metadata } from 'next'
 
-export const metadata: Metadata = { title: 'Notifications' }
+export const metadata: Metadata = {
+  title: 'Notificaciones | NexusLMS',
+  description: 'Tus notificaciones de NexusLMS — inscripciones, calificaciones y actividad.',
+  openGraph: {
+    title: 'Notificaciones | NexusLMS',
+    description: 'Tus notificaciones de NexusLMS — inscripciones, calificaciones y actividad.',
+    type: 'website',
+  },
+}
 
 export default function NotificationsPage() {
   return (

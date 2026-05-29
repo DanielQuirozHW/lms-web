@@ -1,7 +1,15 @@
 import type { Metadata } from 'next'
 import { LoginForm } from '@/components/features/auth/LoginForm'
 
-export const metadata: Metadata = { title: 'Ingresar | NexusLMS' }
+export const metadata: Metadata = {
+  title: 'Ingresar | NexusLMS',
+  description: 'Iniciá sesión en NexusLMS y continuá tu aprendizaje.',
+  openGraph: {
+    title: 'Ingresar | NexusLMS',
+    description: 'Iniciá sesión en NexusLMS y continuá tu aprendizaje.',
+    type: 'website',
+  },
+}
 
 // ─── Left branding panel ──────────────────────────────────────────────────────
 

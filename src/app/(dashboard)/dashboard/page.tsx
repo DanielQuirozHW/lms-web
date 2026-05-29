@@ -13,7 +13,15 @@ import {
 import { UpcomingEvents } from '@/components/features/dashboard/UpcomingEvents'
 import { NotificationsSync } from '@/components/features/dashboard/NotificationsSync'
 
-export const metadata: Metadata = { title: 'Dashboard | NexusLMS' }
+export const metadata: Metadata = {
+  title: 'Dashboard | NexusLMS',
+  description: 'Tu resumen de cursos, progreso y eventos próximos en NexusLMS.',
+  openGraph: {
+    title: 'Dashboard | NexusLMS',
+    description: 'Tu resumen de cursos, progreso y eventos próximos en NexusLMS.',
+    type: 'website',
+  },
+}
 
 function getGreeting(): string {
   const hour = new Date().getHours()

@@ -13,7 +13,15 @@ import { EmptyState } from '@/components/shared/feedback/EmptyState'
 import { MyCoursesFilter } from '@/components/features/courses/MyCoursesFilter'
 import { MyCourseCard } from '@/components/features/courses/MyCourseCard'
 
-export const metadata: Metadata = { title: 'Mis cursos | NexusLMS' }
+export const metadata: Metadata = {
+  title: 'Mis cursos | NexusLMS',
+  description: 'Tus cursos inscritos, progreso y calificaciones en NexusLMS.',
+  openGraph: {
+    title: 'Mis cursos | NexusLMS',
+    description: 'Tus cursos inscritos, progreso y calificaciones en NexusLMS.',
+    type: 'website',
+  },
+}
 
 const LIMIT = 9
 

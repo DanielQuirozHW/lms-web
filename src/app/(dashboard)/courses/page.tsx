@@ -9,7 +9,15 @@ import { CoursesFilter } from '@/components/features/courses/CoursesFilter'
 import { CourseGrid } from '@/components/features/courses/CourseGrid'
 import type { CatalogCourse } from '@/components/features/courses/CourseCard'
 
-export const metadata: Metadata = { title: 'Explorar cursos | NexusLMS' }
+export const metadata: Metadata = {
+  title: 'Explorar cursos | NexusLMS',
+  description: 'Explorá el catálogo completo de cursos disponibles en NexusLMS.',
+  openGraph: {
+    title: 'Explorar cursos | NexusLMS',
+    description: 'Explorá el catálogo completo de cursos disponibles en NexusLMS.',
+    type: 'website',
+  },
+}
 
 interface PageProps {
   searchParams: Promise<{ categoryId?: string; page?: string; search?: string }>
