@@ -9,6 +9,7 @@ import { LessonPageShell } from '@/components/features/lessons/LessonPageShell'
 import { VideoPlayer } from '@/components/features/lessons/VideoPlayer'
 import { TextLesson } from '@/components/features/lessons/TextLesson'
 import { LessonNavigation } from '@/components/features/lessons/LessonNavigation'
+import { QuizPlayer } from '@/components/features/quiz/QuizPlayer'
 
 interface PageProps {
   params: Promise<{ courseId: string; lessonId: string }>
@@ -166,12 +167,10 @@ export default async function LessonPage({ params }: PageProps) {
       ) : null}
 
       {lesson.type === 'QUIZ' && (
-        <div className="border-nexus-border bg-nexus-card rounded-xl border p-8 text-center">
-          <p className="text-nexus-text text-lg font-semibold">Quiz</p>
-          <p className="text-nexus-muted mt-2 text-sm">
-            Los quizzes estarán disponibles próximamente.
-          </p>
-        </div>
+        <QuizPlayer
+          lessonId={lessonId}
+          nextLessonHref={nextLesson ? `/courses/${courseId}/learn/${nextLesson.id}` : null}
+        />
       )}
 
       {lesson.type === 'ASSIGNMENT' && (
