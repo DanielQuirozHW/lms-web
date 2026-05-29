@@ -6,7 +6,7 @@ import type { NavGroup } from '@/components/shared/navigation/Sidebar'
 
 const navGroups: NavGroup[] = [
   {
-    items: [{ label: 'Dashboard', href: '/admin', icon: LayoutDashboard, exact: true }],
+    items: [{ label: 'Panel', href: '/admin/users', icon: LayoutDashboard, exact: true }],
   },
   {
     label: 'USUARIOS',

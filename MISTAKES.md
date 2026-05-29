@@ -164,3 +164,32 @@ import { sanitize } from '@/lib/sanitize'
 **Rule:** Every `dangerouslySetInnerHTML` must call `sanitize()`, must be in a Client Component, and will be caught by ESLint if not.
 
 ---
+
+## [010] Middleware excluded the public landing page from PUBLIC_PATHS
+
+**Date:** 2026-05
+**Category:** Auth
+**What happened:** When the root `/` was converted from a redirect-only stub to a full landing page for unauthenticated users, the middleware `PUBLIC_PATHS` set was not updated. The middleware saw `/` was not in `PUBLIC_PATHS`, found no session, and redirected unauthenticated visitors to `/login` — making the landing page completely unreachable without logging in first.
+**Fix:** Added `'/'` to `PUBLIC_PATHS` in `src/middleware.ts`.
+
+```typescript
+// Before — '/' was not in the set
+const PUBLIC_PATHS = new Set(['/login', '/register', '/verify-email'])
+
+// After
+const PUBLIC_PATHS = new Set(['/', '/login', '/register', '/verify-email'])
+```
+
+**Rule:** Any time a new publicly accessible route is added to the app, add its path to `PUBLIC_PATHS` in middleware. The default assumption is that ALL routes require authentication.
+
+---
+
+## [011] Navigation sidebar linked to non-existent routes
+
+**Date:** 2026-05
+**Category:** Dead Links / UX
+**What happened:** During early planning, several nav items were added to layouts pointing to routes that were never built: `/certificates` (no page), `/forum` (course-specific only — no top-level route), `/instructor/students` (per-course only), `/instructor/grades` (per-course only). Clicking these links produced 404 errors.
+**Fix:** Removed the dead nav items from the respective layout files. Students and gradebook pages are accessible via the course editor (`/instructor/courses/[id]/students` and `/instructor/courses/[id]/gradebook`).
+**Rule:** Before adding a nav item to a sidebar, verify the target route exists (`Glob` for the page.tsx file). Never add speculative links.
+
+---

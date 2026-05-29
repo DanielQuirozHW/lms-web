@@ -4,8 +4,6 @@ import {
   LayoutDashboard,
   BookOpen,
   BookMarked,
-  Award,
-  MessageCircle,
   MessageSquare,
   Calendar,
   Bell,
@@ -23,15 +21,11 @@ const navGroups: NavGroup[] = [
     items: [
       { label: 'Explorar cursos', href: '/courses', icon: BookOpen },
       { label: 'Mis cursos', href: '/my-courses', icon: BookMarked },
-      { label: 'Certificados', href: '/certificates', icon: Award },
     ],
   },
   {
     label: 'COMUNIDAD',
-    items: [
-      { label: 'Foro', href: '/forum', icon: MessageCircle },
-      { label: 'Mensajes', href: '/messages', icon: MessageSquare, badge: 'messages' },
-    ],
+    items: [{ label: 'Mensajes', href: '/messages', icon: MessageSquare, badge: 'messages' }],
   },
   {
     label: 'PERSONAL',

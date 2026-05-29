@@ -1,14 +1,6 @@
 import { auth } from '@/lib/auth'
 import { redirect } from 'next/navigation'
-import {
-  LayoutDashboard,
-  BookOpen,
-  PlusCircle,
-  Users,
-  GraduationCap,
-  MessageCircle,
-  Bell,
-} from 'lucide-react'
+import { LayoutDashboard, BookOpen, PlusCircle, Bell } from 'lucide-react'
 import { NavigationShell } from '@/components/shared/navigation/NavigationShell'
 import type { NavGroup } from '@/components/shared/navigation/Sidebar'
 
@@ -24,16 +16,8 @@ const navGroups: NavGroup[] = [
     ],
   },
   {
-    label: 'GESTIÓN',
-    items: [
-      { label: 'Estudiantes', href: '/instructor/students', icon: Users },
-      { label: 'Calificaciones', href: '/instructor/grades', icon: GraduationCap },
-    ],
-  },
-  {
     label: 'COMUNIDAD',
     items: [
-      { label: 'Foro', href: '/forum', icon: MessageCircle },
       { label: 'Notificaciones', href: '/notifications', icon: Bell, badge: 'notifications' },
     ],
   },

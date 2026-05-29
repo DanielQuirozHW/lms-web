@@ -2,7 +2,8 @@ import { auth } from '@/lib/auth'
 import { NextResponse } from 'next/server'
 import type { NextAuthRequest } from 'next-auth'
 
-const PUBLIC_PATHS = new Set(['/login', '/register', '/verify-email'])
+// '/' is the public landing page — must be accessible without authentication
+const PUBLIC_PATHS = new Set(['/', '/login', '/register', '/verify-email'])
 const INSTRUCTOR_PREFIX = '/instructor'
 const ADMIN_PREFIX = '/admin'
 
