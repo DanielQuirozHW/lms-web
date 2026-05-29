@@ -63,6 +63,25 @@ export function useArchiveCourse(courseId: string) {
   })
 }
 
+export function useUploadCourseCover() {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: async ({ file, courseId }: { file: File; courseId: string }) => {
+      const form = new FormData()
+      form.append('file', file)
+      form.append('courseId', courseId)
+      // Axios auto-sets multipart/form-data with boundary from FormData
+      const r = await api.post<{ url: string }>('/upload/course-cover', form)
+      return r.data.url
+    },
+    onSuccess: (_url, vars) => {
+      queryClient.invalidateQueries({ queryKey: courseKeys.detail(vars.courseId) })
+      queryClient.invalidateQueries({ queryKey: courseKeys.my() })
+    },
+  })
+}
+
 export function useDeleteCourse() {
   const queryClient = useQueryClient()
 
