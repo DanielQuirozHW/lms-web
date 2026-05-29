@@ -2,14 +2,57 @@ import { auth } from '@/lib/auth'
 import { NextResponse } from 'next/server'
 import type { NextAuthRequest } from 'next-auth'
 
+const API_URL = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:3000/api/v1'
+
 // '/' is the public landing page — must be accessible without authentication
 const PUBLIC_PATHS = new Set(['/', '/login', '/register', '/verify-email'])
+const MAINTENANCE_PATH = '/maintenance'
 const INSTRUCTOR_PREFIX = '/instructor'
 const ADMIN_PREFIX = '/admin'
 
-export default auth((req: NextAuthRequest) => {
+export default auth(async (req: NextAuthRequest) => {
   const { pathname } = req.nextUrl
   const session = req.auth
+
+  // ── Maintenance check ─────────────────────────────────────────────────────
+  // Skip for API routes, static assets, and the maintenance page itself so
+  // non-admin users can access /maintenance and admins can still reach /api/*.
+  const skipMaintenanceCheck =
+    pathname.startsWith('/api/') || pathname.startsWith('/_next/') || pathname === '/favicon.ico'
+
+  if (!skipMaintenanceCheck) {
+    try {
+      const res = await fetch(`${API_URL}/admin/maintenance`, {
+        next: { revalidate: 30 },
+      })
+      if (res.ok) {
+        const { data } = (await res.json()) as {
+          data: { isEnabled: boolean; message: string | null; estimatedEnd: string | null }
+        }
+        const isAdmin = (session?.user?.roles ?? []).includes('ADMIN')
+
+        if (data.isEnabled && !isAdmin && pathname !== MAINTENANCE_PATH) {
+          const url = new URL(MAINTENANCE_PATH, req.url)
+          if (data.message) url.searchParams.set('message', data.message)
+          if (data.estimatedEnd) url.searchParams.set('estimatedEnd', data.estimatedEnd)
+          return NextResponse.redirect(url)
+        }
+
+        if (!data.isEnabled && pathname === MAINTENANCE_PATH) {
+          return NextResponse.redirect(new URL('/', req.url))
+        }
+      }
+    } catch {
+      // Maintenance check failed — fail open so users aren't locked out
+    }
+  }
+
+  // Maintenance page is publicly accessible — bypass all auth routing
+  if (pathname === MAINTENANCE_PATH) {
+    return NextResponse.next()
+  }
+
+  // ── Auth routing ──────────────────────────────────────────────────────────
 
   // Auth routes: redirect signed-in users away
   if (PUBLIC_PATHS.has(pathname)) {

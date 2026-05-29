@@ -322,6 +322,31 @@ export interface Gradebook {
   totalWeight: number
 }
 
+// ─── Global Announcements ─────────────────────────────────────────────────────
+
+export type GlobalAnnouncementType = 'INFO' | 'WARNING' | 'MAINTENANCE' | 'SUCCESS'
+
+export interface GlobalAnnouncement {
+  id: string
+  title: string
+  message: string
+  type: GlobalAnnouncementType
+  isActive: boolean
+  startsAt: string | null
+  endsAt: string | null
+  createdBy: string
+  createdAt: string
+  updatedAt: string
+}
+
+// ─── Maintenance ──────────────────────────────────────────────────────────────
+
+export interface MaintenanceStatus {
+  isEnabled: boolean
+  message: string | null
+  estimatedEnd: string | null
+}
+
 export interface StudentGradeItem {
   itemId: string
   lessonId: string

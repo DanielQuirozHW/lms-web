@@ -1,6 +1,6 @@
 import { auth } from '@/lib/auth'
 import { redirect } from 'next/navigation'
-import { LayoutDashboard, Users, BookOpen, Tag } from 'lucide-react'
+import { LayoutDashboard, Users, BookOpen, Tag, Megaphone, Settings } from 'lucide-react'
 import { NavigationShell } from '@/components/shared/navigation/NavigationShell'
 import type { NavGroup } from '@/components/shared/navigation/Sidebar'
 
@@ -17,7 +17,12 @@ const navGroups: NavGroup[] = [
     items: [
       { label: 'Cursos', href: '/admin/courses', icon: BookOpen },
       { label: 'Categorías', href: '/admin/categories', icon: Tag },
+      { label: 'Alertas globales', href: '/admin/announcements', icon: Megaphone },
     ],
+  },
+  {
+    label: 'SISTEMA',
+    items: [{ label: 'Configuración', href: '/admin/settings', icon: Settings }],
   },
 ]
 

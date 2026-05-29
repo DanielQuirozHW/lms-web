@@ -6,6 +6,7 @@ import { Sidebar, type NavGroup } from './Sidebar'
 import { Header } from './Header'
 import { Breadcrumbs } from './Breadcrumbs'
 import { ImpersonationBanner } from '@/components/shared/auth/ImpersonationBanner'
+import { GlobalAnnouncementBanner } from '@/components/shared/announcements/GlobalAnnouncementBanner'
 import { cn } from '@/lib/utils'
 
 interface NavigationShellProps {
@@ -37,6 +38,7 @@ export function NavigationShell({ navGroups, children }: NavigationShellProps) {
       {/* Content column: no left offset needed — sidebar is a flex item on desktop */}
       <div className="flex min-w-0 flex-1 flex-col">
         <Header onMobileMenuOpen={() => setMobileOpen(true)} />
+        <GlobalAnnouncementBanner />
         <Breadcrumbs />
         {/* pb-16 on mobile so content clears the fixed bottom nav */}
         <main className="flex-1 p-4 pb-20 lg:p-6 lg:pb-6">{children}</main>
