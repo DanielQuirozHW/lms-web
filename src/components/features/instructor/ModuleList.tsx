@@ -13,6 +13,8 @@ import {
   HelpCircle,
   ClipboardList,
   Loader2,
+  Settings2,
+  X,
 } from 'lucide-react'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
@@ -20,6 +22,8 @@ import { cn } from '@/lib/utils'
 import { formatDuration } from '@/lib/utils'
 import { ModuleForm } from './ModuleForm'
 import { LessonForm } from './LessonForm'
+import { QuizEditor } from '@/components/features/quiz/QuizEditor'
+import { AssignmentEditor } from '@/components/features/assignments/AssignmentEditor'
 import {
   useDeleteModule,
   usePublishModule,
@@ -56,6 +60,7 @@ interface LessonRowProps {
   onEdit: () => void
   onDelete: (id: string) => void
   onPublish: (id: string, updated: LessonWithDetails) => void
+  onConfigure?: () => void
   dragHandleProps: React.HTMLAttributes<HTMLDivElement>
   isDragOver: boolean
 }
@@ -67,6 +72,7 @@ function LessonRow({
   onEdit,
   onDelete,
   onPublish,
+  onConfigure,
   dragHandleProps,
   isDragOver,
 }: LessonRowProps) {
@@ -169,6 +175,17 @@ function LessonRow({
         >
           <Pencil className="h-3 w-3" aria-hidden="true" />
         </Button>
+        {onConfigure && (
+          <Button
+            size="sm"
+            variant="ghost"
+            onClick={onConfigure}
+            className="text-nexus-muted hover:text-nexus-accent h-7 px-2"
+            aria-label="Configurar quiz/tarea"
+          >
+            <Settings2 className="h-3 w-3" aria-hidden="true" />
+          </Button>
+        )}
         <Button
           size="sm"
           variant="ghost"
@@ -207,6 +224,7 @@ interface ModuleRowProps {
   onLessonDelete: (lessonId: string, moduleId: string) => void
   onLessonPublish: (lessonId: string, moduleId: string, updated: LessonWithDetails) => void
   onLessonsReorder: (moduleId: string, newLessons: LessonWithDetails[]) => void
+  onLessonConfigure: (lesson: LessonWithDetails) => void
   dragHandleProps: React.HTMLAttributes<HTMLDivElement>
   isDragOver: boolean
 }
@@ -227,6 +245,7 @@ function ModuleRow({
   onLessonDelete,
   onLessonPublish,
   onLessonsReorder,
+  onLessonConfigure,
   dragHandleProps,
   isDragOver,
 }: ModuleRowProps) {
@@ -413,6 +432,11 @@ function ModuleRow({
                     onEdit={() => onLessonEdit(lesson, module.id)}
                     onDelete={(id) => onLessonDelete(id, module.id)}
                     onPublish={(id, updated) => onLessonPublish(id, module.id, updated)}
+                    onConfigure={
+                      lesson.type === 'QUIZ' || lesson.type === 'ASSIGNMENT'
+                        ? () => onLessonConfigure(lesson)
+                        : undefined
+                    }
                     dragHandleProps={{}} // handled by outer div
                     isDragOver={lessonDragOver === li && lessonDragSrc !== li}
                   />
@@ -453,6 +477,11 @@ export function ModuleList({ courseId, initialModules }: ModuleListProps) {
   const [lessonFormState, setLessonFormState] = useState<{
     moduleId: string
     lesson?: LessonWithDetails
+  } | null>(null)
+  const [editorPanel, setEditorPanel] = useState<{
+    type: 'quiz' | 'assignment'
+    lessonId: string
+    lessonTitle: string
   } | null>(null)
 
   // Module DnD state
@@ -569,85 +598,139 @@ export function ModuleList({ courseId, initialModules }: ModuleListProps) {
   }
 
   return (
-    <div className="space-y-3">
-      {/* Module list */}
-      {modules.map((mod, mi) => (
-        <div
-          key={mod.id}
-          draggable
-          onDragStart={() => {
-            setModDragSrc(mi)
-          }}
-          onDragOver={(e) => {
-            e.preventDefault()
-            setModDragOver(mi)
-          }}
-          onDrop={() => handleModDrop(mi)}
-          onDragEnd={() => {
-            setModDragSrc(null)
-            setModDragOver(null)
-          }}
-          className={cn(modDragSrc === mi && 'opacity-50')}
-        >
-          <ModuleRow
-            module={mod}
-            index={mi}
+    <>
+      <div className="space-y-3">
+        {/* Module list */}
+        {modules.map((mod, mi) => (
+          <div
+            key={mod.id}
+            draggable
+            onDragStart={() => {
+              setModDragSrc(mi)
+            }}
+            onDragOver={(e) => {
+              e.preventDefault()
+              setModDragOver(mi)
+            }}
+            onDrop={() => handleModDrop(mi)}
+            onDragEnd={() => {
+              setModDragSrc(null)
+              setModDragOver(null)
+            }}
+            className={cn(modDragSrc === mi && 'opacity-50')}
+          >
+            <ModuleRow
+              module={mod}
+              index={mi}
+              courseId={courseId}
+              isExpanded={expandedIds.has(mod.id)}
+              isEditing={editingModuleId === mod.id}
+              onToggleExpand={() => toggleExpand(mod.id)}
+              onStartEdit={() => {
+                setEditingModuleId(mod.id)
+                setExpandedIds((prev) => new Set([...prev, mod.id]))
+              }}
+              onCancelEdit={() => setEditingModuleId(null)}
+              onSaveModule={handleModuleUpdated}
+              onDeleteModule={handleModuleDeleted}
+              onPublishModule={handleModulePublished}
+              onLessonCreate={(moduleId) => {
+                setLessonFormState({ moduleId })
+                setExpandedIds((prev) => new Set([...prev, moduleId]))
+              }}
+              onLessonEdit={(lesson, moduleId) => setLessonFormState({ moduleId, lesson })}
+              onLessonDelete={handleLessonDeleted}
+              onLessonPublish={handleLessonPublished}
+              onLessonsReorder={handleLessonsReorder}
+              onLessonConfigure={(lesson) =>
+                setEditorPanel({
+                  type: lesson.type === 'QUIZ' ? 'quiz' : 'assignment',
+                  lessonId: lesson.id,
+                  lessonTitle: lesson.title,
+                })
+              }
+              dragHandleProps={{
+                onDragStart: () => setModDragSrc(mi),
+              }}
+              isDragOver={modDragOver === mi && modDragSrc !== mi}
+            />
+          </div>
+        ))}
+
+        {/* Create module form or button */}
+        {showCreateModule ? (
+          <ModuleForm
             courseId={courseId}
-            isExpanded={expandedIds.has(mod.id)}
-            isEditing={editingModuleId === mod.id}
-            onToggleExpand={() => toggleExpand(mod.id)}
-            onStartEdit={() => {
-              setEditingModuleId(mod.id)
-              setExpandedIds((prev) => new Set([...prev, mod.id]))
-            }}
-            onCancelEdit={() => setEditingModuleId(null)}
-            onSaveModule={handleModuleUpdated}
-            onDeleteModule={handleModuleDeleted}
-            onPublishModule={handleModulePublished}
-            onLessonCreate={(moduleId) => {
-              setLessonFormState({ moduleId })
-              setExpandedIds((prev) => new Set([...prev, moduleId]))
-            }}
-            onLessonEdit={(lesson, moduleId) => setLessonFormState({ moduleId, lesson })}
-            onLessonDelete={handleLessonDeleted}
-            onLessonPublish={handleLessonPublished}
-            onLessonsReorder={handleLessonsReorder}
-            dragHandleProps={{
-              onDragStart: () => setModDragSrc(mi),
-            }}
-            isDragOver={modDragOver === mi && modDragSrc !== mi}
+            onSuccess={handleModuleCreated}
+            onCancel={() => setShowCreateModule(false)}
           />
-        </div>
-      ))}
+        ) : (
+          <Button
+            variant="outline"
+            onClick={() => setShowCreateModule(true)}
+            className="border-nexus-border text-nexus-muted hover:border-nexus-accent hover:text-nexus-accent w-full border-dashed"
+          >
+            <Plus className="mr-2 h-4 w-4" aria-hidden="true" />
+            Agregar módulo
+          </Button>
+        )}
 
-      {/* Create module form or button */}
-      {showCreateModule ? (
-        <ModuleForm
-          courseId={courseId}
-          onSuccess={handleModuleCreated}
-          onCancel={() => setShowCreateModule(false)}
-        />
-      ) : (
-        <Button
-          variant="outline"
-          onClick={() => setShowCreateModule(true)}
-          className="border-nexus-border text-nexus-muted hover:border-nexus-accent hover:text-nexus-accent w-full border-dashed"
-        >
-          <Plus className="mr-2 h-4 w-4" aria-hidden="true" />
-          Agregar módulo
-        </Button>
-      )}
+        {/* Lesson form modal */}
+        {lessonFormState && (
+          <LessonForm
+            courseId={courseId}
+            moduleId={lessonFormState.moduleId}
+            lesson={lessonFormState.lesson}
+            onClose={() => setLessonFormState(null)}
+            onSuccess={handleLessonFormSuccess}
+          />
+        )}
+      </div>
 
-      {/* Lesson form modal */}
-      {lessonFormState && (
-        <LessonForm
-          courseId={courseId}
-          moduleId={lessonFormState.moduleId}
-          lesson={lessonFormState.lesson}
-          onClose={() => setLessonFormState(null)}
-          onSuccess={handleLessonFormSuccess}
-        />
+      {/* Slide-over editor panel (Quiz / Assignment) */}
+      {editorPanel && (
+        <>
+          {/* Backdrop */}
+          <div
+            className="fixed inset-0 z-40 bg-black/40"
+            onClick={() => setEditorPanel(null)}
+            aria-hidden="true"
+          />
+          {/* Panel */}
+          <aside
+            className="bg-nexus-surface fixed inset-y-0 right-0 z-50 flex w-full flex-col overflow-hidden shadow-2xl sm:w-120"
+            aria-label={`Configurar ${editorPanel.type === 'quiz' ? 'quiz' : 'tarea'}`}
+          >
+            {/* Panel header */}
+            <div className="border-nexus-border flex shrink-0 items-center justify-between border-b px-4 py-3">
+              <div>
+                <p className="text-nexus-muted text-[10px] font-semibold tracking-wide uppercase">
+                  {editorPanel.type === 'quiz' ? 'Quiz' : 'Tarea'}
+                </p>
+                <h2 className="text-nexus-text truncate text-sm font-semibold">
+                  {editorPanel.lessonTitle}
+                </h2>
+              </div>
+              <button
+                type="button"
+                onClick={() => setEditorPanel(null)}
+                aria-label="Cerrar panel"
+                className="text-nexus-muted hover:text-nexus-text transition-colors"
+              >
+                <X className="h-5 w-5" aria-hidden="true" />
+              </button>
+            </div>
+            {/* Panel body */}
+            <div className="flex-1 overflow-y-auto p-4">
+              {editorPanel.type === 'quiz' ? (
+                <QuizEditor lessonId={editorPanel.lessonId} />
+              ) : (
+                <AssignmentEditor lessonId={editorPanel.lessonId} />
+              )}
+            </div>
+          </aside>
+        </>
       )}
-    </div>
+    </>
   )
 }
