@@ -193,3 +193,33 @@ const PUBLIC_PATHS = new Set(['/', '/login', '/register', '/verify-email'])
 **Rule:** Before adding a nav item to a sidebar, verify the target route exists (`Glob` for the page.tsx file). Never add speculative links.
 
 ---
+
+## [012] DOMPurify used without explicit allowlist — default config too permissive
+
+**Date:** 2026-05
+**Category:** XSS
+**What happened:** `lib/sanitize.ts` called `DOMPurify.sanitize(html)` with no configuration. DOMPurify's default blocklist approach is less secure than an explicit allowlist: it may allow SVG `<foreignObject>` elements (which can embed arbitrary HTML/scripts), MathML content, `<form>` elements (phishing), `<style>` blocks (CSS injection), and other potentially unsafe constructs depending on the DOMPurify version. Additionally, no hook enforced `rel="noopener noreferrer"` on `target="_blank"` links, leaving lesson content vulnerable to tabnabbing attacks where a linked page accesses `window.opener`.
+**Fix:** Replaced default config with an explicit ALLOWED_TAGS allowlist (text formatting, headings, lists, links, images, tables, semantic elements — no SVG, MathML, forms, scripts, embedded content). Added `afterSanitizeAttributes` hook to: (1) force `rel="noopener noreferrer"` on all `target="_blank"` links; (2) block `javascript:`, `vbscript:`, and `data:` URI schemes in href; (3) block non-`https://` and non-relative URLs in src attributes.
+**Rule:** Always pass an explicit `ALLOWED_TAGS` allowlist to DOMPurify — never rely on the default blocklist. Add hooks for protocol and link-target safety.
+
+---
+
+## [013] User-supplied fileUrl rendered as href without protocol validation
+
+**Date:** 2026-05
+**Category:** XSS / href injection
+**What happened:** `GradeSubmissionDialog.tsx` rendered `submission.fileUrl` directly as an `<a href={submission.fileUrl}>`. If a malicious backend stored a `javascript:alert(1)` or `data:text/html,...` URL as a file URL, clicking the link would execute arbitrary JavaScript in the user's browser context. Although the backend should validate file URLs, the frontend must not trust backend data for security-critical operations.
+**Fix:** Added a protocol guard before rendering the link: `{/^https?:\/\//i.test(submission.fileUrl) && <a href={...}>}`. Only `http://` and `https://` URLs are rendered as clickable links; all other protocols are silently dropped.
+**Rule:** Always validate URL protocols before using API data as an `href`. Never render `href={untrustedUrl}` without first asserting the URL starts with `https://` or `http://`.
+
+---
+
+## [014] callbackUrl set in middleware but not consumed by login form (known limitation)
+
+**Date:** 2026-05
+**Category:** Auth / UX
+**What happened:** The middleware appends `?callbackUrl=<pathname>` to the login redirect URL when an unauthenticated user hits a protected route. However, `LoginForm.tsx` uses `useLoginMutation` with `redirect: false` and then hardcodes `router.push('/dashboard')` on success — the `callbackUrl` parameter is never read or validated. The result is that users always land on `/dashboard` after login regardless of the page they were trying to reach.
+**Fix:** None applied (by design — reading callbackUrl requires validation to prevent open redirect attacks, and the validation logic was not yet implemented). The current behavior is SECURE but has degraded UX.
+**Rule:** If implementing callbackUrl redirect after login, validate the URL with `callbackUrl.startsWith('/')` before using it. Never redirect to a URL that starts with `http://` or `//` — it must be a relative path.
+
+---

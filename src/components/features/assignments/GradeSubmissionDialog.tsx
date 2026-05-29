@@ -118,8 +118,8 @@ export function GradeSubmissionDialog({
             </div>
           </div>
 
-          {/* File link */}
-          {submission.fileUrl && (
+          {/* File link — only render for https:// URLs to prevent href injection */}
+          {submission.fileUrl && /^https?:\/\//i.test(submission.fileUrl) && (
             <div>
               <a
                 href={submission.fileUrl}
