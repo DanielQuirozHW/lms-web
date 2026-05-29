@@ -241,6 +241,23 @@ function QuestionView({ question, answer, onAnswer, disabled, reviewAnswers }: Q
   )
 }
 
+// ─── Cryptographically secure Fisher-Yates shuffle ───────────────────────────
+// Math.random() is not CSPRNG-seeded and could allow an attacker with knowledge
+// of engine internals to predict question order. crypto.getRandomValues() uses
+// the OS CSPRNG, which is unpredictable.
+
+function cryptoShuffle<T>(arr: T[]): T[] {
+  const array = [...arr]
+  for (let i = array.length - 1; i > 0; i--) {
+    const buf = new Uint32Array(1)
+    crypto.getRandomValues(buf)
+    // Modulo bias is negligible for array sizes << 2^32
+    const j = buf[0] % (i + 1)
+    ;[array[i], array[j]] = [array[j], array[i]]
+  }
+  return array
+}
+
 // ─── Main component ───────────────────────────────────────────────────────────
 
 interface QuizPlayerProps {
@@ -314,7 +331,7 @@ export function QuizPlayer({ lessonId, nextLessonHref }: QuizPlayerProps) {
     startAttempt(undefined, {
       onSuccess: (attempt) => {
         if (settings.shuffleQuestions) {
-          const shuffled = [...rawQuestions].sort(() => Math.random() - 0.5).map((q) => q.id)
+          const shuffled = cryptoShuffle(rawQuestions).map((q) => q.id)
           setDisplayQuestionIds(shuffled)
         } else {
           setDisplayQuestionIds(null)

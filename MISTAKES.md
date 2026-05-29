@@ -223,3 +223,28 @@ const PUBLIC_PATHS = new Set(['/', '/login', '/register', '/verify-email'])
 **Rule:** If implementing callbackUrl redirect after login, validate the URL with `callbackUrl.startsWith('/')` before using it. Never redirect to a URL that starts with `http://` or `//` — it must be a relative path.
 
 ---
+
+## [015] Multi-tab token refresh race condition caused session invalidation
+
+**Date:** 2026-05
+**Category:** Race Condition / Auth
+**What happened:** The `isRefreshing` flag in `src/lib/api.ts` is module-scoped — it exists independently in each browser tab. If a user has two tabs open and both receive a 401 simultaneously:
+
+1. Tab A: sets `isRefreshing = true`, calls `POST /api/auth/refresh` → backend rotates the refresh token
+2. Tab B: `isRefreshing = false` (separate module instance), also calls `POST /api/auth/refresh` — but the backend now rejects the old (already-consumed) refresh token
+3. Tab B's refresh fails → `signOut()` is called → user is logged out across all tabs
+
+**Fix:** Added BroadcastChannel coordination (`nexus-auth-refresh` channel) in `src/lib/api.ts`. When Tab A starts refreshing, it broadcasts `{ type: 'REFRESHING' }`. Tab B receives this and sets its local `isRefreshing = true`, queuing any 401s instead of starting a second refresh. When Tab A completes, it broadcasts `{ type: 'REFRESH_DONE', accessToken }` so Tab B can drain its queue. If refresh fails, `{ type: 'REFRESH_FAILED' }` causes all tabs to sign out. Falls back to original per-tab behaviour if BroadcastChannel is unsupported.
+**Rule:** Never use module-scoped flags for per-tab coordination in multi-tab applications. Use BroadcastChannel, localStorage events, or SharedWorker to synchronise cross-tab state.
+
+---
+
+## [016] WebSocket connections not disconnected on logout
+
+**Date:** 2026-05
+**Category:** Auth / Logic
+**What happened:** `useLogoutMutation` called `signOut()` to clear the session but never called `disconnectAll()` from `src/lib/socket.ts`. After logout, both `messagesSocket` and `forumSocket` remained open. For up to 5 reconnection attempts after any disconnect, socket.io would call `tokenAuth()` which would now return an empty token (session gone), but during the window before the first reconnect failure, any incoming WebSocket events (e.g., `newMessage`) would still be processed and update React state — post-logout. The same omission existed in `AuthErrorHandler.tsx` when handling `RefreshTokenExpired`.
+**Fix:** Added `disconnectAll()` call in `useLogoutMutation` (before `signOut()`) and in `AuthErrorHandler` (before `signOut()`). Sockets are now torn down before the session is cleared.
+**Rule:** Always call `disconnectAll()` before `signOut()` in any logout path (explicit logout, session expiry, and forced sign-out from API interceptor). The socket must be severed while the session is still valid so the `leaveThread`/disconnect handshake can complete with a legitimate token.
+
+---

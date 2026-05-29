@@ -1,6 +1,10 @@
 import type { Metadata } from 'next'
 import { LoginForm } from '@/components/features/auth/LoginForm'
 
+interface PageProps {
+  searchParams: Promise<{ callbackUrl?: string }>
+}
+
 export const metadata: Metadata = {
   title: 'Ingresar | NexusLMS',
   description: 'Iniciá sesión en NexusLMS y continuá tu aprendizaje.',
@@ -76,7 +80,14 @@ function BrandingPanel() {
 
 // ─── Page ─────────────────────────────────────────────────────────────────────
 
-export default function LoginPage() {
+export default async function LoginPage({ searchParams }: PageProps) {
+  const params = await searchParams
+  // Validate the callbackUrl: must be an internal path (starts with /) and must
+  // not be protocol-relative (starts with //) to prevent open-redirect attacks.
+  const raw = params.callbackUrl
+  const redirectTo =
+    typeof raw === 'string' && raw.startsWith('/') && !raw.startsWith('//') ? raw : '/dashboard'
+
   return (
     <div className="flex min-h-screen">
       <BrandingPanel />
@@ -112,7 +123,7 @@ export default function LoginPage() {
             </p>
           </div>
 
-          <LoginForm />
+          <LoginForm redirectTo={redirectTo} />
         </div>
       </main>
     </div>

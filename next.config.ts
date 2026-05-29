@@ -35,6 +35,8 @@ function buildCsp(): string {
     "font-src 'self'",
     `connect-src 'self' ${apiOrigin} ${wsOrigin}`,
     "frame-ancestors 'none'",
+    // Violations are POSTed to /api/csp-report for monitoring.
+    'report-uri /api/csp-report',
   ].join('; ')
 }
 

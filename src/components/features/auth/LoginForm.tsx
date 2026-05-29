@@ -28,7 +28,13 @@ const schema = z.object({
 
 type FormValues = z.infer<typeof schema>
 
-export function LoginForm() {
+interface LoginFormProps {
+  /** Pre-validated redirect path from the server. Must start with '/' and not
+   *  start with '//' (no protocol-relative URLs). Defaults to '/dashboard'. */
+  redirectTo?: string
+}
+
+export function LoginForm({ redirectTo = '/dashboard' }: LoginFormProps) {
   const router = useRouter()
   const [showPassword, setShowPassword] = useState(false)
   const { mutate, isPending } = useLoginMutation()
@@ -41,7 +47,7 @@ export function LoginForm() {
   function onSubmit(values: FormValues) {
     mutate(values, {
       onSuccess: () => {
-        router.push('/dashboard')
+        router.push(redirectTo)
       },
       onError: (error) => {
         if (error instanceof Error && error.message === 'Invalid email or password') {

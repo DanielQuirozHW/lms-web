@@ -1,6 +1,7 @@
 import { useMutation } from '@tanstack/react-query'
 import { signIn, signOut } from 'next-auth/react'
 import api from '@/lib/api'
+import { disconnectAll } from '@/lib/socket'
 
 interface LoginInput {
   email: string
@@ -46,6 +47,9 @@ export function useRegisterMutation() {
 export function useLogoutMutation() {
   return useMutation({
     mutationFn: async () => {
+      // Disconnect WebSocket connections BEFORE revoking the session so no
+      // post-logout events are processed with the old authenticated connection.
+      disconnectAll()
       try {
         await fetch('/api/auth/logout', { method: 'POST' })
       } catch {

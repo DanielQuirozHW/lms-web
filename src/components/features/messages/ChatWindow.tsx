@@ -58,7 +58,9 @@ export function ChatWindow({ userId, initialMessages, partner }: ChatWindowProps
       setMessages((prev) => {
         // Deduplicate — server may echo our own messages
         if (prev.some((m) => m.id === msg.id)) return prev
-        return [...prev, msg]
+        // Cap at 500 messages to prevent unbounded memory growth from
+        // flooding attacks. Oldest messages are discarded first.
+        return [...prev, msg].slice(-500)
       })
     }
 
