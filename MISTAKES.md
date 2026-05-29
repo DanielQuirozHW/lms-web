@@ -248,3 +248,25 @@ const PUBLIC_PATHS = new Set(['/', '/login', '/register', '/verify-email'])
 **Rule:** Always call `disconnectAll()` before `signOut()` in any logout path (explicit logout, session expiry, and forced sign-out from API interceptor). The socket must be severed while the session is still valid so the `leaveThread`/disconnect handshake can complete with a legitimate token.
 
 ---
+
+## [017] Impersonation tokens refreshed as regular tokens
+
+**Date:** 2026-05
+**Category:** Auth / Impersonation
+**What happened:** The JWT callback in `src/lib/auth.ts` ran the proactive refresh logic for all tokens without checking whether the token belonged to an impersonation session. Impersonation tokens store an empty `refreshToken` field by design (they are non-renewable — the backend enforces a fixed 60-minute TTL). When the proactive-refresh window was reached (14 minutes in), the JWT callback attempted to refresh using the empty refresh token, the backend returned a 401, and `error: 'RefreshTokenExpired'` was set — immediately signing out the admin and ending the impersonation session unexpectedly.
+**Fix:** Added an early-exit guard at the top of the refresh section in the JWT callback. Tokens with `impersonationTokenId` skip all refresh logic entirely. When the impersonation token itself expires, the callback sets `error: 'ImpersonationExpired'` instead of `RefreshTokenExpired`:
+
+```typescript
+// Skip ALL refresh logic for impersonation tokens — they are non-renewable
+if (token.impersonationTokenId) {
+  if (Date.now() >= (token.accessTokenExpiresAt as number)) {
+    return { ...token, error: 'ImpersonationExpired' }
+  }
+  return token
+}
+```
+
+`AuthErrorHandler` handles `ImpersonationExpired` by calling `POST /api/auth/restore-admin`, which reads the backup admin refresh token stored in the JWT (written when impersonation started) and issues fresh admin tokens — restoring the admin session without a full sign-out.
+**Rule:** Always check for `impersonationTokenId` before any refresh logic in the JWT callback. Impersonation tokens must never be refreshed. Store admin backup tokens in the JWT when impersonation starts so the session can be restored when it expires.
+
+---

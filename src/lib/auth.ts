@@ -61,6 +61,23 @@ function parseOAuthProfile(profile: Record<string, unknown>): {
   return { email, firstName, lastName, avatarUrl }
 }
 
+// ─── Impersonation session update payload ────────────────────────────────────
+
+type SessionUpdatePayload = {
+  impersonation?: {
+    accessToken: string
+    refreshToken: string
+    user: AppUser
+    adminId: string
+    impersonationTokenId: string
+  }
+  restoreAdmin?: {
+    accessToken: string
+    refreshToken: string
+    user: AppUser
+  }
+}
+
 // ─── NextAuth config ──────────────────────────────────────────────────────────
 
 export const { auth, signIn, signOut, handlers } = NextAuth({
@@ -99,7 +116,50 @@ export const { auth, signIn, signOut, handlers } = NextAuth({
     }),
   ],
   callbacks: {
-    async jwt({ token, user, account, profile }) {
+    async jwt({ token, user, account, profile, trigger, session }) {
+      // ── Session update (impersonation start / stop) ───────────────────────
+      if (trigger === 'update') {
+        const update = session as unknown as SessionUpdatePayload
+
+        if (update?.impersonation) {
+          // Back up current admin tokens, then switch to impersonation tokens.
+          // Admin backup fields stay in the server-side JWT only — never in session.
+          return {
+            ...token,
+            adminAccessToken: token.accessToken,
+            adminRefreshToken: token.refreshToken,
+            adminAccessTokenExpiresAt: token.accessTokenExpiresAt,
+            adminUser: token.appUser,
+            accessToken: update.impersonation.accessToken,
+            refreshToken: '',
+            accessTokenExpiresAt: Date.now() + 60 * 60 * 1000,
+            appUser: update.impersonation.user,
+            impersonatedBy: update.impersonation.adminId,
+            impersonationTokenId: update.impersonation.impersonationTokenId,
+            error: undefined,
+          }
+        }
+
+        if (update?.restoreAdmin) {
+          // Restore admin session with tokens provided by the backend stop endpoint.
+          return {
+            accessToken: update.restoreAdmin.accessToken,
+            refreshToken: update.restoreAdmin.refreshToken,
+            accessTokenExpiresAt: Date.now() + ACCESS_TOKEN_LIFETIME_MS,
+            appUser: update.restoreAdmin.user,
+            impersonatedBy: undefined,
+            impersonationTokenId: undefined,
+            adminAccessToken: undefined,
+            adminRefreshToken: undefined,
+            adminAccessTokenExpiresAt: undefined,
+            adminUser: undefined,
+            error: undefined,
+          }
+        }
+
+        return token
+      }
+
       // ── Initial credentials sign-in ──────────────────────────────────────
       if (account?.provider === 'credentials' && user) {
         return {
@@ -151,6 +211,14 @@ export const { auth, signIn, signOut, handlers } = NextAuth({
         }
       }
 
+      // ── Impersonation tokens must never be refreshed (see MISTAKES.md [017]) ──
+      if (token.impersonationTokenId) {
+        if (Date.now() >= (token.accessTokenExpiresAt as number)) {
+          return { ...token, error: 'ImpersonationExpired' }
+        }
+        return token
+      }
+
       // ── Subsequent calls — check token validity ───────────────────────────
       if (Date.now() < (token.accessTokenExpiresAt as number) - 60_000) {
         return token
@@ -185,6 +253,7 @@ export const { auth, signIn, signOut, handlers } = NextAuth({
           email: (token.appUser as AppUser).email,
           image: (token.appUser as AppUser).avatarUrl,
         },
+        impersonatedBy: token.impersonatedBy,
         error: token.error as string | undefined,
       }
     },

@@ -1,12 +1,14 @@
 'use client'
 
 import { useState } from 'react'
-import { Search, CheckCircle2, X } from 'lucide-react'
+import { Search, CheckCircle2, X, Eye, Loader2 } from 'lucide-react'
 import Link from 'next/link'
+import { useSession } from 'next-auth/react'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
-import { buttonVariants } from '@/components/ui/button'
+import { Button, buttonVariants } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
 import { formatDate } from '@/lib/utils'
+import { useImpersonateMutation } from '@/hooks/mutations/impersonation'
 import type { User, UserRole } from '@/types/models'
 import type { PaginationMeta } from '@/types/api'
 
@@ -24,6 +26,16 @@ interface UserTableProps {
 
 export function UserTable({ users, meta, currentPage }: UserTableProps) {
   const [search, setSearch] = useState('')
+  const { data: session } = useSession()
+  const {
+    mutate: impersonate,
+    isPending: isImpersonating,
+    variables: pendingUserId,
+  } = useImpersonateMutation()
+
+  const currentUserId = session?.user.id
+  const isAdmin = session?.user.roles.includes('ADMIN') ?? false
+  const alreadyImpersonating = !!session?.impersonatedBy
 
   const filtered = users.filter((u) => {
     if (!search) return true
@@ -139,16 +151,54 @@ export function UserTable({ users, meta, currentPage }: UserTableProps) {
                     </td>
                     <td className="text-nexus-muted px-4 py-3">{formatDate(user.createdAt)}</td>
                     <td className="px-4 py-3">
-                      <Link
-                        href={`/admin/users/${user.id}`}
-                        className={buttonVariants({
-                          variant: 'ghost',
-                          size: 'sm',
-                          className: 'text-nexus-muted hover:text-nexus-text h-7 px-2 text-xs',
-                        })}
-                      >
-                        Ver perfil
-                      </Link>
+                      <div className="flex items-center gap-1">
+                        <Link
+                          href={`/admin/users/${user.id}`}
+                          className={buttonVariants({
+                            variant: 'ghost',
+                            size: 'sm',
+                            className: 'text-nexus-muted hover:text-nexus-text h-7 px-2 text-xs',
+                          })}
+                        >
+                          Ver perfil
+                        </Link>
+
+                        {isAdmin &&
+                          user.id !== currentUserId &&
+                          !alreadyImpersonating &&
+                          (user.roles.includes('ADMIN') ? (
+                            <span title="No se puede enmascarar admins" className="inline-flex">
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                disabled
+                                className="text-nexus-muted pointer-events-none h-7 cursor-not-allowed px-2 text-xs opacity-50"
+                                aria-label="No se puede enmascarar admins"
+                              >
+                                <Eye className="mr-1 h-3.5 w-3.5" aria-hidden="true" />
+                                Ver como
+                              </Button>
+                            </span>
+                          ) : (
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => impersonate(user.id)}
+                              disabled={isImpersonating}
+                              className="text-nexus-muted hover:text-nexus-text h-7 px-2 text-xs"
+                            >
+                              {isImpersonating && pendingUserId === user.id ? (
+                                <Loader2
+                                  className="mr-1 h-3.5 w-3.5 animate-spin"
+                                  aria-hidden="true"
+                                />
+                              ) : (
+                                <Eye className="mr-1 h-3.5 w-3.5" aria-hidden="true" />
+                              )}
+                              Ver como
+                            </Button>
+                          ))}
+                      </div>
                     </td>
                   </tr>
                 )

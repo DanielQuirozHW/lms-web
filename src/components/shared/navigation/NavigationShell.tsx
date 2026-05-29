@@ -1,9 +1,12 @@
 'use client'
 
 import { useState } from 'react'
+import { useSession } from 'next-auth/react'
 import { Sidebar, type NavGroup } from './Sidebar'
 import { Header } from './Header'
 import { Breadcrumbs } from './Breadcrumbs'
+import { ImpersonationBanner } from '@/components/shared/auth/ImpersonationBanner'
+import { cn } from '@/lib/utils'
 
 interface NavigationShellProps {
   navGroups: NavGroup[]
@@ -17,9 +20,19 @@ interface NavigationShellProps {
  */
 export function NavigationShell({ navGroups, children }: NavigationShellProps) {
   const [mobileOpen, setMobileOpen] = useState(false)
+  const { data: session } = useSession()
+
+  const isImpersonating = !!session?.impersonatedBy
 
   return (
-    <div className="bg-nexus-bg flex min-h-screen">
+    <div className={cn('bg-nexus-bg flex min-h-screen', isImpersonating && 'pt-11')}>
+      {isImpersonating && session && (
+        <ImpersonationBanner
+          firstName={session.user.firstName}
+          lastName={session.user.lastName}
+          email={session.user.email}
+        />
+      )}
       <Sidebar navGroups={navGroups} mobileOpen={mobileOpen} onMobileOpenChange={setMobileOpen} />
       {/* Content column: no left offset needed — sidebar is a flex item on desktop */}
       <div className="flex min-w-0 flex-1 flex-col">
