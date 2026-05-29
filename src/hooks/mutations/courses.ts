@@ -50,6 +50,19 @@ export function usePublishCourse(courseId: string) {
   })
 }
 
+export function useArchiveCourse(courseId: string) {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: () => api.patch<Course>(`/courses/${courseId}/archive`).then((r) => r.data),
+    onSuccess: (updated) => {
+      queryClient.setQueryData(courseKeys.detail(courseId), updated)
+      queryClient.invalidateQueries({ queryKey: courseKeys.lists() })
+      queryClient.invalidateQueries({ queryKey: courseKeys.my() })
+    },
+  })
+}
+
 export function useDeleteCourse() {
   const queryClient = useQueryClient()
 
