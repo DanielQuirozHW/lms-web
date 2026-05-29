@@ -19,6 +19,7 @@ import {
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 import { useLoginMutation } from '@/hooks/mutations/auth'
+import { OAuthButtons } from './OAuthButtons'
 import { cn } from '@/lib/utils'
 
 const schema = z.object({
@@ -156,7 +157,17 @@ export function LoginForm({ redirectTo = '/dashboard' }: LoginFormProps) {
           )}
         </Button>
 
-        {/* Divider */}
+        {/* OAuth divider */}
+        <div className="relative flex items-center gap-3" aria-hidden="true">
+          <div className="bg-nexus-border h-px flex-1" />
+          <span className="text-nexus-muted text-xs">o continuá con</span>
+          <div className="bg-nexus-border h-px flex-1" />
+        </div>
+
+        {/* OAuth buttons */}
+        <OAuthButtons redirectTo={redirectTo} />
+
+        {/* Register divider */}
         <div className="relative flex items-center gap-3" aria-hidden="true">
           <div className="bg-nexus-border h-px flex-1" />
           <span className="text-nexus-muted text-xs">o</span>

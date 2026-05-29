@@ -2,7 +2,7 @@ import type { Metadata } from 'next'
 import { LoginForm } from '@/components/features/auth/LoginForm'
 
 interface PageProps {
-  searchParams: Promise<{ callbackUrl?: string }>
+  searchParams: Promise<{ callbackUrl?: string; error?: string }>
 }
 
 export const metadata: Metadata = {
@@ -80,6 +80,15 @@ function BrandingPanel() {
 
 // ─── Page ─────────────────────────────────────────────────────────────────────
 
+function oauthErrorMessage(error: string | undefined): string | null {
+  if (!error) return null
+  if (error === 'OAuthAccountNotLinked')
+    return 'Este email ya está registrado con otro método. Usá email y contraseña.'
+  if (error === 'OAuthSignin' || error === 'OAuthCallback')
+    return 'Error al conectar con el proveedor. Intentá de nuevo.'
+  return null
+}
+
 export default async function LoginPage({ searchParams }: PageProps) {
   const params = await searchParams
   // Validate the callbackUrl: must be an internal path (starts with /) and must
@@ -87,6 +96,8 @@ export default async function LoginPage({ searchParams }: PageProps) {
   const raw = params.callbackUrl
   const redirectTo =
     typeof raw === 'string' && raw.startsWith('/') && !raw.startsWith('//') ? raw : '/dashboard'
+
+  const errorMsg = oauthErrorMessage(params.error)
 
   return (
     <div className="flex min-h-screen">
@@ -122,6 +133,15 @@ export default async function LoginPage({ searchParams }: PageProps) {
               Ingresá tus datos para continuar aprendiendo
             </p>
           </div>
+
+          {errorMsg && (
+            <div
+              role="alert"
+              className="bg-destructive/10 text-destructive rounded-lg px-4 py-3 text-sm font-medium"
+            >
+              {errorMsg}
+            </div>
+          )}
 
           <LoginForm redirectTo={redirectTo} />
         </div>

@@ -20,6 +20,7 @@ import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 import { useRegisterMutation } from '@/hooks/mutations/auth'
 import { isApiError } from '@/lib/api'
+import { OAuthButtons } from './OAuthButtons'
 import { cn } from '@/lib/utils'
 
 // ─── Schema ───────────────────────────────────────────────────────────────────
@@ -164,6 +165,19 @@ export function RegisterForm() {
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-5" noValidate>
+        {/* OAuth shortcut */}
+        <p className="text-nexus-muted text-sm">
+          ¿Ya tenés cuenta en Google o Microsoft? Ingresá directamente:
+        </p>
+        <OAuthButtons redirectTo="/dashboard" />
+
+        {/* Form divider */}
+        <div className="relative flex items-center gap-3" aria-hidden="true">
+          <div className="bg-nexus-border h-px flex-1" />
+          <span className="text-nexus-muted text-xs">o completá el formulario</span>
+          <div className="bg-nexus-border h-px flex-1" />
+        </div>
+
         {/* First name + Last name */}
         <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
           <FormField

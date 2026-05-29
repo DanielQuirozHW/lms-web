@@ -1,5 +1,7 @@
 import NextAuth from 'next-auth'
 import Credentials from 'next-auth/providers/credentials'
+import Google from 'next-auth/providers/google'
+import MicrosoftEntraID from 'next-auth/providers/microsoft-entra-id'
 import type { User as AppUser } from '@/types/models'
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:3000/api/v1'
@@ -18,8 +20,59 @@ async function refreshAccessToken(refreshToken: string) {
   return data
 }
 
+// ─── OAuth profile helpers ────────────────────────────────────────────────────
+
+/** Splits a full name into firstName/lastName, handling single-name profiles. */
+function splitFullName(fullName: string | null | undefined): {
+  firstName: string
+  lastName: string
+} {
+  const name = fullName?.trim() ?? ''
+  const parts = name.split(/\s+/).filter(Boolean)
+  return {
+    firstName: parts[0] ?? '',
+    lastName: parts.length > 1 ? parts.slice(1).join(' ') : '',
+  }
+}
+
+/**
+ * Extracts normalised user fields from an OAuth provider profile.
+ * Google provides `picture`; Microsoft/generic providers use `image`.
+ */
+function parseOAuthProfile(profile: Record<string, unknown>): {
+  email: string
+  firstName: string
+  lastName: string
+  avatarUrl: string | null
+} {
+  const email = (profile.email as string | undefined) ?? ''
+  // Google sends given_name/family_name; fall back to splitting the full name
+  const firstName =
+    (profile.given_name as string | undefined) ||
+    splitFullName(profile.name as string | undefined).firstName
+  const lastName =
+    (profile.family_name as string | undefined) ||
+    splitFullName(profile.name as string | undefined).lastName
+  const avatarUrl =
+    (profile.picture as string | null | undefined) ??
+    (profile.image as string | null | undefined) ??
+    null
+
+  return { email, firstName, lastName, avatarUrl }
+}
+
+// ─── NextAuth config ──────────────────────────────────────────────────────────
+
 export const { auth, signIn, signOut, handlers } = NextAuth({
   providers: [
+    Google({
+      clientId: process.env.GOOGLE_CLIENT_ID!,
+      clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
+    }),
+    MicrosoftEntraID({
+      clientId: process.env.MICROSOFT_CLIENT_ID!,
+      clientSecret: process.env.MICROSOFT_CLIENT_SECRET!,
+    }),
     Credentials({
       credentials: {
         email: { label: 'Email', type: 'email' },
@@ -46,9 +99,9 @@ export const { auth, signIn, signOut, handlers } = NextAuth({
     }),
   ],
   callbacks: {
-    async jwt({ token, user }) {
-      // Initial sign in
-      if (user) {
+    async jwt({ token, user, account, profile }) {
+      // ── Initial credentials sign-in ──────────────────────────────────────
+      if (account?.provider === 'credentials' && user) {
         return {
           ...token,
           accessToken: user.accessToken as string,
@@ -57,11 +110,53 @@ export const { auth, signIn, signOut, handlers } = NextAuth({
           appUser: user.appUser as AppUser,
         }
       }
-      // Return token if still valid (with 1-minute buffer)
+
+      // ── Initial OAuth sign-in (Google / Microsoft) ───────────────────────
+      if (account?.provider === 'google' || account?.provider === 'microsoft-entra-id') {
+        const rawProfile = (profile ?? {}) as Record<string, unknown>
+        const { email, firstName, lastName, avatarUrl } = parseOAuthProfile(rawProfile)
+
+        // Sync with the backend — creates or retrieves the user account and
+        // returns our own accessToken/refreshToken pair.
+        const res = await fetch(`${API_URL}/auth/oauth`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            email,
+            firstName,
+            lastName,
+            avatarUrl,
+            provider: account.provider,
+            providerAccountId: account.providerAccountId,
+          }),
+        })
+
+        if (!res.ok) {
+          // Throwing here causes NextAuth to redirect to pages.error (/login)
+          // with ?error=OAuthCallback so the login page can display a message.
+          throw new Error('OAuth backend sync failed')
+        }
+
+        const { data } = (await res.json()) as {
+          data: { accessToken: string; refreshToken: string; user: AppUser }
+        }
+
+        return {
+          ...token,
+          accessToken: data.accessToken,
+          refreshToken: data.refreshToken,
+          accessTokenExpiresAt: Date.now() + ACCESS_TOKEN_LIFETIME_MS,
+          appUser: data.user,
+          error: undefined,
+        }
+      }
+
+      // ── Subsequent calls — check token validity ───────────────────────────
       if (Date.now() < (token.accessTokenExpiresAt as number) - 60_000) {
         return token
       }
-      // Proactive refresh
+
+      // ── Proactive refresh ─────────────────────────────────────────────────
       const refreshed = await refreshAccessToken(token.refreshToken as string)
       if (!refreshed) {
         return { ...token, error: 'RefreshTokenExpired' }
@@ -75,6 +170,7 @@ export const { auth, signIn, signOut, handlers } = NextAuth({
         error: undefined,
       }
     },
+
     async session({ session, token }) {
       return {
         ...session,
@@ -95,7 +191,7 @@ export const { auth, signIn, signOut, handlers } = NextAuth({
   },
   pages: {
     signIn: '/login',
-    error: '/login',
+    error: '/login', // OAuth errors redirect here with ?error=...
   },
   session: { strategy: 'jwt' },
 })

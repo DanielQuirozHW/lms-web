@@ -53,6 +53,10 @@ jobs:
           NEXT_PUBLIC_WS_URL: http://localhost:3000
           NEXT_PUBLIC_APP_URL: http://localhost:3001
           AUTH_SECRET: ${{ secrets.AUTH_SECRET }}
+          GOOGLE_CLIENT_ID: placeholder
+          GOOGLE_CLIENT_SECRET: placeholder
+          MICROSOFT_CLIENT_ID: placeholder
+          MICROSOFT_CLIENT_SECRET: placeholder
 
       - name: Notify success in Teams
         if: success()
