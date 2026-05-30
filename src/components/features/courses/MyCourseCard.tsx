@@ -3,7 +3,7 @@
 import Image from 'next/image'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-import { BookOpen, Award, RotateCcw, Loader2 } from 'lucide-react'
+import { BookOpen, Award, RotateCcw, Loader2, BarChart2 } from 'lucide-react'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
 import { buttonVariants } from '@/components/ui/button'
@@ -136,6 +136,15 @@ export function MyCourseCard({ enrollment, course }: MyCourseCardProps) {
             {formatRelativeTime(enrollment.updatedAt)}
           </time>
         </div>
+
+        {/* Progress link */}
+        <Link
+          href={`/courses/${enrollment.courseId}/progress?enrollmentId=${enrollment.id}`}
+          className="text-nexus-muted hover:text-nexus-accent flex items-center gap-1 text-xs transition-colors"
+        >
+          <BarChart2 className="h-3.5 w-3.5" aria-hidden="true" />
+          Ver mi progreso
+        </Link>
 
         <div className="flex-1" />
 

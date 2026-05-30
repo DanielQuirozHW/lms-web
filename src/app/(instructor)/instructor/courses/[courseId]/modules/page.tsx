@@ -1,7 +1,7 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
-import { ChevronLeft } from 'lucide-react'
+import { ChevronLeft, BarChart2 } from 'lucide-react'
 import { auth } from '@/lib/auth'
 import api, { isApiError } from '@/lib/api'
 import type { CourseDetail } from '@/types/models'
@@ -80,6 +80,20 @@ export default async function CourseModulesPage({ params }: PageProps) {
             {totalLessons !== 1 && 'es'}
           </p>
         </div>
+
+        {/* Analytics shortcut */}
+        <Link
+          href={`/instructor/courses/${courseId}/analytics`}
+          className={buttonVariants({
+            variant: 'outline',
+            size: 'sm',
+            className:
+              'border-nexus-border text-nexus-muted hover:text-nexus-text flex items-center gap-1.5',
+          })}
+        >
+          <BarChart2 className="h-3.5 w-3.5" aria-hidden="true" />
+          Analíticas
+        </Link>
       </div>
 
       {/* Module editor */}

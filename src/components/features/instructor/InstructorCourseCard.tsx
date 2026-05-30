@@ -3,7 +3,16 @@
 import Image from 'next/image'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-import { BookOpen, Users, Pencil, LayoutList, Archive, Globe, Loader2 } from 'lucide-react'
+import {
+  BookOpen,
+  Users,
+  Pencil,
+  LayoutList,
+  Archive,
+  Globe,
+  Loader2,
+  BarChart2,
+} from 'lucide-react'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
 import { buttonVariants } from '@/components/ui/button'
@@ -116,7 +125,7 @@ export function InstructorCourseCard({ course }: InstructorCourseCardProps) {
         <div className="flex-1" />
 
         {/* Navigation actions */}
-        <div className="grid grid-cols-2 gap-2">
+        <div className="grid grid-cols-3 gap-2">
           <Link
             href={`/instructor/courses/${course.id}/edit`}
             className={buttonVariants({
@@ -140,6 +149,18 @@ export function InstructorCourseCard({ course }: InstructorCourseCardProps) {
           >
             <LayoutList className="h-3.5 w-3.5" aria-hidden="true" />
             Módulos
+          </Link>
+          <Link
+            href={`/instructor/courses/${course.id}/analytics`}
+            className={buttonVariants({
+              variant: 'outline',
+              size: 'sm',
+              className:
+                'border-nexus-border text-nexus-muted hover:text-nexus-text flex items-center gap-1.5',
+            })}
+          >
+            <BarChart2 className="h-3.5 w-3.5" aria-hidden="true" />
+            Analíticas
           </Link>
         </div>
 
