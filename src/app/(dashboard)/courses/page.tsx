@@ -7,7 +7,7 @@ import type { Category } from '@/types/models'
 import { LoadingSpinner } from '@/components/shared/feedback/LoadingSpinner'
 import { CoursesFilter } from '@/components/features/courses/CoursesFilter'
 import { CourseGrid } from '@/components/features/courses/CourseGrid'
-import type { CatalogCourse } from '@/components/features/courses/CourseCard'
+import type { CatalogCourse } from '@/types/models'
 
 export const metadata: Metadata = {
   title: 'Explorar cursos | NexusLMS',

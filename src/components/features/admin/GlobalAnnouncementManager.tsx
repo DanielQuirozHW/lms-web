@@ -20,6 +20,7 @@ import {
   useDeleteGlobalAnnouncement,
 } from '@/hooks/mutations/announcements-global'
 import { AnnouncementFormDialog } from './AnnouncementFormDialog'
+import { InlineConfirmActions } from '@/components/shared/feedback/InlineConfirmActions'
 import type { GlobalAnnouncement, GlobalAnnouncementType } from '@/types/models'
 
 const typeConfig: Record<
@@ -188,28 +189,12 @@ export function GlobalAnnouncementManager({
                       </td>
                       <td className="px-4 py-3">
                         {confirmDeleteId === a.id ? (
-                          <div className="flex items-center gap-1">
-                            <button
-                              type="button"
-                              onClick={() => handleDeleteConfirm(a.id)}
-                              disabled={isThisDeleting}
-                              className="text-destructive hover:text-destructive/80 text-xs font-medium transition-colors"
-                            >
-                              {isThisDeleting ? (
-                                <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                              ) : (
-                                'Confirmar'
-                              )}
-                            </button>
-                            <span className="text-nexus-muted">/</span>
-                            <button
-                              type="button"
-                              onClick={() => setConfirmDeleteId(null)}
-                              className="text-nexus-muted hover:text-nexus-text text-xs transition-colors"
-                            >
-                              Cancelar
-                            </button>
-                          </div>
+                          <InlineConfirmActions
+                            onConfirm={() => handleDeleteConfirm(a.id)}
+                            onCancel={() => setConfirmDeleteId(null)}
+                            isPending={isThisDeleting}
+                            confirmVariant="destructive"
+                          />
                         ) : (
                           <div className="flex items-center gap-1">
                             <Button

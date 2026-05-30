@@ -3,10 +3,8 @@ import type { Notification } from '@/types/models'
 
 interface NotificationsState {
   unreadCount: number
-  messagesUnreadCount: number
   recentNotifications: Notification[]
   setUnreadCount: (count: number) => void
-  setMessagesUnreadCount: (count: number) => void
   addNotification: (notification: Notification) => void
   markRead: (id: string) => void
   markAllRead: () => void
@@ -14,11 +12,9 @@ interface NotificationsState {
 
 export const useNotificationsStore = create<NotificationsState>((set) => ({
   unreadCount: 0,
-  messagesUnreadCount: 0,
   recentNotifications: [],
 
   setUnreadCount: (count) => set({ unreadCount: count }),
-  setMessagesUnreadCount: (count) => set({ messagesUnreadCount: count }),
 
   addNotification: (notification) =>
     set((state) => ({

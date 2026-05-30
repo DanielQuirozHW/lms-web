@@ -5,6 +5,7 @@ import { StickyNote, Trash2, Loader2, ChevronDown, ChevronUp } from 'lucide-reac
 import { cn } from '@/lib/utils'
 import { useLessonNote } from '@/hooks/queries/notes'
 import { useSaveNote, useDeleteNote } from '@/hooks/mutations/notes'
+import { InlineConfirmActions } from '@/components/shared/feedback/InlineConfirmActions'
 
 const MAX_CHARS = 10_000
 
@@ -171,28 +172,12 @@ export function LessonNotes({ lessonId }: LessonNotesProps) {
                   {/* Delete */}
                   {showDeleteButton &&
                     (confirmDelete ? (
-                      <div className="flex items-center gap-2 text-xs">
-                        <button
-                          type="button"
-                          onClick={handleDelete}
-                          disabled={isDeleting}
-                          className="text-destructive hover:text-destructive/80 font-medium transition-colors"
-                        >
-                          {isDeleting ? (
-                            <Loader2 className="h-3.5 w-3.5 animate-spin" aria-hidden="true" />
-                          ) : (
-                            'Confirmar'
-                          )}
-                        </button>
-                        <span className="text-nexus-muted">/</span>
-                        <button
-                          type="button"
-                          onClick={() => setConfirmDelete(false)}
-                          className="text-nexus-muted hover:text-nexus-text transition-colors"
-                        >
-                          Cancelar
-                        </button>
-                      </div>
+                      <InlineConfirmActions
+                        onConfirm={handleDelete}
+                        onCancel={() => setConfirmDelete(false)}
+                        isPending={isDeleting}
+                        confirmVariant="destructive"
+                      />
                     ) : (
                       <button
                         type="button"

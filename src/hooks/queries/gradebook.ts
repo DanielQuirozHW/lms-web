@@ -14,6 +14,7 @@ export function useGradebook(courseId: string) {
     queryKey: gradebookKeys.structure(courseId),
     queryFn: () => api.get<Gradebook>(`/courses/${courseId}/gradebook`).then((r) => r.data),
     enabled: !!courseId,
+    staleTime: 5 * 60 * 1000,
   })
 }
 
@@ -25,5 +26,6 @@ export function useStudentGrade(courseId: string, enrollmentId: string) {
         .get<StudentGrade>(`/courses/${courseId}/gradebook/student/${enrollmentId}`)
         .then((r) => r.data),
     enabled: !!courseId && !!enrollmentId,
+    staleTime: 5 * 60 * 1000,
   })
 }

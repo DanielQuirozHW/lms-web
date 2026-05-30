@@ -5,15 +5,9 @@ import Link from 'next/link'
 import { Star, BookOpen } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { formatPrice } from '@/lib/utils'
-import type { Course } from '@/types/models'
+import type { CatalogCourse } from '@/types/models'
 
-// Extends the base Course type with fields the API may embed in list responses
-export interface CatalogCourse extends Course {
-  category?: { id: string; name: string; slug: string } | null
-  instructor?: { firstName: string; lastName: string } | null
-  averageRating?: number | null
-  totalRatings?: number | null
-}
+export type { CatalogCourse }
 
 interface CourseCardProps {
   course: CatalogCourse

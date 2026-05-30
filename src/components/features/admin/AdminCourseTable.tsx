@@ -13,7 +13,7 @@ import { cn } from '@/lib/utils'
 import { formatPrice } from '@/lib/utils'
 import api from '@/lib/api'
 import { courseKeys } from '@/hooks/queries/courses'
-import type { CatalogCourse } from '@/components/features/courses/CourseCard'
+import type { CatalogCourse } from '@/types/models'
 import type { CourseStatus } from '@/types/models'
 import type { PaginationMeta } from '@/types/api'
 

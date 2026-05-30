@@ -32,5 +32,6 @@ export function useQuizAttempts(lessonId: string) {
     queryKey: quizKeys.attempts(lessonId),
     queryFn: () => api.get<QuizAttempt[]>(`/lessons/${lessonId}/quiz/attempts`).then((r) => r.data),
     enabled: !!lessonId,
+    staleTime: 30 * 1000,
   })
 }

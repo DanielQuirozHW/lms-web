@@ -322,6 +322,24 @@ export interface Gradebook {
   totalWeight: number
 }
 
+// ─── Course catalog (API may embed extra fields in list responses) ─────────────
+
+export interface CatalogCourse extends Course {
+  category?: { id: string; name: string; slug: string } | null
+  instructor?: { firstName: string; lastName: string } | null
+  averageRating?: number | null
+  totalRatings?: number | null
+}
+
+// ─── Query filters ────────────────────────────────────────────────────────────
+
+export interface CoursesFilter {
+  page?: number
+  limit?: number
+  categoryId?: string
+  search?: string
+}
+
 // ─── Certificates ─────────────────────────────────────────────────────────────
 
 export interface Certificate {

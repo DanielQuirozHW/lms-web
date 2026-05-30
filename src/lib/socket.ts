@@ -1,6 +1,5 @@
 import { io, type Socket } from 'socket.io-client'
-
-const WS_URL = process.env.NEXT_PUBLIC_WS_URL ?? 'http://localhost:3000'
+import { WS_URL } from '@/lib/config'
 
 let forumSocket: Socket | null = null
 let messagesSocket: Socket | null = null

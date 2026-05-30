@@ -1,14 +1,7 @@
 import { useQuery } from '@tanstack/react-query'
 import api from '@/lib/api'
-import type { Course, CourseDetail, Category } from '@/types/models'
+import type { Course, CourseDetail, Category, CoursesFilter } from '@/types/models'
 import type { PaginatedData } from '@/types/api'
-
-interface CoursesFilter {
-  page?: number
-  limit?: number
-  categoryId?: string
-  search?: string
-}
 
 export const categoryKeys = {
   all: ['categories'] as const,

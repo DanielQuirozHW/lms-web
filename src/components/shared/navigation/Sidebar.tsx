@@ -10,6 +10,7 @@ import { ScrollArea } from '@/components/ui/scroll-area'
 import { Sheet, SheetContent, SheetTitle } from '@/components/ui/sheet'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { useNotificationsStore } from '@/store/notifications.store'
+import { useMessagesStore } from '@/store/messages.store'
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
@@ -232,14 +233,14 @@ function MobileBottomNav({
 export function Sidebar({ navGroups, mobileOpen, onMobileOpenChange }: SidebarProps) {
   const pathname = usePathname()
   const notificationsCount = useNotificationsStore((s) => s.unreadCount)
-  const messagesCount = useNotificationsStore((s) => s.messagesUnreadCount)
+  const messagesCount = useMessagesStore((s) => s.messagesUnreadCount)
 
   const sharedNavProps = { navGroups, pathname, notificationsCount, messagesCount }
 
   return (
     <>
       {/* Desktop sidebar */}
-      <aside className="border-nexus-border bg-nexus-surface sticky top-0 hidden h-screen w-[240px] shrink-0 flex-col border-r lg:flex">
+      <aside className="border-nexus-border bg-nexus-surface sticky top-0 hidden h-screen w-60 shrink-0 flex-col border-r lg:flex">
         <NexusLogo />
         <ScrollArea className="flex-1">
           <NavGroups {...sharedNavProps} />
@@ -249,7 +250,7 @@ export function Sidebar({ navGroups, mobileOpen, onMobileOpenChange }: SidebarPr
 
       {/* Mobile: full-nav Sheet (opened by Header hamburger or bottom nav "Más") */}
       <Sheet open={mobileOpen} onOpenChange={onMobileOpenChange}>
-        <SheetContent side="left" className="bg-nexus-surface border-nexus-border w-[240px] p-0">
+        <SheetContent side="left" className="bg-nexus-surface border-nexus-border w-60 p-0">
           <SheetTitle className="sr-only">Navigation menu</SheetTitle>
           <div className="flex h-full flex-col">
             <NexusLogo />

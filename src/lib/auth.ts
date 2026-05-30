@@ -3,8 +3,7 @@ import Credentials from 'next-auth/providers/credentials'
 import Google from 'next-auth/providers/google'
 import MicrosoftEntraID from 'next-auth/providers/microsoft-entra-id'
 import type { User as AppUser } from '@/types/models'
-
-const API_URL = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:3000/api/v1'
+import { API_URL } from '@/lib/config'
 const ACCESS_TOKEN_LIFETIME_MS = 14 * 60 * 1000 // 14 min (1 min safety margin)
 
 async function refreshAccessToken(refreshToken: string) {
@@ -240,6 +239,7 @@ export const { auth, signIn, signOut, handlers } = NextAuth({
     },
 
     async session({ session, token }) {
+      const appUser = token.appUser as AppUser
       return {
         ...session,
         accessToken: token.accessToken as string,
@@ -247,11 +247,11 @@ export const { auth, signIn, signOut, handlers } = NextAuth({
         // Server-side logout reads it via getToken() in /api/auth/logout.
         accessTokenExpiresAt: token.accessTokenExpiresAt as number,
         user: {
-          ...(token.appUser as AppUser),
+          ...appUser,
           // next-auth requires these fields on session.user
-          name: `${(token.appUser as AppUser).firstName} ${(token.appUser as AppUser).lastName}`,
-          email: (token.appUser as AppUser).email,
-          image: (token.appUser as AppUser).avatarUrl,
+          name: `${appUser.firstName} ${appUser.lastName}`,
+          email: appUser.email,
+          image: appUser.avatarUrl,
         },
         impersonatedBy: token.impersonatedBy,
         error: token.error as string | undefined,

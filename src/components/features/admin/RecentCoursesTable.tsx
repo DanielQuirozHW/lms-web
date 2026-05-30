@@ -5,7 +5,7 @@ import { buttonVariants } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
 import { formatDate } from '@/lib/utils'
 import type { CourseStatus } from '@/types/models'
-import type { CatalogCourse } from '@/components/features/courses/CourseCard'
+import type { CatalogCourse } from '@/types/models'
 
 const statusConfig: Record<CourseStatus, { label: string; className: string }> = {
   DRAFT: {

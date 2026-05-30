@@ -19,6 +19,7 @@ export function useNotifications(
       api
         .get<PaginatedData<Notification>>('/notifications', { params: filters })
         .then((r) => r.data),
+    staleTime: 30 * 1000,
   })
 }
 

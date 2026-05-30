@@ -1,7 +1,6 @@
 import { type NextRequest, NextResponse } from 'next/server'
 import { getToken } from 'next-auth/jwt'
-
-const API_URL = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:3000/api/v1'
+import { API_URL } from '@/lib/config'
 
 // Reads the refresh token from the server-side JWT (never exposed to client JS)
 // and revokes it on the backend before the client calls signOut().

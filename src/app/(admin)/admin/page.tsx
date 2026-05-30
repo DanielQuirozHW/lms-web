@@ -6,7 +6,7 @@ import { RecentUsersTable } from '@/components/features/admin/RecentUsersTable'
 import { RecentCoursesTable } from '@/components/features/admin/RecentCoursesTable'
 import type { User, GlobalAnnouncement } from '@/types/models'
 import type { PaginatedData } from '@/types/api'
-import type { CatalogCourse } from '@/components/features/courses/CourseCard'
+import type { CatalogCourse } from '@/types/models'
 
 export const metadata: Metadata = {
   title: 'Panel de administración | NexusLMS',

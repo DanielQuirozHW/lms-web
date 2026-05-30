@@ -3,7 +3,7 @@ import { auth } from '@/lib/auth'
 import api from '@/lib/api'
 import type { PaginatedData, PaginationMeta } from '@/types/api'
 import type { CourseStatus } from '@/types/models'
-import type { CatalogCourse } from '@/components/features/courses/CourseCard'
+import type { CatalogCourse } from '@/types/models'
 import { AdminCourseTable } from '@/components/features/admin/AdminCourseTable'
 
 export const metadata: Metadata = {

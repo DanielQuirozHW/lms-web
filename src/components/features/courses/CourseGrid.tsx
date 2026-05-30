@@ -2,7 +2,8 @@
 
 import { useRouter } from 'next/navigation'
 import { ChevronLeft, ChevronRight, BookOpen } from 'lucide-react'
-import { CourseCard, type CatalogCourse } from './CourseCard'
+import { CourseCard } from './CourseCard'
+import type { CatalogCourse } from '@/types/models'
 import { EmptyState } from '@/components/shared/feedback/EmptyState'
 import { Button } from '@/components/ui/button'
 import type { PaginationMeta } from '@/types/api'

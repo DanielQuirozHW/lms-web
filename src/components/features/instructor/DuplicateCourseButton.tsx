@@ -1,9 +1,10 @@
 'use client'
 
 import { useState } from 'react'
-import { Copy, Loader2 } from 'lucide-react'
+import { Copy } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { useDuplicateCourse } from '@/hooks/mutations/courses'
+import { InlineConfirmActions } from '@/components/shared/feedback/InlineConfirmActions'
 
 interface DuplicateCourseButtonProps {
   courseId: string
@@ -17,33 +18,11 @@ export function DuplicateCourseButton({ courseId }: DuplicateCourseButtonProps) 
     return (
       <div className="flex items-center gap-2 text-sm">
         <span className="text-nexus-muted">¿Duplicar este curso?</span>
-        <button
-          type="button"
-          onClick={() => duplicate()}
-          disabled={isPending}
-          className="text-nexus-accent hover:text-nexus-accent-hover font-medium transition-colors disabled:opacity-50"
-        >
-          {isPending ? (
-            <span className="flex items-center gap-1">
-              <Loader2 className="h-3.5 w-3.5 animate-spin" aria-hidden="true" />
-              Duplicando...
-            </span>
-          ) : (
-            'Confirmar'
-          )}
-        </button>
-        {!isPending && (
-          <>
-            <span className="text-nexus-muted">/</span>
-            <button
-              type="button"
-              onClick={() => setShowConfirm(false)}
-              className="text-nexus-muted hover:text-nexus-text transition-colors"
-            >
-              Cancelar
-            </button>
-          </>
-        )}
+        <InlineConfirmActions
+          onConfirm={() => duplicate()}
+          onCancel={() => setShowConfirm(false)}
+          isPending={isPending}
+        />
       </div>
     )
   }

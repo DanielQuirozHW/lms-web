@@ -21,6 +21,7 @@ import { buttonVariants } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
 import { formatPrice } from '@/lib/utils'
 import { usePublishCourse, useArchiveCourse, useDuplicateCourse } from '@/hooks/mutations/courses'
+import { InlineConfirmActions } from '@/components/shared/feedback/InlineConfirmActions'
 import type { CourseDetail, CourseStatus } from '@/types/models'
 
 const statusConfig: Record<CourseStatus, { label: string; className: string }> = {
@@ -169,27 +170,12 @@ export function InstructorCourseCard({ course }: InstructorCourseCardProps) {
 
           {/* Duplicate — disabled for archived courses */}
           {confirmDuplicate ? (
-            <div className="border-nexus-border flex items-center justify-center gap-1 rounded-md border px-2 py-1 text-xs">
-              <button
-                type="button"
-                onClick={() => duplicate()}
-                disabled={isDuplicating}
-                className="text-nexus-accent hover:text-nexus-accent-hover font-medium transition-colors disabled:opacity-50"
-              >
-                {isDuplicating ? (
-                  <Loader2 className="h-3.5 w-3.5 animate-spin" aria-hidden="true" />
-                ) : (
-                  'Confirmar'
-                )}
-              </button>
-              <span className="text-nexus-muted">/</span>
-              <button
-                type="button"
-                onClick={() => setConfirmDuplicate(false)}
-                className="text-nexus-muted hover:text-nexus-text transition-colors"
-              >
-                Cancelar
-              </button>
+            <div className="border-nexus-border flex items-center justify-center rounded-md border px-2 py-1">
+              <InlineConfirmActions
+                onConfirm={() => duplicate()}
+                onCancel={() => setConfirmDuplicate(false)}
+                isPending={isDuplicating}
+              />
             </div>
           ) : (
             <Button

@@ -12,7 +12,7 @@ import { useEnrollMutation } from '@/hooks/mutations/enrollments'
 import { useGenerateCertificate } from '@/hooks/mutations/certificates'
 import { isApiError } from '@/lib/api'
 import type { EnrollmentDetail, EnrollmentStatus } from '@/types/models'
-import type { CatalogCourse } from './CourseCard'
+import type { CatalogCourse } from '@/types/models'
 
 const statusConfig: Record<EnrollmentStatus, { label: string; className: string }> = {
   ACTIVE: {

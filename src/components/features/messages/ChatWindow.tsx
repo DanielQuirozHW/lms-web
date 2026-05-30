@@ -10,7 +10,7 @@ import { MessageInput } from './MessageInput'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { getMessagesSocket } from '@/lib/socket'
 import api from '@/lib/api'
-import { useNotificationsStore } from '@/store/notifications.store'
+import { useMessagesStore } from '@/store/messages.store'
 import { cn } from '@/lib/utils'
 import type { Message, PublicUser } from '@/types/models'
 
@@ -27,7 +27,7 @@ export function ChatWindow({ userId, initialMessages, partner }: ChatWindowProps
   const [isConnected, setIsConnected] = useState(false)
   const [isSendingHttp, setIsSendingHttp] = useState(false)
   const bottomRef = useRef<HTMLDivElement>(null)
-  const setMessagesUnreadCount = useNotificationsStore((s) => s.setMessagesUnreadCount)
+  const setMessagesUnreadCount = useMessagesStore((s) => s.setMessagesUnreadCount)
 
   const partnerName = partner ? `${partner.firstName} ${partner.lastName}`.trim() : `Usuario`
   const partnerInitials = partner

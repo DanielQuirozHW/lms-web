@@ -1,6 +1,7 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
-import api, { isApiError } from '@/lib/api'
+import api from '@/lib/api'
+import { getApiErrorMessage } from '@/lib/errors'
 import { globalAnnouncementKeys } from '@/hooks/queries/announcements-global'
 import type { GlobalAnnouncement, GlobalAnnouncementType } from '@/types/models'
 
@@ -24,7 +25,7 @@ export function useCreateGlobalAnnouncement() {
       toast.success('Alerta creada correctamente')
     },
     onError: (error) => {
-      toast.error(isApiError(error) ? error.response?.data.message : 'Error al crear la alerta')
+      toast.error(getApiErrorMessage(error, 'Error al crear la alerta'))
     },
   })
 }
@@ -39,9 +40,7 @@ export function useUpdateGlobalAnnouncement() {
       queryClient.invalidateQueries({ queryKey: globalAnnouncementKeys.all })
     },
     onError: (error) => {
-      toast.error(
-        isApiError(error) ? error.response?.data.message : 'Error al actualizar la alerta'
-      )
+      toast.error(getApiErrorMessage(error, 'Error al actualizar la alerta'))
     },
   })
 }
@@ -56,7 +55,7 @@ export function useDeleteGlobalAnnouncement() {
       toast.success('Alerta eliminada')
     },
     onError: (error) => {
-      toast.error(isApiError(error) ? error.response?.data.message : 'Error al eliminar la alerta')
+      toast.error(getApiErrorMessage(error, 'Error al eliminar la alerta'))
     },
   })
 }
