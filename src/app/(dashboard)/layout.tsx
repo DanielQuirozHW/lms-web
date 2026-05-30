@@ -4,6 +4,7 @@ import {
   LayoutDashboard,
   BookOpen,
   BookMarked,
+  Bookmark,
   MessageSquare,
   Calendar,
   Bell,
@@ -21,6 +22,7 @@ const navGroups: NavGroup[] = [
     items: [
       { label: 'Explorar cursos', href: '/courses', icon: BookOpen },
       { label: 'Mis cursos', href: '/my-courses', icon: BookMarked },
+      { label: 'Guardados', href: '/bookmarks', icon: Bookmark },
     ],
   },
   {

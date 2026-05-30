@@ -322,6 +322,40 @@ export interface Gradebook {
   totalWeight: number
 }
 
+// ─── Lesson Notes ─────────────────────────────────────────────────────────────
+
+export interface LessonNote {
+  id: string
+  lessonId: string
+  userId: string
+  content: string
+  createdAt: string
+  updatedAt: string
+}
+
+// ─── Bookmarks ────────────────────────────────────────────────────────────────
+
+export interface Bookmark {
+  id: string
+  lessonId: string
+  userId: string
+  lesson: {
+    id: string
+    title: string
+    type: LessonType
+    courseId: string
+    course?: {
+      id: string
+      title: string
+    } | null
+  }
+  createdAt: string
+}
+
+export interface BookmarkCheck {
+  isBookmarked: boolean
+}
+
 // ─── Global Announcements ─────────────────────────────────────────────────────
 
 export type GlobalAnnouncementType = 'INFO' | 'WARNING' | 'MAINTENANCE' | 'SUCCESS'

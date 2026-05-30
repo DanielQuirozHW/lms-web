@@ -9,6 +9,8 @@ import { LessonPageShell } from '@/components/features/lessons/LessonPageShell'
 import { VideoPlayer } from '@/components/features/lessons/VideoPlayer'
 import { TextLesson } from '@/components/features/lessons/TextLesson'
 import { LessonNavigation } from '@/components/features/lessons/LessonNavigation'
+import { LessonNotes } from '@/components/features/lessons/LessonNotes'
+import { BookmarkButton } from '@/components/features/lessons/BookmarkButton'
 import { QuizPlayer } from '@/components/features/quiz/QuizPlayer'
 import { AssignmentPlayer } from '@/components/features/assignments/AssignmentPlayer'
 
@@ -134,7 +136,10 @@ export default async function LessonPage({ params }: PageProps) {
         <p className="text-nexus-muted mb-1 text-xs font-semibold tracking-widest uppercase">
           {moduleForLesson.title}
         </p>
-        <h1 className="text-nexus-text text-2xl font-bold">{lesson.title}</h1>
+        <div className="flex items-start justify-between gap-3">
+          <h1 className="text-nexus-text text-2xl font-bold">{lesson.title}</h1>
+          <BookmarkButton lessonId={lessonId} />
+        </div>
       </div>
 
       {/* Lesson content by type */}
@@ -180,6 +185,9 @@ export default async function LessonPage({ params }: PageProps) {
           nextLessonHref={nextLesson ? `/courses/${courseId}/learn/${nextLesson.id}` : null}
         />
       )}
+
+      {/* Lesson notes */}
+      <LessonNotes key={lessonId} lessonId={lessonId} />
 
       {/* Lesson navigation */}
       <LessonNavigation
