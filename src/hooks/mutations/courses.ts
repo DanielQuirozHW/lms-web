@@ -1,4 +1,6 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query'
+import { useRouter } from 'next/navigation'
+import { toast } from 'sonner'
 import api from '@/lib/api'
 import type { Course } from '@/types/models'
 import { courseKeys } from '@/hooks/queries/courses'
@@ -78,6 +80,22 @@ export function useUploadCourseCover() {
     onSuccess: (_url, vars) => {
       queryClient.invalidateQueries({ queryKey: courseKeys.detail(vars.courseId) })
       queryClient.invalidateQueries({ queryKey: courseKeys.my() })
+    },
+  })
+}
+
+export function useDuplicateCourse(courseId: string) {
+  const queryClient = useQueryClient()
+  const router = useRouter()
+
+  return useMutation({
+    mutationFn: () => api.post<Course>(`/courses/${courseId}/duplicate`).then((r) => r.data),
+    onSuccess: (newCourse) => {
+      queryClient.invalidateQueries({ queryKey: courseKeys.my() })
+      router.push(`/instructor/courses/${newCourse.id}/edit`)
+    },
+    onError: () => {
+      toast.error('No se pudo duplicar el curso')
     },
   })
 }

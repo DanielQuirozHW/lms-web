@@ -8,6 +8,7 @@ import type { CourseDetail, Category } from '@/types/models'
 import { buttonVariants } from '@/components/ui/button'
 import { CourseForm } from '@/components/features/instructor/CourseForm'
 import { CourseDangerZone } from '@/components/features/instructor/CourseDangerZone'
+import { DuplicateCourseButton } from '@/components/features/instructor/DuplicateCourseButton'
 
 interface PageProps {
   params: Promise<{ courseId: string }>
@@ -57,18 +58,21 @@ export default async function EditCoursePage({ params }: PageProps) {
 
   return (
     <div className="mx-auto max-w-2xl space-y-8">
-      {/* Back */}
-      <Link
-        href="/instructor"
-        className={buttonVariants({
-          variant: 'ghost',
-          size: 'sm',
-          className: 'text-nexus-muted hover:text-nexus-text -ml-2 flex items-center gap-1',
-        })}
-      >
-        <ChevronLeft className="h-4 w-4" aria-hidden="true" />
-        Volver al dashboard
-      </Link>
+      {/* Back + Duplicate */}
+      <div className="flex items-center justify-between gap-3">
+        <Link
+          href="/instructor"
+          className={buttonVariants({
+            variant: 'ghost',
+            size: 'sm',
+            className: 'text-nexus-muted hover:text-nexus-text -ml-2 flex items-center gap-1',
+          })}
+        >
+          <ChevronLeft className="h-4 w-4" aria-hidden="true" />
+          Volver al dashboard
+        </Link>
+        <DuplicateCourseButton courseId={courseId} />
+      </div>
 
       <div>
         <h1 className="text-nexus-text text-2xl font-bold">Editar curso</h1>

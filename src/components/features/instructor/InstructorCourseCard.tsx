@@ -1,5 +1,6 @@
 'use client'
 
+import { useState } from 'react'
 import Image from 'next/image'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
@@ -12,13 +13,14 @@ import {
   Globe,
   Loader2,
   BarChart2,
+  Copy,
 } from 'lucide-react'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
 import { buttonVariants } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
 import { formatPrice } from '@/lib/utils'
-import { usePublishCourse, useArchiveCourse } from '@/hooks/mutations/courses'
+import { usePublishCourse, useArchiveCourse, useDuplicateCourse } from '@/hooks/mutations/courses'
 import type { CourseDetail, CourseStatus } from '@/types/models'
 
 const statusConfig: Record<CourseStatus, { label: string; className: string }> = {
@@ -44,6 +46,8 @@ export function InstructorCourseCard({ course }: InstructorCourseCardProps) {
   const router = useRouter()
   const { mutate: publish, isPending: isPublishing } = usePublishCourse(course.id)
   const { mutate: archive, isPending: isArchiving } = useArchiveCourse(course.id)
+  const { mutate: duplicate, isPending: isDuplicating } = useDuplicateCourse(course.id)
+  const [confirmDuplicate, setConfirmDuplicate] = useState(false)
 
   const status = statusConfig[course.status]
 
@@ -125,7 +129,7 @@ export function InstructorCourseCard({ course }: InstructorCourseCardProps) {
         <div className="flex-1" />
 
         {/* Navigation actions */}
-        <div className="grid grid-cols-3 gap-2">
+        <div className="grid grid-cols-2 gap-2">
           <Link
             href={`/instructor/courses/${course.id}/edit`}
             className={buttonVariants({
@@ -162,6 +166,46 @@ export function InstructorCourseCard({ course }: InstructorCourseCardProps) {
             <BarChart2 className="h-3.5 w-3.5" aria-hidden="true" />
             Analíticas
           </Link>
+
+          {/* Duplicate — disabled for archived courses */}
+          {confirmDuplicate ? (
+            <div className="border-nexus-border flex items-center justify-center gap-1 rounded-md border px-2 py-1 text-xs">
+              <button
+                type="button"
+                onClick={() => duplicate()}
+                disabled={isDuplicating}
+                className="text-nexus-accent hover:text-nexus-accent-hover font-medium transition-colors disabled:opacity-50"
+              >
+                {isDuplicating ? (
+                  <Loader2 className="h-3.5 w-3.5 animate-spin" aria-hidden="true" />
+                ) : (
+                  'Confirmar'
+                )}
+              </button>
+              <span className="text-nexus-muted">/</span>
+              <button
+                type="button"
+                onClick={() => setConfirmDuplicate(false)}
+                className="text-nexus-muted hover:text-nexus-text transition-colors"
+              >
+                Cancelar
+              </button>
+            </div>
+          ) : (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setConfirmDuplicate(true)}
+              disabled={course.status === 'ARCHIVED'}
+              title={
+                course.status === 'ARCHIVED' ? 'No se puede duplicar un curso archivado' : undefined
+              }
+              className="border-nexus-border text-nexus-muted hover:text-nexus-text flex items-center gap-1.5"
+            >
+              <Copy className="h-3.5 w-3.5" aria-hidden="true" />
+              Duplicar
+            </Button>
+          )}
         </div>
 
         {/* Quick status action */}
