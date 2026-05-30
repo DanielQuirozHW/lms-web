@@ -8,6 +8,7 @@ import { buttonVariants } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
 import { formatDuration } from '@/lib/utils'
 import { ProgressTimeline } from '@/components/features/courses/ProgressTimeline'
+import { GenerateCertificateButton } from '@/components/features/certificates/GenerateCertificateButton'
 import type { CourseDetail, EnrollmentDetail } from '@/types/models'
 import type { ModuleWithLessons } from '@/hooks/queries/modules'
 
@@ -173,6 +174,15 @@ export default async function CourseProgressPage({ params, searchParams }: PageP
           />
         </div>
       </div>
+
+      {/* Certificate CTA — shown when course is completed or 100% progress */}
+      {(enrollment.status === 'COMPLETED' || pct >= 100) && (
+        <div className="border-nexus-border bg-nexus-card flex flex-col items-center gap-3 rounded-xl border p-6 text-center">
+          <p className="text-nexus-text font-semibold">¡Felicitaciones! Completaste el curso</p>
+          <p className="text-nexus-muted text-sm">Obtené tu certificado oficial de finalización.</p>
+          <GenerateCertificateButton enrollmentId={enrollmentId} />
+        </div>
+      )}
 
       {/* Timeline */}
       <div>

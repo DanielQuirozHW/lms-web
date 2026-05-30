@@ -322,6 +322,20 @@ export interface Gradebook {
   totalWeight: number
 }
 
+// ─── Certificates ─────────────────────────────────────────────────────────────
+
+export interface Certificate {
+  id: string
+  certificateCode: string
+  userId: string
+  courseId: string
+  enrollmentId: string
+  issuedAt: string
+  finalGrade: number | null
+  course: { title: string; slug: string }
+  instructor: { firstName: string; lastName: string }
+}
+
 // ─── Lesson Notes ─────────────────────────────────────────────────────────────
 
 export interface LessonNote {

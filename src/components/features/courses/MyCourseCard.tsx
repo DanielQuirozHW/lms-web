@@ -10,6 +10,7 @@ import { buttonVariants } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
 import { formatRelativeTime } from '@/lib/utils'
 import { useEnrollMutation } from '@/hooks/mutations/enrollments'
+import { useGenerateCertificate } from '@/hooks/mutations/certificates'
 import { isApiError } from '@/lib/api'
 import type { EnrollmentDetail, EnrollmentStatus } from '@/types/models'
 import type { CatalogCourse } from './CourseCard'
@@ -37,6 +38,7 @@ export interface MyCourseCardProps {
 export function MyCourseCard({ enrollment, course }: MyCourseCardProps) {
   const router = useRouter()
   const { mutate: enroll, isPending } = useEnrollMutation()
+  const { mutate: generateCert, isPending: isGenerating } = useGenerateCertificate()
 
   const pct = Math.round(enrollment.progress.progressPercentage)
   const { status } = enrollment
@@ -63,10 +65,6 @@ export function MyCourseCard({ enrollment, course }: MyCourseCardProps) {
         }
       },
     })
-  }
-
-  function handleCertificate() {
-    toast.info('Los certificados estarán disponibles próximamente.')
   }
 
   return (
@@ -165,11 +163,21 @@ export function MyCourseCard({ enrollment, course }: MyCourseCardProps) {
           <Button
             size="sm"
             variant="outline"
-            onClick={handleCertificate}
+            disabled={isGenerating}
+            onClick={() =>
+              generateCert(
+                { enrollmentId: enrollment.id },
+                { onSuccess: () => router.push('/certificates') }
+              )
+            }
             className="border-nexus-border text-nexus-muted w-full"
           >
-            <Award className="mr-1.5 h-3.5 w-3.5" aria-hidden="true" />
-            Ver certificado
+            {isGenerating ? (
+              <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" aria-hidden="true" />
+            ) : (
+              <Award className="mr-1.5 h-3.5 w-3.5" aria-hidden="true" />
+            )}
+            {isGenerating ? 'Generando...' : 'Ver certificado'}
           </Button>
         )}
 
