@@ -1,4 +1,4 @@
-import { useMutation, useQueryClient } from '@tanstack/react-query'
+import { useMutation } from '@tanstack/react-query'
 import api from '@/lib/api'
 import type { User } from '@/types/models'
 
@@ -14,15 +14,11 @@ interface ChangePasswordInput {
 }
 
 export function useUpdateProfileMutation() {
-  const queryClient = useQueryClient()
-
   return useMutation({
     mutationFn: (data: UpdateProfileInput) =>
       api.patch<User>('/users/me', data).then((r) => r.data),
-    onSuccess: () => {
-      // Invalidate any cached user queries
-      queryClient.invalidateQueries({ queryKey: ['users', 'me'] })
-    },
+    // Session update (router.refresh()) is handled by the calling component (ProfileForm)
+    // because the profile page reads from the Auth.js session, not React Query cache.
   })
 }
 

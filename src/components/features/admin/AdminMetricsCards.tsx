@@ -1,5 +1,3 @@
-'use client'
-
 import { Users, BookOpen, CheckCircle2, FileText, Archive, Bell } from 'lucide-react'
 import type { LucideIcon } from 'lucide-react'
 

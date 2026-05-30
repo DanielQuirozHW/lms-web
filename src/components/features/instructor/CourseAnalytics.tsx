@@ -1,5 +1,6 @@
 'use client'
 
+import { useMemo } from 'react'
 import {
   BarChart,
   Bar,
@@ -164,10 +165,16 @@ export function CourseAnalytics({
         ? '/ 10'
         : '/ 100'
 
-  // ── Chart data ─────────────────────────────────────────────────────────────
-  const funnelData = computeModuleFunnel(enrollments, modules)
-  const gradeDistData = computeGradeDistribution(enrollments, gradebookData)
-  const overTimeData = computeEnrollmentOverTime(enrollments)
+  // ── Chart data — memoized to avoid O(n) recomputation on every render ───────
+  const funnelData = useMemo(
+    () => computeModuleFunnel(enrollments, modules),
+    [enrollments, modules]
+  )
+  const gradeDistData = useMemo(
+    () => computeGradeDistribution(enrollments, gradebookData),
+    [enrollments, gradebookData]
+  )
+  const overTimeData = useMemo(() => computeEnrollmentOverTime(enrollments), [enrollments])
 
   const tooltipStyle = {
     backgroundColor: '#1f2937',

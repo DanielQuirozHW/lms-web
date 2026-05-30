@@ -156,10 +156,7 @@ export default async function MyCoursesPage({ searchParams }: PageProps) {
             description={empty.description}
             className="border-nexus-border"
             {...(!status && {
-              action: {
-                label: 'Explorar cursos',
-                onClick: undefined as unknown as () => void,
-              },
+              action: { label: 'Explorar cursos', href: '/courses' },
             })}
           />
         ) : (

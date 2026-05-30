@@ -15,8 +15,10 @@ export interface EnrollmentWithStudent extends EnrollmentDetail {
 
 export const enrollmentKeys = {
   all: ['enrollments'] as const,
+  lists: () => [...enrollmentKeys.all, 'list'] as const,
   courseList: (courseId: string) => [...enrollmentKeys.all, 'course', courseId] as const,
   detail: (enrollmentId: string) => [...enrollmentKeys.all, 'detail', enrollmentId] as const,
+  myList: () => [...enrollmentKeys.all, 'my'] as const,
 }
 
 export function useCourseEnrollments(courseId: string) {

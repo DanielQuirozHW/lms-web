@@ -1,5 +1,6 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import api from '@/lib/api'
+import { enrollmentKeys } from '@/hooks/queries/enrollments'
 
 interface ProgressUpdate {
   watchedSeconds?: number
@@ -14,7 +15,7 @@ export function useUpdateProgress(courseId: string, moduleId: string, lessonId: 
       api.patch(`/courses/${courseId}/modules/${moduleId}/lessons/${lessonId}/progress`, data),
     onSuccess: () => {
       // Refresh enrollment progress so sidebar percentage and course status update
-      queryClient.invalidateQueries({ queryKey: ['enrollments'] })
+      queryClient.invalidateQueries({ queryKey: enrollmentKeys.all })
     },
   })
 }
