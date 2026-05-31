@@ -33,7 +33,7 @@ function buildCsp(): string {
     "style-src 'self' 'unsafe-inline'",
     "img-src 'self' blob: data: https:",
     "font-src 'self'",
-    `connect-src 'self' ${apiOrigin} ${wsOrigin}`,
+    `connect-src 'self' ${apiOrigin} ${wsOrigin}${isDev ? ' ws://127.0.0.1:* http://127.0.0.1:*' : ''}`,
     "frame-ancestors 'none'",
     // Violations are POSTed to /api/csp-report for monitoring.
     'report-uri /api/csp-report',

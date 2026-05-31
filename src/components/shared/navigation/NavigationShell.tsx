@@ -15,9 +15,6 @@ interface NavigationShellProps {
   children: React.ReactNode
 }
 
-// Resolves the correct nav based on the active route group.
-// Called inside the Client Component so the icon functions (LucideIcon) never
-// cross the Server → Client serialization boundary.
 function useNavGroups() {
   const pathname = usePathname()
   if (pathname.startsWith('/admin')) return getAdminNav()
@@ -25,16 +22,22 @@ function useNavGroups() {
   return getDashboardNav()
 }
 
-/**
- * Client wrapper that owns the mobile sidebar open/close state and composes
- * Sidebar + Header + main content. Layouts (Server Components) render this;
- * page content flows through `children`. Nav groups are resolved here — not
- * passed as props — so LucideIcon functions stay client-side only.
- */
 export function NavigationShell({ children }: NavigationShellProps) {
   const [mobileOpen, setMobileOpen] = useState(false)
+  // Lazy initializer: reads localStorage at client mount; falls back to false on SSR.
+  // No effect needed — avoids the extra render cycle from setState-in-effect.
+  const [isCollapsed, setIsCollapsed] = useState(
+    () =>
+      typeof window !== 'undefined' && localStorage.getItem('nexus-sidebar-collapsed') === 'true'
+  )
   const { data: session } = useSession()
   const navGroups = useNavGroups()
+
+  function toggleCollapsed() {
+    const next = !isCollapsed
+    setIsCollapsed(next)
+    localStorage.setItem('nexus-sidebar-collapsed', String(next))
+  }
 
   const isImpersonating = !!session?.impersonatedBy
 
@@ -47,13 +50,19 @@ export function NavigationShell({ children }: NavigationShellProps) {
           email={session.user.email}
         />
       )}
-      <Sidebar navGroups={navGroups} mobileOpen={mobileOpen} onMobileOpenChange={setMobileOpen} />
-      {/* Content column: no left offset needed — sidebar is a flex item on desktop */}
-      <div className="flex min-w-0 flex-1 flex-col">
+      <Sidebar
+        navGroups={navGroups}
+        mobileOpen={mobileOpen}
+        onMobileOpenChange={setMobileOpen}
+        isCollapsed={isCollapsed}
+        onToggle={toggleCollapsed}
+      />
+      {/* Content area transitions alongside sidebar width */}
+      <div className="flex min-w-0 flex-1 flex-col transition-all duration-200">
         <Header onMobileMenuOpen={() => setMobileOpen(true)} />
         <GlobalAnnouncementBanner />
         <Breadcrumbs />
-        {/* pb-16 on mobile so content clears the fixed bottom nav */}
+        {/* pb-20 on mobile so content clears the fixed bottom nav */}
         <main className="flex-1 p-4 pb-20 lg:p-6 lg:pb-6">{children}</main>
       </div>
     </div>

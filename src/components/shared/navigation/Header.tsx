@@ -1,6 +1,6 @@
 'use client'
 
-import { useRouter } from 'next/navigation'
+import { usePathname, useRouter } from 'next/navigation'
 import { Bell, LogOut, Menu, User, Sun, Moon } from 'lucide-react'
 import { useSession, signOut } from 'next-auth/react'
 import { useTheme } from 'next-themes'
@@ -18,6 +18,36 @@ import {
 import { useNotificationsStore } from '@/store/notifications.store'
 import { cn } from '@/lib/utils'
 
+// Maps exact and prefix paths to human-readable titles
+const PAGE_TITLES: Record<string, string> = {
+  '/dashboard': 'Dashboard',
+  '/courses': 'Explorar Cursos',
+  '/my-courses': 'Mis Cursos',
+  '/bookmarks': 'Guardados',
+  '/certificates': 'Certificados',
+  '/messages': 'Mensajes',
+  '/calendar': 'Calendario',
+  '/notifications': 'Notificaciones',
+  '/profile': 'Perfil',
+  '/instructor': 'Dashboard Instructor',
+  '/instructor/courses': 'Mis Cursos',
+  '/instructor/courses/new': 'Nuevo Curso',
+  '/admin': 'Dashboard Admin',
+  '/admin/users': 'Usuarios',
+  '/admin/courses': 'Cursos',
+  '/admin/categories': 'Categorías',
+  '/admin/announcements': 'Anuncios',
+  '/admin/settings': 'Configuración',
+}
+
+function getPageTitle(pathname: string): string {
+  if (PAGE_TITLES[pathname]) return PAGE_TITLES[pathname]
+  // Dynamic routes: try stripping the last segment
+  const parent = pathname.split('/').slice(0, -1).join('/')
+  if (parent && PAGE_TITLES[parent]) return PAGE_TITLES[parent]
+  return ''
+}
+
 interface HeaderProps {
   onMobileMenuOpen: () => void
   className?: string
@@ -25,6 +55,7 @@ interface HeaderProps {
 
 export function Header({ onMobileMenuOpen, className }: HeaderProps) {
   const router = useRouter()
+  const pathname = usePathname()
   const { data: session } = useSession()
   const unreadCount = useNotificationsStore((s) => s.unreadCount)
   const { theme, setTheme } = useTheme()
@@ -34,6 +65,7 @@ export function Header({ onMobileMenuOpen, className }: HeaderProps) {
   const lastName = user?.lastName ?? user?.name?.split(' ').slice(1).join(' ') ?? ''
   const fullName = [firstName, lastName].filter(Boolean).join(' ') || 'User'
   const initials = [firstName[0], lastName[0]].filter(Boolean).join('').toUpperCase() || 'U'
+  const pageTitle = getPageTitle(pathname)
 
   async function handleLogout() {
     try {
@@ -47,7 +79,7 @@ export function Header({ onMobileMenuOpen, className }: HeaderProps) {
   return (
     <header
       className={cn(
-        'border-nexus-border bg-nexus-surface/95 sticky top-0 z-30 flex h-14 items-center gap-2 border-b px-4 backdrop-blur-sm',
+        'border-nexus-border bg-nexus-surface/95 sticky top-0 z-30 flex h-13 items-center gap-3 border-b px-4 backdrop-blur-sm',
         className
       )}
     >
@@ -55,39 +87,42 @@ export function Header({ onMobileMenuOpen, className }: HeaderProps) {
       <Button
         variant="ghost"
         size="icon"
-        className="text-nexus-muted hover:text-nexus-text hover:bg-nexus-card shrink-0 lg:hidden"
+        className="text-nexus-muted hover:text-nexus-text hover:bg-nexus-card h-8 w-8 shrink-0 lg:hidden"
         onClick={onMobileMenuOpen}
         aria-label="Open navigation menu"
       >
-        <Menu className="h-5 w-5" />
+        <Menu className="h-4 w-4" />
       </Button>
 
-      {/* Mobile: centered logo */}
-      <div className="flex flex-1 justify-center lg:hidden">
-        <span className="text-nexus-text text-sm font-bold tracking-tight">
-          Nexus<span className="text-nexus-accent">LMS</span>
-        </span>
+      {/* Desktop: page title / Mobile: centred logo */}
+      <div className="flex flex-1 items-center">
+        {pageTitle && (
+          <span className="text-nexus-text hidden text-sm font-semibold lg:block">{pageTitle}</span>
+        )}
+        <div className="flex flex-1 justify-center lg:hidden">
+          <span className="text-nexus-text text-sm font-bold tracking-tight">
+            Nexus<span className="text-nexus-accent">LMS</span>
+          </span>
+        </div>
+        <div className="hidden flex-1 lg:block" />
       </div>
 
-      {/* Desktop: spacer pushes actions to the right */}
-      <div className="hidden flex-1 lg:block" />
-
       {/* Right actions */}
-      <div className="flex shrink-0 items-center gap-1">
+      <div className="flex shrink-0 items-center gap-0.5">
         {/* Theme toggle — CSS icon-swap avoids hydration mismatch */}
         <Button
           variant="ghost"
           size="icon"
           onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
-          className="text-nexus-muted hover:text-nexus-text hover:bg-nexus-card relative"
+          className="text-nexus-muted hover:text-nexus-text hover:bg-nexus-card relative h-8 w-8"
           aria-label="Cambiar tema"
         >
           <Sun
-            className="h-5 w-5 scale-100 rotate-0 transition-all dark:scale-0 dark:-rotate-90"
+            className="h-4 w-4 scale-100 rotate-0 transition-all dark:scale-0 dark:-rotate-90"
             aria-hidden="true"
           />
           <Moon
-            className="absolute h-5 w-5 scale-0 rotate-90 transition-all dark:scale-100 dark:rotate-0"
+            className="absolute h-4 w-4 scale-0 rotate-90 transition-all dark:scale-100 dark:rotate-0"
             aria-hidden="true"
           />
         </Button>
@@ -96,29 +131,28 @@ export function Header({ onMobileMenuOpen, className }: HeaderProps) {
         <Button
           variant="ghost"
           size="icon"
-          className="text-nexus-muted hover:text-nexus-text hover:bg-nexus-card relative"
+          className="text-nexus-muted hover:text-nexus-text hover:bg-nexus-card relative h-8 w-8"
           onClick={() => router.push('/notifications')}
           aria-label={`Notifications${unreadCount > 0 ? ` (${unreadCount} unread)` : ''}`}
         >
-          <Bell className="h-5 w-5" />
+          <Bell className="h-4 w-4" />
           {unreadCount > 0 && (
-            <span className="bg-nexus-accent absolute top-1.5 right-1.5 h-2 w-2 rounded-full" />
+            <span className="bg-nexus-accent absolute top-1.5 right-1.5 h-1.5 w-1.5 rounded-full" />
           )}
         </Button>
 
         {/* User avatar dropdown */}
         <DropdownMenu>
           <DropdownMenuTrigger
-            className="hover:bg-nexus-card flex cursor-pointer items-center gap-2 rounded-lg px-2 py-1 text-sm font-medium transition-colors focus-visible:outline-none"
+            className="hover:bg-nexus-card ml-1 flex cursor-pointer items-center rounded-lg p-1 transition-colors duration-150 focus-visible:outline-none"
             aria-label="User menu"
           >
             <Avatar className="h-7 w-7">
               <AvatarImage src={user?.avatarUrl ?? undefined} alt={fullName} />
-              <AvatarFallback className="bg-nexus-accent/20 text-nexus-accent text-xs">
+              <AvatarFallback className="bg-nexus-accent-muted text-nexus-accent text-xs font-medium">
                 {initials}
               </AvatarFallback>
             </Avatar>
-            <span className="text-nexus-text hidden sm:inline-block">{fullName}</span>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="w-52">
             <DropdownMenuGroup>
@@ -132,12 +166,12 @@ export function Header({ onMobileMenuOpen, className }: HeaderProps) {
             <DropdownMenuSeparator />
             <DropdownMenuItem onClick={() => router.push('/profile')}>
               <User className="h-4 w-4" />
-              Profile
+              Perfil
             </DropdownMenuItem>
             <DropdownMenuSeparator />
             <DropdownMenuItem variant="destructive" onClick={handleLogout}>
               <LogOut className="h-4 w-4" />
-              Log out
+              Cerrar sesión
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>

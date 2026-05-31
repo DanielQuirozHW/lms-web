@@ -23,16 +23,8 @@ export const metadata: Metadata = {
   },
 }
 
-function getGreeting(): string {
-  const hour = new Date().getHours()
-  if (hour < 12) return 'Buenos días'
-  if (hour < 19) return 'Buenas tardes'
-  return 'Buenas noches'
-}
-
 export default async function DashboardPage() {
   const session = await auth()
-  const firstName = session?.user?.firstName ?? session?.user?.name?.split(' ')[0] ?? 'allí'
   const headers = session?.accessToken ? { Authorization: `Bearer ${session.accessToken}` } : {}
 
   const todayDate = new Date()
@@ -74,12 +66,14 @@ export default async function DashboardPage() {
       {/* Sync notification count to Zustand store for the header badge */}
       <NotificationsSync unreadCount={unreadCount} />
 
-      {/* Greeting */}
+      {/* Page header */}
       <div>
-        <h1 className="text-nexus-text text-2xl font-bold">
-          {getGreeting()}, {firstName}
-        </h1>
-        <p className="text-nexus-muted mt-1 text-sm">Continuá donde lo dejaste</p>
+        <h1 className="text-nexus-text text-2xl font-bold tracking-tight">Dashboard</h1>
+        <p className="text-nexus-muted mt-1 text-sm">
+          {activeEnrollments > 0 || completedLessons > 0
+            ? `${activeEnrollments} curso${activeEnrollments !== 1 ? 's' : ''} activo${activeEnrollments !== 1 ? 's' : ''} · ${completedLessons} lección${completedLessons !== 1 ? 'es' : ''} completada${completedLessons !== 1 ? 's' : ''}`
+            : 'Bienvenido a NexusLMS'}
+        </p>
       </div>
 
       {/* Stat cards */}
