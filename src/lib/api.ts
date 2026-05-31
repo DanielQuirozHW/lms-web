@@ -7,15 +7,29 @@ const api = axios.create({
   timeout: 15_000,
 })
 
+// Short-lived in-memory cache for the access token to avoid hammering
+// /api/auth/token on data-heavy pages that fire multiple requests in parallel.
+// TTL is 30 s — well within the 15-minute token lifetime and short enough that
+// a token rotated by a background refresh is picked up quickly.
+let cachedToken: string | null = null
+let tokenCachedAt: number = 0
+const TOKEN_CACHE_TTL = 30 * 1000 // 30 seconds
+
 // Attach Bearer token on every request.
 // On the client, reads from the Auth.js session via a route handler.
 // The raw token is never stored in JS — it flows through the session cookie.
 api.interceptors.request.use(async (config) => {
   if (typeof window !== 'undefined') {
     try {
+      if (cachedToken && Date.now() - tokenCachedAt < TOKEN_CACHE_TTL) {
+        config.headers.Authorization = `Bearer ${cachedToken}`
+        return config
+      }
       const res = await fetch('/api/auth/token')
       if (res.ok) {
         const { accessToken } = (await res.json()) as { accessToken: string }
+        cachedToken = accessToken
+        tokenCachedAt = Date.now()
         config.headers.Authorization = `Bearer ${accessToken}`
       }
     } catch {
@@ -139,6 +153,8 @@ api.interceptors.response.use(
         const res = await fetch('/api/auth/refresh', { method: 'POST' })
         if (!res.ok) throw new Error('Refresh failed')
         const { accessToken } = (await res.json()) as { accessToken: string }
+        cachedToken = null
+        tokenCachedAt = 0
         if (original.headers) original.headers.Authorization = `Bearer ${accessToken}`
         onRefreshDone(accessToken)
 

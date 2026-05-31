@@ -1,3 +1,7 @@
+// TODO: Consider adding generateStaticParams for published courses
+// to enable static generation at build time (significant TTFB improvement).
+// Blocked by: auth check for draft/archived courses requires dynamic rendering.
+// Revisit when a public course catalog (no auth) is implemented.
 import type { Metadata } from 'next'
 import { cache } from 'react'
 import { notFound } from 'next/navigation'

@@ -9,6 +9,7 @@ import { Button } from '@/components/ui/button'
 import {
   DropdownMenu,
   DropdownMenuContent,
+  DropdownMenuGroup,
   DropdownMenuItem,
   DropdownMenuLabel,
   DropdownMenuSeparator,
@@ -120,12 +121,14 @@ export function Header({ onMobileMenuOpen, className }: HeaderProps) {
             <span className="text-nexus-text hidden sm:inline-block">{fullName}</span>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="w-52">
-            <DropdownMenuLabel>
-              <p className="text-sm leading-none font-medium">{fullName}</p>
-              {user?.email && (
-                <p className="text-muted-foreground mt-1 truncate text-xs">{user.email}</p>
-              )}
-            </DropdownMenuLabel>
+            <DropdownMenuGroup>
+              <DropdownMenuLabel>
+                <p className="text-sm leading-none font-medium">{fullName}</p>
+                {user?.email && (
+                  <p className="text-muted-foreground mt-1 truncate text-xs">{user.email}</p>
+                )}
+              </DropdownMenuLabel>
+            </DropdownMenuGroup>
             <DropdownMenuSeparator />
             <DropdownMenuItem onClick={() => router.push('/profile')}>
               <User className="h-4 w-4" />

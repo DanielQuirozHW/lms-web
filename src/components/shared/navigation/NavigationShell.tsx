@@ -1,27 +1,40 @@
 'use client'
 
 import { useState } from 'react'
+import { usePathname } from 'next/navigation'
 import { useSession } from 'next-auth/react'
-import { Sidebar, type NavGroup } from './Sidebar'
+import { Sidebar } from './Sidebar'
 import { Header } from './Header'
 import { Breadcrumbs } from './Breadcrumbs'
 import { ImpersonationBanner } from '@/components/shared/auth/ImpersonationBanner'
 import { GlobalAnnouncementBanner } from '@/components/shared/announcements/GlobalAnnouncementBanner'
+import { getDashboardNav, getInstructorNav, getAdminNav } from '@/lib/navigation'
 import { cn } from '@/lib/utils'
 
 interface NavigationShellProps {
-  navGroups: NavGroup[]
   children: React.ReactNode
+}
+
+// Resolves the correct nav based on the active route group.
+// Called inside the Client Component so the icon functions (LucideIcon) never
+// cross the Server → Client serialization boundary.
+function useNavGroups() {
+  const pathname = usePathname()
+  if (pathname.startsWith('/admin')) return getAdminNav()
+  if (pathname.startsWith('/instructor')) return getInstructorNav()
+  return getDashboardNav()
 }
 
 /**
  * Client wrapper that owns the mobile sidebar open/close state and composes
- * Sidebar + Header + main content. Layouts (Server Components) render this
- * and pass their navGroups; page content flows through `children`.
+ * Sidebar + Header + main content. Layouts (Server Components) render this;
+ * page content flows through `children`. Nav groups are resolved here — not
+ * passed as props — so LucideIcon functions stay client-side only.
  */
-export function NavigationShell({ navGroups, children }: NavigationShellProps) {
+export function NavigationShell({ children }: NavigationShellProps) {
   const [mobileOpen, setMobileOpen] = useState(false)
   const { data: session } = useSession()
+  const navGroups = useNavGroups()
 
   const isImpersonating = !!session?.impersonatedBy
 

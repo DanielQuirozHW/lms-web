@@ -270,3 +270,13 @@ if (token.impersonationTokenId) {
 **Rule:** Always check for `impersonationTokenId` before any refresh logic in the JWT callback. Impersonation tokens must never be refreshed. Store admin backup tokens in the JWT when impersonation starts so the session can be restored when it expires.
 
 ---
+
+## [018] Auth.js v5 beta JWT type augmentation incomplete
+
+**Date:** 2026-05
+**Category:** TypeScript
+**What happened:** Auth.js v5 beta does not fully use the module-augmented JWT type in all callback parameters, requiring repeated `as` casts in `auth.ts` JWT callback.
+**Fix:** No fix available until Auth.js exits beta.
+**Rule:** When Auth.js reaches stable, audit `auth.ts` for removable type casts.
+
+---
