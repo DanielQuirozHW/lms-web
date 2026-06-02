@@ -70,6 +70,8 @@ export interface Course {
   status: CourseStatus
   enrollmentType: EnrollmentType
   price: number | null
+  enrollmentPeriodStart?: string | null
+  enrollmentPeriodEnd?: string | null
   instructorId: string
   categoryId: string | null
   createdAt: string

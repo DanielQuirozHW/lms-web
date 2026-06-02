@@ -15,6 +15,7 @@ import {
   Settings,
 } from 'lucide-react'
 import type { NavGroup } from '@/components/shared/navigation/Sidebar'
+import { isCorporate } from '@/lib/config'
 
 export function getDashboardNav(): NavGroup[] {
   return [
@@ -24,7 +25,8 @@ export function getDashboardNav(): NavGroup[] {
     {
       label: 'APRENDIZAJE',
       items: [
-        { label: 'Explorar cursos', href: '/courses', icon: BookOpen },
+        // Corporate portals don't expose a course catalog — students only see assigned courses
+        ...(isCorporate ? [] : [{ label: 'Explorar cursos', href: '/courses', icon: BookOpen }]),
         { label: 'Mis cursos', href: '/my-courses', icon: BookMarked },
         { label: 'Guardados', href: '/bookmarks', icon: Bookmark },
         { label: 'Certificados', href: '/certificates', icon: GraduationCap },

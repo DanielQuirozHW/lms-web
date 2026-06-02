@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
+import { useSession } from 'next-auth/react'
 import { Loader2, BookOpen, ShoppingCart, Info, Key } from 'lucide-react'
 import { z } from 'zod'
 import { toast } from 'sonner'
@@ -13,6 +14,7 @@ import { formatPrice } from '@/lib/utils'
 import { cn } from '@/lib/utils'
 import Link from 'next/link'
 import type { EnrollmentType } from '@/types/models'
+import { isCorporate, isAcademic } from '@/lib/config'
 
 const codeSchema = z.object({
   code: z.string().min(3, 'El código debe tener al menos 3 caracteres'),
@@ -24,6 +26,8 @@ interface EnrollButtonProps {
   enrollmentType: EnrollmentType
   price: number | null
   firstLessonId?: string
+  enrollmentPeriodStart?: string | null
+  enrollmentPeriodEnd?: string | null
 }
 
 export function EnrollButton({
@@ -32,17 +36,23 @@ export function EnrollButton({
   enrollmentType,
   price,
   firstLessonId,
+  enrollmentPeriodStart,
+  enrollmentPeriodEnd,
 }: EnrollButtonProps) {
   const router = useRouter()
+  const { data: session } = useSession()
   const { mutate, isPending } = useEnrollMutation()
   const [code, setCode] = useState('')
   const [codeError, setCodeError] = useState<string | null>(null)
+
+  const roles = session?.user?.roles ?? []
+  const isStudentOnly = !roles.includes('ADMIN') && !roles.includes('INSTRUCTOR')
 
   const learnPath = firstLessonId
     ? `/courses/${courseId}/learn/${firstLessonId}`
     : `/courses/${courseId}`
 
-  // Already enrolled — same for all types
+  // Already enrolled — same for all types and modes
   if (isEnrolled) {
     return (
       <Link
@@ -57,7 +67,39 @@ export function EnrollButton({
     )
   }
 
-  // ASSIGNED — no self-enrollment
+  // ── Corporate mode ────────────────────────────────────────────────────────
+  // Students see an info message; ADMIN/INSTRUCTOR see the normal enroll UI
+  if (isCorporate && isStudentOnly) {
+    return (
+      <div className="border-nexus-border flex items-start gap-3 rounded-lg border p-4">
+        <Info className="text-nexus-muted mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" />
+        <p className="text-nexus-muted text-sm leading-relaxed">
+          Este curso fue asignado a vos por un administrador.
+        </p>
+      </div>
+    )
+  }
+
+  // ── Academic mode — enrollment period check ───────────────────────────────
+  if (isAcademic && (enrollmentPeriodStart || enrollmentPeriodEnd)) {
+    const now = new Date()
+    const start = enrollmentPeriodStart ? new Date(enrollmentPeriodStart) : null
+    const end = enrollmentPeriodEnd ? new Date(enrollmentPeriodEnd) : null
+    const inPeriod = (!start || now >= start) && (!end || now <= end)
+
+    if (!inPeriod) {
+      return (
+        <div className="border-nexus-border flex items-start gap-3 rounded-lg border p-4">
+          <Info className="text-nexus-muted mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" />
+          <p className="text-nexus-muted text-sm leading-relaxed">
+            El período de inscripción no está activo.
+          </p>
+        </div>
+      )
+    }
+  }
+
+  // ── ASSIGNED — no self-enrollment (all modes) ─────────────────────────────
   if (enrollmentType === 'ASSIGNED') {
     return (
       <div className="border-nexus-border flex items-start gap-3 rounded-lg border p-4">
@@ -69,7 +111,7 @@ export function EnrollButton({
     )
   }
 
-  // CODE — code input + enroll button
+  // ── CODE — code input + enroll button ────────────────────────────────────
   if (enrollmentType === 'CODE') {
     function handleCodeEnroll() {
       const result = codeSchema.safeParse({ code })
@@ -152,7 +194,7 @@ export function EnrollButton({
     )
   }
 
-  // FREE or PAID — standard enroll
+  // ── FREE / PAID — standard enroll ─────────────────────────────────────────
   function handleEnroll() {
     mutate(
       { courseId },
@@ -179,8 +221,17 @@ export function EnrollButton({
     )
   }
 
+  // Academic mode — show enrollment period end date above button when open
+  const academicPeriodNote =
+    isAcademic && enrollmentPeriodEnd
+      ? `Inscripción abierta hasta el ${new Date(enrollmentPeriodEnd).toLocaleDateString('es-AR', { day: '2-digit', month: '2-digit', year: 'numeric' })}`
+      : null
+
   return (
     <div className="space-y-2">
+      {academicPeriodNote && (
+        <p className="text-nexus-muted text-center text-xs">{academicPeriodNote}</p>
+      )}
       <Button
         onClick={handleEnroll}
         disabled={isPending}

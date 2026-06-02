@@ -1,7 +1,7 @@
 import { auth } from '@/lib/auth'
 import { NextResponse } from 'next/server'
 import type { NextAuthRequest } from 'next-auth'
-import { API_URL } from '@/lib/config'
+import { API_URL, isCorporate } from '@/lib/config'
 
 // '/' is the public landing page — must be accessible without authentication
 const PUBLIC_PATHS = new Set(['/', '/login', '/register', '/verify-email'])
@@ -77,6 +77,14 @@ export default auth(async (req: NextAuthRequest) => {
   }
 
   const roles = session.user?.roles ?? []
+
+  // Corporate mode: students cannot access the course catalog (/courses exactly).
+  // Course detail (/courses/[id]) and lesson pages (/courses/[id]/learn) remain accessible.
+  if (isCorporate && pathname === '/courses') {
+    if (!roles.includes('ADMIN') && !roles.includes('INSTRUCTOR')) {
+      return NextResponse.redirect(new URL('/my-courses', req.url))
+    }
+  }
 
   // Instructor routes require INSTRUCTOR or ADMIN
   if (pathname.startsWith(INSTRUCTOR_PREFIX)) {

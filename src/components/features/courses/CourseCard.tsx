@@ -6,6 +6,7 @@ import { Star, BookOpen, UserCheck, Key } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { formatPrice } from '@/lib/utils'
 import type { CatalogCourse } from '@/types/models'
+import { isMarketplace } from '@/lib/config'
 
 export type { CatalogCourse }
 
@@ -80,21 +81,27 @@ export function CourseCard({ course, enrollmentProgress }: CourseCardProps) {
         {/* Spacer */}
         <div className="flex-1" />
 
-        {/* Enrollment type indicator — only shown for non-FREE types */}
-        {course.enrollmentType === 'ASSIGNED' && (
-          <div className="flex items-center gap-1.5">
-            <UserCheck className="text-nexus-muted h-3.5 w-3.5 shrink-0" aria-hidden="true" />
-            <span className="text-nexus-muted text-xs font-medium">Asignado</span>
-          </div>
-        )}
-        {course.enrollmentType === 'CODE' && (
-          <div className="flex items-center gap-1.5">
-            <Key className="h-3.5 w-3.5 shrink-0 text-amber-500" aria-hidden="true" />
-            <span className="text-xs font-medium text-amber-500">Con código</span>
-          </div>
-        )}
-        {course.enrollmentType === 'PAID' && (
-          <p className="text-nexus-accent text-sm font-bold">{formatPrice(course.price ?? 0)}</p>
+        {/* Enrollment type / price — marketplace only */}
+        {isMarketplace && (
+          <>
+            {course.enrollmentType === 'ASSIGNED' && (
+              <div className="flex items-center gap-1.5">
+                <UserCheck className="text-nexus-muted h-3.5 w-3.5 shrink-0" aria-hidden="true" />
+                <span className="text-nexus-muted text-xs font-medium">Asignado</span>
+              </div>
+            )}
+            {course.enrollmentType === 'CODE' && (
+              <div className="flex items-center gap-1.5">
+                <Key className="h-3.5 w-3.5 shrink-0 text-amber-500" aria-hidden="true" />
+                <span className="text-xs font-medium text-amber-500">Con código</span>
+              </div>
+            )}
+            {course.enrollmentType === 'PAID' && (
+              <p className="text-nexus-accent text-sm font-bold">
+                {formatPrice(course.price ?? 0)}
+              </p>
+            )}
+          </>
         )}
 
         {/* Enrollment progress bar */}

@@ -5,6 +5,7 @@ import { useRouter, useSearchParams } from 'next/navigation'
 import { Search, X } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import type { Category } from '@/types/models'
+import { isMarketplace } from '@/lib/config'
 
 interface CoursesFilterProps {
   categories: Category[]
@@ -147,24 +148,26 @@ export function CoursesFilter({ categories }: CoursesFilterProps) {
         </div>
       )}
 
-      {/* Enrollment type pills */}
-      <div
-        className="flex gap-2 overflow-x-auto pb-1"
-        role="group"
-        aria-label="Filtrar por tipo de inscripción"
-      >
-        {ENROLLMENT_TYPE_OPTIONS.map(({ value, label }) => (
-          <button
-            key={value}
-            type="button"
-            onClick={() => handleEnrollmentType(value)}
-            className={pillClass(activeEnrollmentType === value)}
-            aria-pressed={activeEnrollmentType === value}
-          >
-            {label}
-          </button>
-        ))}
-      </div>
+      {/* Enrollment type pills — marketplace only */}
+      {isMarketplace && (
+        <div
+          className="flex gap-2 overflow-x-auto pb-1"
+          role="group"
+          aria-label="Filtrar por tipo de inscripción"
+        >
+          {ENROLLMENT_TYPE_OPTIONS.map(({ value, label }) => (
+            <button
+              key={value}
+              type="button"
+              onClick={() => handleEnrollmentType(value)}
+              className={pillClass(activeEnrollmentType === value)}
+              aria-pressed={activeEnrollmentType === value}
+            >
+              {label}
+            </button>
+          ))}
+        </div>
+      )}
     </div>
   )
 }
