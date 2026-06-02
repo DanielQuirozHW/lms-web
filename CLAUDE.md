@@ -135,6 +135,7 @@ Users can hold multiple roles simultaneously (`roles` is an array).
 ```typescript
 type UserRole = 'STUDENT' | 'INSTRUCTOR' | 'ADMIN'
 type CourseStatus = 'DRAFT' | 'PUBLISHED' | 'ARCHIVED'
+type EnrollmentType = 'FREE' | 'ASSIGNED' | 'CODE' | 'PAID'
 type EnrollmentStatus = 'ACTIVE' | 'COMPLETED' | 'CANCELLED'
 type LessonType = 'VIDEO' | 'TEXT' | 'QUIZ' | 'ASSIGNMENT'
 type QuestionType = 'MULTIPLE_CHOICE' | 'SINGLE_CHOICE' | 'TRUE_FALSE' | 'SHORT_TEXT' | 'LONG_TEXT'
@@ -182,12 +183,15 @@ src/
 │   ├── (dashboard)/              # Authenticated student/shared routes
 │   │   ├── dashboard/page.tsx
 │   │   ├── courses/
-│   │   │   ├── page.tsx          # Course catalog
+│   │   │   ├── page.tsx          # Course catalog (CORPORATE: ADMIN/INSTRUCTOR only)
 │   │   │   └── [courseId]/
 │   │   │       ├── page.tsx      # Course detail
 │   │   │       ├── learn/[lessonId]/page.tsx
-│   │   │       └── forum/page.tsx
+│   │   │       ├── forum/page.tsx
+│   │   │       └── progress/page.tsx  # Student progress timeline
 │   │   ├── my-courses/page.tsx
+│   │   ├── bookmarks/page.tsx
+│   │   ├── certificates/page.tsx
 │   │   ├── calendar/page.tsx
 │   │   ├── messages/
 │   │   │   ├── page.tsx
@@ -205,7 +209,7 @@ src/
 │   │   │   │   └── [courseId]/
 │   │   │   │       ├── edit/page.tsx
 │   │   │   │       ├── modules/page.tsx
-│   │   │   │       ├── students/page.tsx
+│   │   │   │       ├── students/page.tsx  # + AssignUsersModal
 │   │   │   │       └── gradebook/page.tsx
 │   │   │   └── page.tsx
 │   │   ├── error.tsx
@@ -213,9 +217,15 @@ src/
 │   │   └── layout.tsx            # Checks session + INSTRUCTOR/ADMIN role
 │   ├── (admin)/                  # Admin-only routes
 │   │   ├── admin/
-│   │   │   ├── users/page.tsx
+│   │   │   ├── page.tsx          # Admin dashboard with metrics
+│   │   │   ├── users/
+│   │   │   │   ├── page.tsx
+│   │   │   │   └── [userId]/page.tsx  # User profile + UserCoursesManager
 │   │   │   ├── courses/page.tsx
-│   │   │   └── categories/page.tsx
+│   │   │   ├── categories/page.tsx
+│   │   │   ├── announcements/page.tsx
+│   │   │   ├── settings/page.tsx
+│   │   │   └── assignments/page.tsx   # CORPORATE only — split-view assignment hub
 │   │   ├── error.tsx
 │   │   ├── loading.tsx
 │   │   └── layout.tsx            # Checks session + ADMIN role
@@ -236,44 +246,69 @@ src/
 │   ├── ui/                       # shadcn/ui (auto-generated — do not hand-edit)
 │   ├── shared/                   # Reusable across all roles
 │   │   ├── auth/
-│   │   │   └── AuthErrorHandler.tsx  # Detects session.error === 'RefreshTokenExpired' → signOut
+│   │   │   ├── AuthErrorHandler.tsx   # Detects session.error → signOut
+│   │   │   └── ImpersonationBanner.tsx # Fixed amber banner during admin impersonation
+│   │   ├── announcements/
+│   │   │   └── GlobalAnnouncementBanner.tsx  # Site-wide info/warning/maintenance banner
 │   │   ├── navigation/
-│   │   │   ├── Header.tsx        # Top bar: notifications badge, user avatar dropdown, logout
-│   │   │   └── Sidebar.tsx       # Side nav with active-link highlighting
-│   │   ├── layouts/
+│   │   │   ├── Header.tsx         # 52px bar: page title, theme toggle, bell, avatar
+│   │   │   ├── Sidebar.tsx        # Collapsible side nav (52px/220px), tooltips, mode-aware
+│   │   │   ├── NavigationShell.tsx # Client wrapper: collapse state, layout composition
+│   │   │   └── Breadcrumbs.tsx
 │   │   └── feedback/
-│   │       ├── ErrorMessage.tsx  # Used by all error.tsx boundaries
-│   │       ├── EmptyState.tsx    # Used by not-found.tsx and empty list states
-│   │       └── LoadingSpinner.tsx # PageSpinner used by all loading.tsx files
+│   │       ├── ErrorMessage.tsx         # Used by all error.tsx boundaries
+│   │       ├── EmptyState.tsx           # Used by not-found.tsx and empty list states
+│   │       ├── LoadingSpinner.tsx       # PageSpinner used by all loading.tsx files
+│   │       └── InlineConfirmActions.tsx # Inline "Are you sure? Yes / No" pattern
 │   └── features/                 # Domain-specific components
-│       ├── auth/
-│       ├── courses/
-│       ├── lessons/
-│       ├── quiz/
-│       ├── assignments/
-│       ├── forum/
-│       ├── messages/
+│       ├── auth/                  # LoginForm, RegisterForm, OAuthButtons, VerifyEmailForm
+│       ├── courses/               # CourseCard, CourseGrid, CoursesFilter, EnrollButton,
+│       │                          # CourseHero, CourseModules, MyCourseCard, MyCoursesFilter,
+│       │                          # ProgressTimeline
+│       ├── lessons/               # VideoPlayer, TextLesson, LessonPageShell, LessonSidebar,
+│       │                          # LessonNavigation, LessonNotes, BookmarkButton
+│       ├── quiz/                  # QuizPlayer, QuizEditor, QuestionForm
+│       ├── assignments/           # AssignmentPlayer, AssignmentEditor, GradeSubmissionDialog
+│       ├── forum/                 # ForumShell, ThreadList, ThreadForm, PostItem, PostForm
+│       ├── messages/              # ConversationList, ChatWindow, MessageBubble, MessageInput
 │       ├── notifications/
 │       ├── calendar/
-│       └── gradebook/
+│       ├── certificates/          # CertificateCard, GenerateCertificateButton
+│       ├── dashboard/             # StatsCards, InProgressCourses, UpcomingEvents, NotificationsSync
+│       ├── gradebook/
+│       ├── profile/               # ProfileForm, PasswordForm, DeleteAccountDialog
+│       ├── instructor/            # CourseForm, CourseAnalytics, ModuleList, ModuleForm,
+│       │                          # LessonForm, QuizEditor, GradebookSetup, GradebookTable,
+│       │                          # StudentList, StudentProgressDetail, InstructorStatsCards,
+│       │                          # InstructorCourseCard, DuplicateCourseButton,
+│       │                          # EnrollmentCodesManager, AssignUsersModal
+│       └── admin/                 # UserTable, AdminCourseTable, CategoryManager,
+│                                  # AdminMetricsCards, RecentUsersTable, RecentCoursesTable,
+│                                  # GlobalAnnouncementManager, AnnouncementFormDialog,
+│                                  # MaintenanceToggle, UserCoursesManager,
+│                                  # AssignCoursesModal, AssignmentsPanel
 ├── hooks/
 │   ├── queries/                  # useQuery hooks per domain (one file per domain)
 │   └── mutations/                # useMutation hooks per domain
 ├── lib/
 │   ├── api.ts                    # Axios instance + envelope-unwrap + 401-retry interceptors
 │   ├── auth.ts                   # Auth.js config (credentials provider, JWT/session callbacks)
+│   ├── config.ts                 # API_URL, WS_URL, APP_URL; PORTAL_MODE + isCorporate/isMarketplace/isAcademic
+│   ├── navigation.ts             # getDashboardNav(), getInstructorNav(), getAdminNav() — mode-aware
+│   ├── errors.ts                 # getApiErrorMessage() helper
 │   ├── sanitize.ts               # DOMPurify wrapper — SSR-safe, client-only lazy load
 │   ├── socket.ts                 # Socket.io factory (token callback pattern — no static token)
 │   ├── query-client.ts           # React Query client (retry policy: no retry on 401/403/404/429)
 │   └── utils.ts                  # cn(), formatDate(), formatPrice(), formatDuration(), etc.
 ├── store/
 │   ├── notifications.store.ts    # Zustand: unread count, recent notifications list
+│   ├── messages.store.ts         # Zustand: messages unread count
 │   └── socket.store.ts           # Zustand: forum/messages connection state
 ├── types/
 │   ├── api.ts                    # ApiResponse<T>, PaginatedData<T>, PaginatedResponse<T>, ApiError
 │   ├── models.ts                 # All domain model types (match backend DTOs exactly)
 │   └── next-auth.d.ts            # NextAuth module augmentation — Session has no refreshToken
-└── middleware.ts                 # Route protection + RefreshTokenExpired redirect
+└── middleware.ts                 # Route protection, RefreshTokenExpired redirect, CORPORATE catalog guard
 ```
 
 **Where each type of code goes:**
@@ -324,6 +359,36 @@ src/
 17. **Add 429 to React Query's no-retry list** alongside 401/403/404. Retrying a rate-limited request immediately makes rate limiting worse. See MISTAKES.md [007].
 
 18. **Socket.io `auth` must use the callback form** so every connect and auto-reconnect fetches a fresh token. A static token string goes stale after 15 minutes. See MISTAKES.md [008].
+
+19. **Portal mode is a UI hint, not a security boundary.** `NEXT_PUBLIC_PORTAL_MODE` is read at build time and controls which UI elements render (nav items, badges, enrollment buttons). Never use `isCorporate` / `isMarketplace` / `isAcademic` to gate actual data access — the backend enforces business rules regardless of mode. A determined user could bypass client-side mode checks.
+
+---
+
+## Portal Mode
+
+The portal runs in one of three modes, set via `NEXT_PUBLIC_PORTAL_MODE` at build time (never at runtime):
+
+| Mode          | Description                              | Key UI behavior                                                                         |
+| ------------- | ---------------------------------------- | --------------------------------------------------------------------------------------- |
+| `MARKETPLACE` | Users browse and self-enroll freely      | Full catalog, prices, all enrollment types shown                                        |
+| `CORPORATE`   | Admin assigns users to specific courses  | No catalog for students, no prices, no enrollment type badges; `/admin/assignments` hub |
+| `ACADEMIC`    | University-style with enrollment periods | No prices, enrollment date window shown on course page                                  |
+
+**Always use the boolean helpers from `@/lib/config`:**
+
+```typescript
+import { isCorporate, isMarketplace, isAcademic } from '@/lib/config'
+```
+
+Never compare the string directly (`PORTAL_MODE === 'CORPORATE'`) outside of `config.ts`. The helpers are the single source of truth and make grep-based audits easy.
+
+**What changes per mode:**
+
+- `navigation.ts` — `getDashboardNav()` omits "Explorar cursos" in `isCorporate`; `getAdminNav()` adds "Asignaciones" in `isCorporate`
+- `middleware.ts` — redirects students from `/courses` to `/my-courses` in `isCorporate`
+- `CourseCard.tsx` — hides price and enrollment-type badges unless `isMarketplace`
+- `CoursesFilter.tsx` — hides enrollment-type pill row unless `isMarketplace`
+- `EnrollButton.tsx` — student sees assignment message in `isCorporate`; enrollment period check in `isAcademic`
 
 ---
 
@@ -400,40 +465,53 @@ pnpm dlx shadcn@latest add <component>   # add a new shadcn component
 
 ## Environment Variables
 
-| Variable              | Required  | Description                                                            |
-| --------------------- | --------- | ---------------------------------------------------------------------- |
-| `NEXT_PUBLIC_APP_URL` | ✅        | Frontend app URL (e.g. `http://localhost:3001`)                        |
-| `NEXT_PUBLIC_API_URL` | ✅        | Backend API base URL (e.g. `http://localhost:3000/api/v1`)             |
-| `NEXT_PUBLIC_WS_URL`  | ✅        | WebSocket server URL (e.g. `http://localhost:3000`)                    |
-| `AUTH_SECRET`         | ✅        | Auth.js secret — min 32 chars; generate with `openssl rand -base64 32` |
-| `AUTH_URL`            | ✅ (prod) | Canonical URL for Auth.js — must match `NEXT_PUBLIC_APP_URL`           |
+| Variable                  | Required  | Description                                                                        |
+| ------------------------- | --------- | ---------------------------------------------------------------------------------- |
+| `NEXT_PUBLIC_APP_URL`     | ✅        | Frontend app URL (e.g. `http://localhost:3001`)                                    |
+| `NEXT_PUBLIC_API_URL`     | ✅        | Backend API base URL (e.g. `http://localhost:3000/api/v1`)                         |
+| `NEXT_PUBLIC_WS_URL`      | ✅        | WebSocket server URL (e.g. `http://localhost:3000`)                                |
+| `NEXT_PUBLIC_PORTAL_MODE` | ✅        | Portal behaviour: `CORPORATE` \| `MARKETPLACE` \| `ACADEMIC`. Default: MARKETPLACE |
+| `AUTH_SECRET`             | ✅        | Auth.js secret — min 32 chars; generate with `openssl rand -base64 32`             |
+| `AUTH_URL`                | ✅ (prod) | Canonical URL for Auth.js — must match `NEXT_PUBLIC_APP_URL`                       |
 
 ---
 
 ## Completed Features
 
-| Area                  | Feature                                                                  | Status |
-| --------------------- | ------------------------------------------------------------------------ | ------ |
-| Auth                  | Login, Register, Email Verification (OTP)                                | ✅     |
-| Navigation            | Sidebar (mobile bottom nav), Header, Breadcrumbs, theme toggle           | ✅     |
-| Design System         | Nexus tokens (globals.css), light/dark via next-themes                   | ✅     |
-| Landing               | Public landing page at `/` with hero, features, stats, CTA               | ✅     |
-| Dashboard             | Stats cards, in-progress courses, upcoming calendar events               | ✅     |
-| Courses               | Catalog with category filter + search, Course detail, Enrollment         | ✅     |
-| My Courses            | Status filter tabs, progress cards, CSV export                           | ✅     |
-| Lesson Player         | Video (HTML5 + keyboard shortcuts), Text (DOMPurify), Quiz, Assignment   | ✅     |
-| Forum                 | Thread list, detail, flat replies, voting, accept answer, WebSocket room | ✅     |
-| Messages              | Inbox, real-time chat, read receipts, WebSocket                          | ✅     |
-| Notifications         | Badge sync with Zustand store                                            | ✅     |
-| Profile               | Edit profile/avatar, change password, delete account                     | ✅     |
-| Calendar              | Upcoming events view                                                     | ✅     |
-| Instructor Dashboard  | Stats, course grid with publish/archive, pagination                      | ✅     |
-| Course Editor         | Create/edit form with cover upload, publish/archive/delete               | ✅     |
-| Module Editor         | Module/Lesson CRUD with HTML5 DnD reorder                                | ✅     |
-| Quiz Management       | Settings (max attempts, passing score, shuffle), 5 question types        | ✅     |
-| Assignment Management | Settings (grading type, due date), file upload, manual grading           | ✅     |
-| Students Page         | Enrollment table, progress detail, CSV export, ADMIN cancel              | ✅     |
-| Gradebook             | Grade matrix table, initial setup, manual grading dialog                 | ✅     |
-| Admin Users           | List + profile view with role display                                    | ✅     |
-| Admin Courses         | All-courses table with status filter + publish/archive                   | ✅     |
-| Admin Categories      | Inline CRUD with 409 protection                                          | ✅     |
+| Area                  | Feature                                                                                         | Status |
+| --------------------- | ----------------------------------------------------------------------------------------------- | ------ |
+| Auth                  | Login, Register, Email Verification (OTP), OAuth (Google + Microsoft)                           | ✅     |
+| Navigation            | Collapsible sidebar (52/220px, localStorage), Header with page title, Breadcrumbs, theme toggle | ✅     |
+| Design System         | Nexus tokens (globals.css), light/dark via next-themes, violet accent                           | ✅     |
+| Landing               | Public landing page at `/` with hero, features, stats, CTA                                      | ✅     |
+| Dashboard             | Stats cards, in-progress courses, upcoming calendar events                                      | ✅     |
+| Courses               | Catalog with category + enrollment-type filters + search, Course detail, Enrollment             | ✅     |
+| My Courses            | Status filter tabs, progress cards, CSV export                                                  | ✅     |
+| Lesson Player         | Video (HTML5 + keyboard shortcuts), Text (DOMPurify), Quiz, Assignment                          | ✅     |
+| Lesson Notes          | Auto-save notes per lesson                                                                      | ✅     |
+| Bookmarks             | Bookmark lessons, dedicated bookmarks page                                                      | ✅     |
+| Certificates          | View + download PDF certificate on course completion                                            | ✅     |
+| Forum                 | Thread list, detail, flat replies, voting, accept answer, WebSocket room                        | ✅     |
+| Messages              | Inbox, real-time chat, read receipts, WebSocket                                                 | ✅     |
+| Notifications         | Badge sync with Zustand store                                                                   | ✅     |
+| Profile               | Edit profile/avatar, change password, delete account                                            | ✅     |
+| Calendar              | Upcoming events view                                                                            | ✅     |
+| Instructor Dashboard  | Stats, course analytics, course grid with publish/archive, pagination                           | ✅     |
+| Course Editor         | Create/edit form with cover upload, enrollment type selector, publish/archive/delete, duplicate | ✅     |
+| Module Editor         | Module/Lesson CRUD with HTML5 DnD reorder                                                       | ✅     |
+| Quiz Management       | Settings (max attempts, passing score, shuffle), 5 question types                               | ✅     |
+| Assignment Management | Settings (grading type, due date), file upload, manual grading                                  | ✅     |
+| Enrollment Codes      | CODE-type courses: generate codes, set max uses + expiry, toggle active                         | ✅     |
+| Students Page         | Enrollment table, progress detail, CSV export, ADMIN cancel, assign users modal                 | ✅     |
+| Gradebook             | Grade matrix table, initial setup, manual grading dialog                                        | ✅     |
+| Student Progress      | Per-student timeline view of lesson completions                                                 | ✅     |
+| Impersonation         | Admin impersonates any user with amber banner + restore session                                 | ✅     |
+| Global Announcements  | Site-wide info/warning/maintenance banners, admin CRUD                                          | ✅     |
+| Maintenance Mode      | Admin toggle, redirect non-admins to /maintenance page                                          | ✅     |
+| Admin Dashboard       | Metrics cards, recent users + courses tables                                                    | ✅     |
+| Admin Users           | List + profile view, user course management, bulk assignment                                    | ✅     |
+| Admin Courses         | All-courses table with status filter + publish/archive                                          | ✅     |
+| Admin Categories      | Inline CRUD with 409 protection                                                                 | ✅     |
+| Portal Mode           | CORPORATE/MARKETPLACE/ACADEMIC build-time mode with mode-aware nav + UI                         | ✅     |
+| Assignment Hub        | CORPORATE: assign users to courses (from course or from user), bulk enrollment                  | ✅     |
+| Assignments Page      | CORPORATE: split-view admin hub at /admin/assignments                                           | ✅     |
