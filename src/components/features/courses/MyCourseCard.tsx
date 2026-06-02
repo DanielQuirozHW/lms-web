@@ -50,20 +50,23 @@ export function MyCourseCard({ enrollment, course }: MyCourseCardProps) {
   const continuePath = `/courses/${enrollment.courseId}`
 
   function handleReenroll() {
-    enroll(enrollment.courseId, {
-      onSuccess: () => {
-        toast.success('¡Te reinscribiste exitosamente!')
-        router.refresh()
-      },
-      onError: (error) => {
-        if (isApiError(error) && error.response?.data.statusCode === 409) {
-          // Race condition: already enrolled — just refresh to show current state
+    enroll(
+      { courseId: enrollment.courseId },
+      {
+        onSuccess: () => {
+          toast.success('¡Te reinscribiste exitosamente!')
           router.refresh()
-        } else {
-          toast.error('No se pudo reinscribir. Intentá de nuevo.')
-        }
-      },
-    })
+        },
+        onError: (error) => {
+          if (isApiError(error) && error.response?.data.statusCode === 409) {
+            // Race condition: already enrolled — just refresh to show current state
+            router.refresh()
+          } else {
+            toast.error('No se pudo reinscribir. Intentá de nuevo.')
+          }
+        },
+      }
+    )
   }
 
   return (

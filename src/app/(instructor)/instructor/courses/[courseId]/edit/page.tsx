@@ -9,6 +9,7 @@ import { buttonVariants } from '@/components/ui/button'
 import { CourseForm } from '@/components/features/instructor/CourseForm'
 import { CourseDangerZone } from '@/components/features/instructor/CourseDangerZone'
 import { DuplicateCourseButton } from '@/components/features/instructor/DuplicateCourseButton'
+import { EnrollmentCodesManager } from '@/components/features/instructor/EnrollmentCodesManager'
 
 interface PageProps {
   params: Promise<{ courseId: string }>
@@ -80,6 +81,8 @@ export default async function EditCoursePage({ params }: PageProps) {
       </div>
 
       <CourseForm mode="edit" initialData={course} categories={categories} />
+
+      {course.enrollmentType === 'CODE' && <EnrollmentCodesManager courseId={courseId} />}
 
       <CourseDangerZone
         courseId={course.id}

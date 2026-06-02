@@ -10,19 +10,33 @@ interface CoursesFilterProps {
   categories: Category[]
 }
 
+const ENROLLMENT_TYPE_OPTIONS = [
+  { value: '', label: 'Todos los tipos' },
+  { value: 'FREE', label: 'Gratuitos' },
+  { value: 'PAID', label: 'Pagos' },
+  { value: 'CODE', label: 'Con código' },
+  { value: 'ASSIGNED', label: 'Asignados' },
+] as const
+
 export function CoursesFilter({ categories }: CoursesFilterProps) {
   const router = useRouter()
   const searchParams = useSearchParams()
 
   const activeCategoryId = searchParams.get('categoryId') ?? ''
-  // Local state only for the input's "draft" value while the user is typing.
-  // The URL (via useSearchParams) is the real source of truth.
+  const activeEnrollmentType = searchParams.get('enrollmentType') ?? ''
   const [searchInput, setSearchInput] = useState(searchParams.get('search') ?? '')
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
-  function buildUrl(updates: Partial<{ categoryId: string; search: string; page: string }>) {
+  function buildUrl(
+    updates: Partial<{
+      categoryId: string
+      search: string
+      page: string
+      enrollmentType: string
+    }>
+  ) {
     const params = new URLSearchParams(searchParams.toString())
-    params.delete('page') // reset to page 1 on any filter change
+    params.delete('page')
 
     if ('categoryId' in updates) {
       if (updates.categoryId) params.set('categoryId', updates.categoryId)
@@ -31,6 +45,10 @@ export function CoursesFilter({ categories }: CoursesFilterProps) {
     if ('search' in updates) {
       if (updates.search) params.set('search', updates.search)
       else params.delete('search')
+    }
+    if ('enrollmentType' in updates) {
+      if (updates.enrollmentType) params.set('enrollmentType', updates.enrollmentType)
+      else params.delete('enrollmentType')
     }
 
     const qs = params.toString()
@@ -41,12 +59,14 @@ export function CoursesFilter({ categories }: CoursesFilterProps) {
     router.push(buildUrl({ categoryId }))
   }
 
+  function handleEnrollmentType(type: string) {
+    router.push(buildUrl({ enrollmentType: type }))
+  }
+
   function handleSearch(value: string) {
     setSearchInput(value)
-
     if (debounceRef.current) clearTimeout(debounceRef.current)
     debounceRef.current = setTimeout(() => {
-      // Use replace so rapid keystrokes don't stack history entries
       router.replace(buildUrl({ search: value }))
     }, 300)
   }
@@ -56,6 +76,14 @@ export function CoursesFilter({ categories }: CoursesFilterProps) {
     if (debounceRef.current) clearTimeout(debounceRef.current)
     router.replace(buildUrl({ search: '' }))
   }
+
+  const pillClass = (active: boolean) =>
+    cn(
+      'shrink-0 rounded-full px-3 py-1 text-xs font-medium transition-colors',
+      active
+        ? 'bg-nexus-accent text-white'
+        : 'border-nexus-border bg-nexus-card text-nexus-muted hover:border-nexus-accent hover:text-nexus-accent border'
+    )
 
   return (
     <div className="space-y-3">
@@ -90,7 +118,7 @@ export function CoursesFilter({ categories }: CoursesFilterProps) {
         )}
       </div>
 
-      {/* Category pills — horizontally scrollable */}
+      {/* Category pills */}
       {categories.length > 0 && (
         <div
           className="flex gap-2 overflow-x-auto pb-1"
@@ -100,28 +128,17 @@ export function CoursesFilter({ categories }: CoursesFilterProps) {
           <button
             type="button"
             onClick={() => handleCategory('')}
-            className={cn(
-              'shrink-0 rounded-full px-3 py-1 text-xs font-medium transition-colors',
-              activeCategoryId === ''
-                ? 'bg-nexus-accent text-white'
-                : 'border-nexus-border bg-nexus-card text-nexus-muted hover:border-nexus-accent hover:text-nexus-accent border'
-            )}
+            className={pillClass(activeCategoryId === '')}
             aria-pressed={activeCategoryId === ''}
           >
             Todos
           </button>
-
           {categories.map((cat) => (
             <button
               key={cat.id}
               type="button"
               onClick={() => handleCategory(cat.id)}
-              className={cn(
-                'shrink-0 rounded-full px-3 py-1 text-xs font-medium transition-colors',
-                activeCategoryId === cat.id
-                  ? 'bg-nexus-accent text-white'
-                  : 'border-nexus-border bg-nexus-card text-nexus-muted hover:border-nexus-accent hover:text-nexus-accent border'
-              )}
+              className={pillClass(activeCategoryId === cat.id)}
               aria-pressed={activeCategoryId === cat.id}
             >
               {cat.name}
@@ -129,6 +146,25 @@ export function CoursesFilter({ categories }: CoursesFilterProps) {
           ))}
         </div>
       )}
+
+      {/* Enrollment type pills */}
+      <div
+        className="flex gap-2 overflow-x-auto pb-1"
+        role="group"
+        aria-label="Filtrar por tipo de inscripción"
+      >
+        {ENROLLMENT_TYPE_OPTIONS.map(({ value, label }) => (
+          <button
+            key={value}
+            type="button"
+            onClick={() => handleEnrollmentType(value)}
+            className={pillClass(activeEnrollmentType === value)}
+            aria-pressed={activeEnrollmentType === value}
+          >
+            {label}
+          </button>
+        ))}
+      </div>
     </div>
   )
 }

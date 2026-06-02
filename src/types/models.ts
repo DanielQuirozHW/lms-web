@@ -2,6 +2,7 @@
 
 export type UserRole = 'STUDENT' | 'INSTRUCTOR' | 'ADMIN'
 export type CourseStatus = 'DRAFT' | 'PUBLISHED' | 'ARCHIVED'
+export type EnrollmentType = 'FREE' | 'ASSIGNED' | 'CODE' | 'PAID'
 export type EnrollmentStatus = 'ACTIVE' | 'COMPLETED' | 'CANCELLED'
 export type LessonType = 'VIDEO' | 'TEXT' | 'QUIZ' | 'ASSIGNMENT'
 export type QuestionType =
@@ -67,11 +68,23 @@ export interface Course {
   description: string | null
   coverUrl: string | null
   status: CourseStatus
+  enrollmentType: EnrollmentType
   price: number | null
   instructorId: string
   categoryId: string | null
   createdAt: string
   updatedAt: string
+}
+
+export interface EnrollmentCode {
+  id: string
+  courseId: string
+  code: string
+  maxUses: number | null
+  usedCount: number
+  expiresAt: string | null
+  isActive: boolean
+  createdAt: string
 }
 
 export interface CourseDetail extends Course {
@@ -338,6 +351,7 @@ export interface CoursesFilter {
   limit?: number
   categoryId?: string
   search?: string
+  enrollmentType?: EnrollmentType
 }
 
 // ─── Certificates ─────────────────────────────────────────────────────────────

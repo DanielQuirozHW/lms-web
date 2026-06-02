@@ -20,13 +20,19 @@ export const metadata: Metadata = {
 }
 
 interface PageProps {
-  searchParams: Promise<{ categoryId?: string; page?: string; search?: string }>
+  searchParams: Promise<{
+    categoryId?: string
+    page?: string
+    search?: string
+    enrollmentType?: string
+  }>
 }
 
 export default async function CoursesPage({ searchParams }: PageProps) {
   const params = await searchParams
   const categoryId = params.categoryId
   const search = params.search
+  const enrollmentType = params.enrollmentType
   const page = Math.max(1, parseInt(params.page ?? '1', 10) || 1)
 
   const session = await auth()
@@ -39,6 +45,7 @@ export default async function CoursesPage({ searchParams }: PageProps) {
         limit: 12,
         ...(categoryId && { categoryId }),
         ...(search && { search }),
+        ...(enrollmentType && { enrollmentType }),
       },
       headers,
     }),

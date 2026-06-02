@@ -113,21 +113,18 @@ export default async function CourseDetailPage({ params }: PageProps) {
           aria-label="Inscripción al curso"
         >
           <div className="border-nexus-border bg-nexus-card rounded-2xl border p-6 lg:sticky lg:top-20">
-            {/* Price */}
-            <p
-              className={
-                course.price === null
-                  ? 'text-nexus-success mb-4 text-3xl font-bold'
-                  : 'text-nexus-text mb-4 text-3xl font-bold'
-              }
-            >
-              {course.price === null ? 'Gratis' : formatPrice(course.price)}
-            </p>
+            {/* Price — only shown for PAID courses */}
+            {course.enrollmentType === 'PAID' && (
+              <p className="text-nexus-accent mb-4 text-3xl font-bold">
+                {formatPrice(course.price ?? 0)}
+              </p>
+            )}
 
             {/* Enroll / continue button */}
             <EnrollButton
               courseId={courseId}
               isEnrolled={isEnrolled}
+              enrollmentType={course.enrollmentType}
               price={course.price}
               firstLessonId={firstLessonId}
             />

@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
-import { ImagePlus, Loader2, Info } from 'lucide-react'
+import { ImagePlus, Loader2, Info, Users, UserCheck, Key, CreditCard } from 'lucide-react'
 import { toast } from 'sonner'
 import {
   Form,
@@ -19,7 +19,7 @@ import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
 import { useCreateCourse, useUpdateCourse, useUploadCourseCover } from '@/hooks/mutations/courses'
-import type { Course, Category } from '@/types/models'
+import type { Course, Category, EnrollmentType } from '@/types/models'
 
 // ─── Schema ───────────────────────────────────────────────────────────────────
 
@@ -27,10 +27,45 @@ const schema = z.object({
   title: z.string().min(3, 'El título debe tener al menos 3 caracteres'),
   description: z.string().optional(),
   categoryId: z.string().optional(),
+  enrollmentType: z.enum(['FREE', 'ASSIGNED', 'CODE', 'PAID']),
   price: z.number().nonnegative('El precio debe ser un número positivo').optional(),
 })
 
 type FormValues = z.infer<typeof schema>
+
+// ─── Enrollment type options ──────────────────────────────────────────────────
+
+const ENROLLMENT_OPTIONS: {
+  value: EnrollmentType
+  label: string
+  description: string
+  icon: React.ElementType
+}[] = [
+  {
+    value: 'FREE',
+    label: 'Libre',
+    description: 'Cualquiera puede inscribirse',
+    icon: Users,
+  },
+  {
+    value: 'ASSIGNED',
+    label: 'Asignado',
+    description: 'Solo por administrador',
+    icon: UserCheck,
+  },
+  {
+    value: 'CODE',
+    label: 'Con código',
+    description: 'El estudiante ingresa un código',
+    icon: Key,
+  },
+  {
+    value: 'PAID',
+    label: 'De pago',
+    description: 'Requiere pago (próximamente)',
+    icon: CreditCard,
+  },
+]
 
 // ─── Cover upload zone ────────────────────────────────────────────────────────
 
@@ -57,7 +92,6 @@ function CoverUploadZone({ courseId, initialCoverUrl }: CoverUploadZoneProps) {
       return
     }
 
-    // Show local preview immediately
     const objectUrl = URL.createObjectURL(file)
     setPreview(objectUrl)
 
@@ -102,15 +136,12 @@ function CoverUploadZone({ courseId, initialCoverUrl }: CoverUploadZoneProps) {
 
   return (
     <div className="space-y-3">
-      {/* Preview */}
       {preview && (
         <div className="relative aspect-video w-full overflow-hidden rounded-xl">
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img src={preview} alt="Vista previa de portada" className="h-full w-full object-cover" />
         </div>
       )}
-
-      {/* Drop zone */}
       <div
         role="button"
         tabIndex={0}
@@ -148,7 +179,6 @@ function CoverUploadZone({ courseId, initialCoverUrl }: CoverUploadZoneProps) {
           </p>
         </div>
       </div>
-
       <input
         ref={fileInputRef}
         type="file"
@@ -185,16 +215,20 @@ export function CourseForm({ mode, initialData, categories }: CourseFormProps) {
       title: initialData?.title ?? '',
       description: initialData?.description ?? '',
       categoryId: initialData?.categoryId ?? '',
+      enrollmentType: initialData?.enrollmentType ?? 'FREE',
       price: initialData?.price ?? undefined,
     },
   })
+
+  const watchedEnrollmentType = form.watch('enrollmentType')
 
   function onSubmit(values: FormValues) {
     const data = {
       title: values.title,
       description: values.description || undefined,
       categoryId: values.categoryId || undefined,
-      price: values.price,
+      enrollmentType: values.enrollmentType,
+      price: values.enrollmentType === 'PAID' ? values.price : undefined,
     }
 
     if (mode === 'create') {
@@ -273,53 +307,105 @@ export function CourseForm({ mode, initialData, categories }: CourseFormProps) {
               )}
             />
 
-            {/* Category + Price */}
-            <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
-              <FormField
-                control={form.control}
-                name="categoryId"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel className="text-nexus-text font-medium">
-                      Categoría <span className="text-nexus-muted font-normal">(opcional)</span>
-                    </FormLabel>
-                    <FormControl>
-                      <select
-                        {...field}
-                        className={cn(
-                          inputClass,
-                          'w-full rounded-lg border px-3 py-2 text-sm',
-                          'focus:border-nexus-accent focus:ring-nexus-accent/50 focus:ring-2 focus:outline-none',
-                          'transition-colors'
-                        )}
-                      >
-                        <option value="">Sin categoría</option>
-                        {categories.map((cat) => (
-                          <option key={cat.id} value={cat.id}>
-                            {cat.name}
-                          </option>
-                        ))}
-                      </select>
-                    </FormControl>
-                    <FormMessage className="text-xs" />
-                  </FormItem>
-                )}
-              />
+            {/* Category */}
+            <FormField
+              control={form.control}
+              name="categoryId"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel className="text-nexus-text font-medium">
+                    Categoría <span className="text-nexus-muted font-normal">(opcional)</span>
+                  </FormLabel>
+                  <FormControl>
+                    <select
+                      {...field}
+                      className={cn(
+                        inputClass,
+                        'w-full rounded-lg border px-3 py-2 text-sm',
+                        'focus:border-nexus-accent focus:ring-nexus-accent/50 focus:ring-2 focus:outline-none',
+                        'transition-colors'
+                      )}
+                    >
+                      <option value="">Sin categoría</option>
+                      {categories.map((cat) => (
+                        <option key={cat.id} value={cat.id}>
+                          {cat.name}
+                        </option>
+                      ))}
+                    </select>
+                  </FormControl>
+                  <FormMessage className="text-xs" />
+                </FormItem>
+              )}
+            />
 
+            {/* Enrollment type selector */}
+            <FormField
+              control={form.control}
+              name="enrollmentType"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel className="text-nexus-text font-medium">Tipo de inscripción</FormLabel>
+                  <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
+                    {ENROLLMENT_OPTIONS.map((option) => {
+                      const Icon = option.icon
+                      const isSelected = field.value === option.value
+                      return (
+                        <button
+                          key={option.value}
+                          type="button"
+                          onClick={() => field.onChange(option.value)}
+                          className={cn(
+                            'flex flex-col items-start gap-2 rounded-lg border p-3 text-left transition-colors',
+                            isSelected
+                              ? 'border-nexus-accent bg-nexus-accent-muted'
+                              : 'border-nexus-border bg-nexus-bg hover:border-nexus-accent/40'
+                          )}
+                          aria-pressed={isSelected}
+                        >
+                          <Icon
+                            className={cn(
+                              'h-4 w-4',
+                              isSelected ? 'text-nexus-accent' : 'text-nexus-muted'
+                            )}
+                            aria-hidden="true"
+                          />
+                          <div>
+                            <p
+                              className={cn(
+                                'text-xs font-semibold',
+                                isSelected ? 'text-nexus-accent' : 'text-nexus-text'
+                              )}
+                            >
+                              {option.label}
+                            </p>
+                            <p className="text-nexus-faint text-[10px] leading-tight">
+                              {option.description}
+                            </p>
+                          </div>
+                        </button>
+                      )
+                    })}
+                  </div>
+                  <FormMessage className="text-xs" />
+                </FormItem>
+              )}
+            />
+
+            {/* Price — only shown for PAID */}
+            {watchedEnrollmentType === 'PAID' && (
               <FormField
                 control={form.control}
                 name="price"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel className="text-nexus-text font-medium">
-                      Precio (USD) <span className="text-nexus-muted font-normal">(opcional)</span>
-                    </FormLabel>
+                    <FormLabel className="text-nexus-text font-medium">Precio (USD)</FormLabel>
                     <FormControl>
                       <Input
                         type="number"
                         min="0"
                         step="0.01"
-                        placeholder="0 para curso gratuito"
+                        placeholder="Ej: 29.99"
                         className={inputClass}
                         value={field.value ?? ''}
                         onChange={(e) => {
@@ -335,7 +421,7 @@ export function CourseForm({ mode, initialData, categories }: CourseFormProps) {
                   </FormItem>
                 )}
               />
-            </div>
+            )}
 
             {/* Submit */}
             <div className="flex justify-end pt-1">

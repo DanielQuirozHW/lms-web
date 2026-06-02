@@ -2,7 +2,7 @@ import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { useRouter } from 'next/navigation'
 import { toast } from 'sonner'
 import api from '@/lib/api'
-import type { Course } from '@/types/models'
+import type { Course, EnrollmentType } from '@/types/models'
 import { courseKeys } from '@/hooks/queries/courses'
 
 interface CreateCourseInput {
@@ -10,6 +10,7 @@ interface CreateCourseInput {
   description?: string
   coverUrl?: string
   categoryId?: string
+  enrollmentType?: EnrollmentType
   price?: number
 }
 

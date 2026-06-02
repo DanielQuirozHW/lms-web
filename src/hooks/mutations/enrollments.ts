@@ -8,12 +8,12 @@ export function useEnrollMutation() {
   const queryClient = useQueryClient()
 
   return useMutation({
-    mutationFn: (courseId: string) =>
-      api.post<Enrollment>('/enrollments', { courseId }).then((r) => r.data),
-    onSuccess: (_enrollment, courseId) => {
-      // Bust the course list so enrolled state is reflected everywhere
+    mutationFn: ({ courseId, code }: { courseId: string; code?: string }) =>
+      api
+        .post<Enrollment>('/enrollments', { courseId, ...(code ? { code } : {}) })
+        .then((r) => r.data),
+    onSuccess: (_enrollment, { courseId }) => {
       queryClient.invalidateQueries({ queryKey: courseKeys.my() })
-      // Bust the instructor's enrollment list for this course
       queryClient.invalidateQueries({ queryKey: enrollmentKeys.courseList(courseId) })
     },
   })
