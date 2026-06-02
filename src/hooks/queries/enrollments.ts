@@ -1,6 +1,6 @@
 import { useQuery } from '@tanstack/react-query'
 import api from '@/lib/api'
-import type { EnrollmentDetail } from '@/types/models'
+import type { EnrollmentDetail, CourseStatus } from '@/types/models'
 import type { PaginatedData } from '@/types/api'
 
 // Extends EnrollmentDetail with student info the API may embed in list responses
@@ -13,10 +13,21 @@ export interface EnrollmentWithStudent extends EnrollmentDetail {
   } | null
 }
 
+// Extends EnrollmentDetail with course info the API embeds in user-enrollment responses
+export interface EnrollmentWithCourse extends EnrollmentDetail {
+  course?: {
+    id: string
+    title: string
+    coverUrl: string | null
+    status: CourseStatus
+  } | null
+}
+
 export const enrollmentKeys = {
   all: ['enrollments'] as const,
   lists: () => [...enrollmentKeys.all, 'list'] as const,
   courseList: (courseId: string) => [...enrollmentKeys.all, 'course', courseId] as const,
+  userList: (userId: string) => [...enrollmentKeys.all, 'user', userId] as const,
   detail: (enrollmentId: string) => [...enrollmentKeys.all, 'detail', enrollmentId] as const,
   myList: () => [...enrollmentKeys.all, 'my'] as const,
 }
@@ -29,6 +40,18 @@ export function useCourseEnrollments(courseId: string) {
         .get<PaginatedData<EnrollmentWithStudent>>(`/enrollments/course/${courseId}`)
         .then((r) => r.data),
     enabled: !!courseId,
+    staleTime: 60 * 1000,
+  })
+}
+
+export function useUserEnrollments(userId: string) {
+  return useQuery({
+    queryKey: enrollmentKeys.userList(userId),
+    queryFn: () =>
+      api
+        .get<PaginatedData<EnrollmentWithCourse>>(`/users/${userId}/enrollments`)
+        .then((r) => r.data),
+    enabled: !!userId,
     staleTime: 60 * 1000,
   })
 }

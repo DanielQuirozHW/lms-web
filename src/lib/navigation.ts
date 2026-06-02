@@ -13,6 +13,7 @@ import {
   Tag,
   Megaphone,
   Settings,
+  ClipboardList,
 } from 'lucide-react'
 import type { NavGroup } from '@/components/shared/navigation/Sidebar'
 import { isCorporate } from '@/lib/config'
@@ -80,6 +81,10 @@ export function getAdminNav(): NavGroup[] {
     {
       label: 'PLATAFORMA',
       items: [
+        // Corporate portals need a dedicated assignment hub
+        ...(isCorporate
+          ? [{ label: 'Asignaciones', href: '/admin/assignments', icon: ClipboardList }]
+          : []),
         { label: 'Cursos', href: '/admin/courses', icon: BookOpen },
         { label: 'Categorías', href: '/admin/categories', icon: Tag },
         { label: 'Alertas globales', href: '/admin/announcements', icon: Megaphone },

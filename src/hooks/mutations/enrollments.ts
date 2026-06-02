@@ -18,3 +18,27 @@ export function useEnrollMutation() {
     },
   })
 }
+
+export function useBulkEnroll() {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: ({ userIds, courseId }: { userIds: string[]; courseId: string }) =>
+      api.post('/enrollments/bulk', { userIds, courseId }).then((r) => r.data),
+    onSuccess: (_data, { courseId }) => {
+      queryClient.invalidateQueries({ queryKey: enrollmentKeys.courseList(courseId) })
+      queryClient.invalidateQueries({ queryKey: courseKeys.my() })
+    },
+  })
+}
+
+export function useRemoveUserEnrollment(userId: string) {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: (courseId: string) => api.delete(`/users/${userId}/enrollments/${courseId}`),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: enrollmentKeys.userList(userId) })
+    },
+  })
+}

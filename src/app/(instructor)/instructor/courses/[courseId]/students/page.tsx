@@ -9,6 +9,7 @@ import type { PaginatedData } from '@/types/api'
 import type { EnrollmentWithStudent } from '@/hooks/queries/enrollments'
 import { buttonVariants } from '@/components/ui/button'
 import { StudentList } from '@/components/features/instructor/StudentList'
+import { AssignUsersModal } from '@/components/features/instructor/AssignUsersModal'
 
 interface PageProps {
   params: Promise<{ courseId: string }>
@@ -59,24 +60,28 @@ export default async function CourseStudentsPage({ params }: PageProps) {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div>
-        <Link
-          href={`/instructor/courses/${courseId}/edit`}
-          className={buttonVariants({
-            variant: 'ghost',
-            size: 'sm',
-            className: 'text-nexus-muted hover:text-nexus-text mb-2 -ml-2 flex items-center gap-1',
-          })}
-        >
-          <ChevronLeft className="h-4 w-4" aria-hidden="true" />
-          Editar curso
-        </Link>
-        <h1 className="text-nexus-text text-2xl font-bold">{course.title}</h1>
-        <p className="text-nexus-muted mt-1 flex items-center gap-1.5 text-sm">
-          <Users className="h-4 w-4" aria-hidden="true" />
-          {enrollments.length} estudiante{enrollments.length !== 1 && 's'} inscrito
-          {enrollments.length !== 1 && 's'}
-        </p>
+      <div className="flex items-start justify-between gap-3">
+        <div>
+          <Link
+            href={`/instructor/courses/${courseId}/edit`}
+            className={buttonVariants({
+              variant: 'ghost',
+              size: 'sm',
+              className:
+                'text-nexus-muted hover:text-nexus-text mb-2 -ml-2 flex items-center gap-1',
+            })}
+          >
+            <ChevronLeft className="h-4 w-4" aria-hidden="true" />
+            Editar curso
+          </Link>
+          <h1 className="text-nexus-text text-2xl font-bold">{course.title}</h1>
+          <p className="text-nexus-muted mt-1 flex items-center gap-1.5 text-sm">
+            <Users className="h-4 w-4" aria-hidden="true" />
+            {enrollments.length} estudiante{enrollments.length !== 1 && 's'} inscrito
+            {enrollments.length !== 1 && 's'}
+          </p>
+        </div>
+        <AssignUsersModal courseId={courseId} enrolledUserIds={enrollments.map((e) => e.userId)} />
       </div>
 
       <StudentList

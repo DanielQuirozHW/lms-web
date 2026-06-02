@@ -5,12 +5,11 @@ import { ChevronLeft, CheckCircle2, ShieldAlert } from 'lucide-react'
 import { auth } from '@/lib/auth'
 import api, { isApiError } from '@/lib/api'
 import type { User, UserRole } from '@/types/models'
-import type { PaginatedData } from '@/types/api'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { buttonVariants } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
 import { formatDate, formatRelativeTime } from '@/lib/utils'
-import type { EnrollmentWithStudent } from '@/hooks/queries/enrollments'
+import { UserCoursesManager } from '@/components/features/admin/UserCoursesManager'
 
 interface PageProps {
   params: Promise<{ userId: string }>
@@ -40,25 +39,12 @@ export default async function AdminUserProfilePage({ params }: PageProps) {
   const token = session?.accessToken
   const headers = token ? { Authorization: `Bearer ${token}` } : {}
 
-  // Fetch user + enrollments in parallel
-  const [userResult, enrollmentsResult] = await Promise.allSettled([
-    api.get<User>(`/users/${userId}`, { headers }),
-    api.get<PaginatedData<EnrollmentWithStudent>>(`/enrollments`, {
-      params: { userId, limit: 20 },
-      headers,
-    }),
-  ])
+  const userResult = await api.get<User>(`/users/${userId}`, { headers }).catch((err) => {
+    if (isApiError(err) && err.response?.data.statusCode === 404) notFound()
+    throw err
+  })
 
-  if (userResult.status === 'rejected') {
-    if (isApiError(userResult.reason) && userResult.reason.response?.data.statusCode === 404) {
-      notFound()
-    }
-    throw userResult.reason
-  }
-
-  const user = userResult.value.data
-  const enrollments: EnrollmentWithStudent[] =
-    enrollmentsResult.status === 'fulfilled' ? (enrollmentsResult.value.data.data ?? []) : []
+  const user = userResult.data
 
   const fullName = `${user.firstName} ${user.lastName}`.trim()
   const initials = `${user.firstName[0] ?? ''}${user.lastName[0] ?? ''}`.toUpperCase() || '?'
@@ -162,53 +148,8 @@ export default async function AdminUserProfilePage({ params }: PageProps) {
         </div>
       </div>
 
-      {/* Enrollments */}
-      {enrollments.length > 0 && (
-        <div>
-          <h2 className="text-nexus-text mb-3 text-base font-semibold">
-            Inscripciones ({enrollments.length})
-          </h2>
-          <div className="divide-nexus-border border-nexus-border divide-y rounded-xl border">
-            {enrollments.map((enrollment) => {
-              const pct = Math.round(enrollment.progress?.progressPercentage ?? 0)
-              const statusLabels: Record<string, string> = {
-                ACTIVE: 'Activo',
-                COMPLETED: 'Completado',
-                CANCELLED: 'Cancelado',
-              }
-              return (
-                <div
-                  key={enrollment.id}
-                  className="bg-nexus-card flex items-center gap-4 px-4 py-3"
-                >
-                  <div className="min-w-0 flex-1">
-                    <p className="text-nexus-text truncate text-sm">
-                      Curso: {enrollment.courseId.slice(0, 8)}…
-                    </p>
-                    <p className="text-nexus-muted text-xs">
-                      Inscripto {formatDate(enrollment.enrolledAt)}
-                    </p>
-                  </div>
-                  <div className="flex shrink-0 items-center gap-3">
-                    <div className="text-right">
-                      <p className="text-nexus-muted text-xs">{pct}%</p>
-                      <div className="bg-nexus-border mt-0.5 h-1 w-16 overflow-hidden rounded-full">
-                        <div
-                          className="bg-nexus-accent h-full rounded-full"
-                          style={{ width: `${pct}%` }}
-                        />
-                      </div>
-                    </div>
-                    <span className="text-nexus-muted text-xs">
-                      {statusLabels[enrollment.status] ?? enrollment.status}
-                    </span>
-                  </div>
-                </div>
-              )
-            })}
-          </div>
-        </div>
-      )}
+      {/* Courses assigned — client component handles fetch + mutations */}
+      <UserCoursesManager userId={userId} />
     </div>
   )
 }
