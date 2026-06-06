@@ -39,23 +39,21 @@ api.interceptors.request.use(async (config) => {
   return config
 })
 
+// ─── Refresh mutex ─────────────────────────────────────────────────────────────
+// When multiple requests fail with 401 simultaneously, only the first one calls
+// POST /auth/refresh. The rest queue up and retry once the new token arrives.
+// This prevents the backend from seeing the refresh token used more than once
+// (which it correctly rejects as a revoked token after rotation).
+
 let isRefreshing = false
-let refreshSubscribers: Array<{
-  onDone: (token: string) => void
-  onFail: (err: unknown) => void
-}> = []
+let refreshSubscribers: Array<(token: string) => void> = []
 
-function subscribeRefresh(onDone: (token: string) => void, onFail: (err: unknown) => void) {
-  refreshSubscribers.push({ onDone, onFail })
+function subscribeTokenRefresh(cb: (token: string) => void) {
+  refreshSubscribers.push(cb)
 }
 
-function onRefreshDone(token: string) {
-  refreshSubscribers.forEach(({ onDone }) => onDone(token))
-  refreshSubscribers = []
-}
-
-function onRefreshFailed(err: unknown) {
-  refreshSubscribers.forEach(({ onFail }) => onFail(err))
+function onRefreshSuccess(token: string) {
+  refreshSubscribers.forEach((cb) => cb(token))
   refreshSubscribers = []
 }
 
@@ -87,11 +85,11 @@ function getAuthChannel(): BroadcastChannel | null {
       } else if (data.type === 'REFRESH_DONE' && data.accessToken) {
         // Another tab completed the refresh successfully — drain our queue.
         isRefreshing = false
-        onRefreshDone(data.accessToken)
+        onRefreshSuccess(data.accessToken)
       } else if (data.type === 'REFRESH_FAILED') {
         // Another tab failed the refresh — log out this tab too.
         isRefreshing = false
-        onRefreshFailed(new Error('Token refresh failed in another tab'))
+        onRefreshSuccess('')
         void (async () => {
           try {
             const { signOut } = await import('next-auth/react')
@@ -136,13 +134,16 @@ api.interceptors.response.use(
     const original = error.config as (typeof error.config & { _retry?: boolean }) | undefined
     if (error.response?.status === 401 && original && !original._retry) {
       if (isRefreshing) {
-        return new Promise((resolve, reject) => {
-          subscribeRefresh((token) => {
+        // Another request is already refreshing — queue this one and retry
+        // with the new token once it arrives.
+        return new Promise((resolve) => {
+          subscribeTokenRefresh((token) => {
             if (original.headers) original.headers.Authorization = `Bearer ${token}`
             resolve(api(original))
-          }, reject)
+          })
         })
       }
+
       original._retry = true
       isRefreshing = true
 
@@ -156,7 +157,7 @@ api.interceptors.response.use(
         cachedToken = null
         tokenCachedAt = 0
         if (original.headers) original.headers.Authorization = `Bearer ${accessToken}`
-        onRefreshDone(accessToken)
+        onRefreshSuccess(accessToken)
 
         // Broadcast the new token so other tabs can drain their queues.
         getAuthChannel()?.postMessage({
@@ -166,8 +167,8 @@ api.interceptors.response.use(
 
         return api(original)
       } catch {
-        // Refresh failed — reject all queued requests then sign the user out.
-        onRefreshFailed(error)
+        // Refresh failed — drain queue with empty token then sign the user out.
+        onRefreshSuccess('')
 
         // Inform other tabs so they also sign out.
         getAuthChannel()?.postMessage({ type: 'REFRESH_FAILED' } satisfies RefreshCoordMsg)
