@@ -8,6 +8,9 @@ import { useBreadcrumbsStore } from '@/store/breadcrumbs.store'
 
 // ─── Segment label map ────────────────────────────────────────────────────────
 
+// Segments listed here are stripped from the breadcrumb trail entirely.
+const HIDDEN_SEGMENTS = new Set(['learn'])
+
 const SEGMENT_LABELS: Record<string, string> = {
   dashboard: 'Dashboard',
   courses: 'Cursos',
@@ -26,7 +29,6 @@ const SEGMENT_LABELS: Record<string, string> = {
   students: 'Estudiantes',
   gradebook: 'Calificaciones',
   forum: 'Foro',
-  learn: 'Lección',
   certificates: 'Certificados',
   verify_email: 'Verificar email',
 }
@@ -90,13 +92,19 @@ export function Breadcrumbs({ overrides, hrefOverrides }: BreadcrumbsProps) {
 
   if (segments.length <= 1) return null
 
-  const crumbs = segments.map((seg, i) => {
-    const defaultHref = '/' + segments.slice(0, i + 1).join('/')
-    const prev = i > 0 ? segments[i - 1] : ''
+  const visibleSegments = segments.filter((seg) => !HIDDEN_SEGMENTS.has(seg))
+
+  if (visibleSegments.length <= 1) return null
+
+  const crumbs = visibleSegments.map((seg, i) => {
+    // Reconstruct the real href up to this segment's position in the full path.
+    const fullIdx = segments.indexOf(seg)
+    const defaultHref = '/' + segments.slice(0, fullIdx + 1).join('/')
+    const prev = fullIdx > 0 ? segments[fullIdx - 1] : ''
     return {
       label: resolveLabel(seg, prev, activeOverrides),
       href: activeHrefOverrides[seg] ?? defaultHref,
-      isLast: i === segments.length - 1,
+      isLast: i === visibleSegments.length - 1,
     }
   })
 

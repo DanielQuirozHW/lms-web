@@ -14,6 +14,7 @@ interface LessonPageShellProps {
   progressPercentage: number
   completedLessonIds: string[]
   children: React.ReactNode
+  breadcrumb?: React.ReactNode
 }
 
 export function LessonPageShell({
@@ -24,6 +25,7 @@ export function LessonPageShell({
   progressPercentage,
   completedLessonIds,
   children,
+  breadcrumb,
 }: LessonPageShellProps) {
   const [sidebarOpen, setSidebarOpen] = useState(false)
 
@@ -56,6 +58,9 @@ export function LessonPageShell({
           </Button>
           <span className="text-nexus-text truncate text-sm font-medium">{courseTitle}</span>
         </div>
+
+        {/* Static breadcrumb slot — rendered server-side, no Zustand dependency */}
+        {breadcrumb}
 
         {/* Scrollable lesson content */}
         <div className="flex-1 overflow-y-auto">

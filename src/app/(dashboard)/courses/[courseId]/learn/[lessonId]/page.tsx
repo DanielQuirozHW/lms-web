@@ -1,11 +1,12 @@
 import type { Metadata } from 'next'
 import { cache } from 'react'
 import { notFound, redirect } from 'next/navigation'
+import Link from 'next/link'
+import { Home, ChevronRight } from 'lucide-react'
 import { auth } from '@/lib/auth'
 import api, { isApiError } from '@/lib/api'
 import type { PaginatedData } from '@/types/api'
 import type { Course, LessonDetail, CourseModuleDetail, EnrollmentDetail } from '@/types/models'
-import { Breadcrumbs } from '@/components/shared/navigation/Breadcrumbs'
 import { LessonPageShell } from '@/components/features/lessons/LessonPageShell'
 import { VideoPlayer } from '@/components/features/lessons/VideoPlayer'
 import { TextLesson } from '@/components/features/lessons/TextLesson'
@@ -61,7 +62,8 @@ export default async function LessonPage({ params }: PageProps) {
   const { courseId, lessonId } = await params
   const session = await auth()
   const token = session?.accessToken
-  const headers = token ? { Authorization: `Bearer ${token}` } : {}
+  if (!token) redirect('/login')
+  const headers = { Authorization: `Bearer ${token}` }
 
   // 1. Resolve course — accepts slug or UUID; subsequent calls use course.id
   let course: Course
@@ -145,13 +147,46 @@ export default async function LessonPage({ params }: PageProps) {
       activeLessonId={lessonId}
       progressPercentage={progressPercentage}
       completedLessonIds={[]} // per-lesson completion requires dedicated endpoint
+      breadcrumb={
+        <nav
+          aria-label="Breadcrumb"
+          className="border-nexus-border hidden border-b px-4 py-2 lg:flex lg:px-6"
+        >
+          <ol className="text-nexus-muted flex flex-wrap items-center gap-1 text-xs">
+            <li>
+              <Link
+                href="/dashboard"
+                className="hover:text-nexus-text flex items-center transition-colors"
+                aria-label="Inicio"
+              >
+                <Home className="h-3.5 w-3.5" aria-hidden="true" />
+              </Link>
+            </li>
+            <li className="flex items-center gap-1">
+              <ChevronRight className="h-3 w-3 shrink-0" aria-hidden="true" />
+              <Link href="/courses" className="hover:text-nexus-text transition-colors">
+                Cursos
+              </Link>
+            </li>
+            <li className="flex items-center gap-1">
+              <ChevronRight className="h-3 w-3 shrink-0" aria-hidden="true" />
+              <Link
+                href={`/courses/${course.slug}`}
+                className="hover:text-nexus-text transition-colors"
+              >
+                {course.title}
+              </Link>
+            </li>
+            <li className="flex items-center gap-1">
+              <ChevronRight className="h-3 w-3 shrink-0" aria-hidden="true" />
+              <span className="text-nexus-text font-medium" aria-current="page">
+                {lesson.title}
+              </span>
+            </li>
+          </ol>
+        </nav>
+      }
     >
-      {/* Inject course + lesson titles into the NavigationShell breadcrumb */}
-      <Breadcrumbs
-        overrides={{ [courseId]: course.title, [lessonId]: lesson.title }}
-        hrefOverrides={{ [courseId]: `/courses/${course.slug}` }}
-      />
-
       {/* Lesson header */}
       <div>
         <p className="text-nexus-muted mb-1 text-xs font-semibold tracking-widest uppercase">
