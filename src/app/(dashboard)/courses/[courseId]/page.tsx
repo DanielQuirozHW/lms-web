@@ -58,12 +58,13 @@ export default async function CourseDetailPage({ params }: PageProps) {
   }
   if (course.status !== 'PUBLISHED') notFound()
 
-  // Remaining fetches in parallel
+  // Remaining fetches in parallel — use course.id (not the URL param) so
+  // slug-based URLs don't break routes that only accept UUIDs.
   const [modulesResult, ratingResult, enrollmentResult] = await Promise.allSettled([
-    api.get<CourseModuleDetail[]>(`/courses/${courseId}/modules`, { headers }),
-    api.get<RatingSummary>(`/ratings/course/${courseId}/summary`, { headers }),
+    api.get<CourseModuleDetail[]>(`/courses/${course.id}/modules`, { headers }),
+    api.get<RatingSummary>(`/ratings/course/${course.id}/summary`, { headers }),
     api.get<PaginatedData<Enrollment>>('/enrollments', {
-      params: { courseId, limit: 1 },
+      params: { courseId: course.id, limit: 1 },
       headers,
     }),
   ])
@@ -126,7 +127,7 @@ export default async function CourseDetailPage({ params }: PageProps) {
 
             {/* Enroll / continue button */}
             <EnrollButton
-              courseId={courseId}
+              courseId={course.id}
               isEnrolled={isEnrolled}
               enrollmentType={course.enrollmentType}
               price={course.price}
