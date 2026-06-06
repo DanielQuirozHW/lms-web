@@ -18,7 +18,7 @@ interface VideoPlayerProps {
   lessonId: string
   initialWatchedSeconds?: number
   isAlreadyCompleted?: boolean
-  onComplete: () => void
+  onComplete?: () => void
 }
 
 export function VideoPlayer({
@@ -55,7 +55,7 @@ export function VideoPlayer({
     if (video.currentTime / video.duration >= COMPLETION_THRESHOLD) {
       completionCalledRef.current = true
       mutate({ completed: true })
-      onComplete()
+      onComplete?.()
     }
   }
 

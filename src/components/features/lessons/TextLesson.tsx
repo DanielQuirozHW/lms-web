@@ -14,7 +14,7 @@ interface TextLessonProps {
   moduleId: string
   lessonId: string
   isAlreadyCompleted?: boolean
-  onComplete: () => void
+  onComplete?: () => void
 }
 
 export function TextLesson({
@@ -60,7 +60,7 @@ export function TextLesson({
       {
         onSuccess: () => {
           setIsCompleted(true)
-          onComplete()
+          onComplete?.()
           toast.success('Lección completada')
         },
         onError: () => toast.error('No se pudo marcar como completada'),
