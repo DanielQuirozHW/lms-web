@@ -108,7 +108,7 @@ export default async function CourseDetailPage({ params }: PageProps) {
             Contenido del curso
           </h2>
           <Suspense fallback={<LoadingSpinner rows={4} />}>
-            <CourseModules modules={modules} isEnrolled={isEnrolled} />
+            <CourseModules modules={modules} isEnrolled={isEnrolled} courseId={course.slug} />
           </Suspense>
         </section>
 

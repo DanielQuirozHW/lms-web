@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import Link from 'next/link'
 import { ChevronDown, PlayCircle, FileText, HelpCircle, ClipboardList, Lock } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { formatDuration } from '@/lib/utils'
@@ -16,14 +17,24 @@ const lessonIcon: Record<LessonType, React.ElementType> = {
 interface CourseModulesProps {
   modules: CourseModuleDetail[]
   isEnrolled: boolean
+  courseId: string
 }
 
-function LessonRow({ lesson, isEnrolled }: { lesson: LessonSummary; isEnrolled: boolean }) {
+function LessonRow({
+  lesson,
+  isEnrolled,
+  courseId,
+}: {
+  lesson: LessonSummary
+  isEnrolled: boolean
+  courseId: string
+}) {
   const Icon = lessonIcon[lesson.type]
   const isLocked = !lesson.isPreview && !isEnrolled
+  const href = `/courses/${courseId}/learn/${lesson.id}`
 
-  return (
-    <li className="flex items-center gap-3 px-4 py-2.5">
+  const content = (
+    <>
       <Icon
         className={cn('h-4 w-4 shrink-0', isLocked ? 'text-nexus-muted' : 'text-nexus-accent')}
         aria-hidden="true"
@@ -47,11 +58,26 @@ function LessonRow({ lesson, isEnrolled }: { lesson: LessonSummary; isEnrolled: 
           <Lock className="text-nexus-muted h-3.5 w-3.5" aria-label="Lección bloqueada" />
         )}
       </div>
+    </>
+  )
+
+  if (isLocked) {
+    return <li className="flex items-center gap-3 px-4 py-2.5">{content}</li>
+  }
+
+  return (
+    <li>
+      <Link
+        href={href}
+        className="hover:bg-nexus-bg/50 flex items-center gap-3 px-4 py-2.5 transition-colors"
+      >
+        {content}
+      </Link>
     </li>
   )
 }
 
-export function CourseModules({ modules, isEnrolled }: CourseModulesProps) {
+export function CourseModules({ modules, isEnrolled, courseId }: CourseModulesProps) {
   // Open the first module by default
   const [openIds, setOpenIds] = useState<Set<string>>(
     () => new Set(modules[0] ? [modules[0].id] : [])
@@ -106,7 +132,12 @@ export function CourseModules({ modules, isEnrolled }: CourseModulesProps) {
             {isOpen && (module.lessons ?? []).length > 0 && (
               <ul className="border-nexus-border border-t">
                 {(module.lessons ?? []).map((lesson) => (
-                  <LessonRow key={lesson.id} lesson={lesson} isEnrolled={isEnrolled} />
+                  <LessonRow
+                    key={lesson.id}
+                    lesson={lesson}
+                    isEnrolled={isEnrolled}
+                    courseId={courseId}
+                  />
                 ))}
               </ul>
             )}

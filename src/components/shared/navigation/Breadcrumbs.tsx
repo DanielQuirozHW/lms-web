@@ -58,18 +58,24 @@ function resolveLabel(
 
 interface BreadcrumbsProps {
   overrides?: Record<string, string>
+  hrefOverrides?: Record<string, string>
 }
 
 // ─── Component ────────────────────────────────────────────────────────────────
 
-export function Breadcrumbs({ overrides }: BreadcrumbsProps) {
-  const { setOverrides, clearOverrides, overrides: storedOverrides } = useBreadcrumbsStore()
+export function Breadcrumbs({ overrides, hrefOverrides }: BreadcrumbsProps) {
+  const {
+    setOverrides,
+    clearOverrides,
+    overrides: storedOverrides,
+    hrefOverrides: storedHrefOverrides,
+  } = useBreadcrumbsStore()
   const pathname = usePathname()
 
   // Setter mode: write overrides to store on mount, clear on unmount; render nothing.
   useEffect(() => {
     if (overrides) {
-      setOverrides(overrides)
+      setOverrides(overrides, hrefOverrides)
       return () => clearOverrides()
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -79,16 +85,17 @@ export function Breadcrumbs({ overrides }: BreadcrumbsProps) {
 
   // Render mode (used by NavigationShell): reads from store so page-level overrides apply.
   const activeOverrides = storedOverrides
+  const activeHrefOverrides = storedHrefOverrides
   const segments = pathname.split('/').filter(Boolean)
 
   if (segments.length <= 1) return null
 
   const crumbs = segments.map((seg, i) => {
-    const href = '/' + segments.slice(0, i + 1).join('/')
+    const defaultHref = '/' + segments.slice(0, i + 1).join('/')
     const prev = i > 0 ? segments[i - 1] : ''
     return {
       label: resolveLabel(seg, prev, activeOverrides),
-      href,
+      href: activeHrefOverrides[seg] ?? defaultHref,
       isLast: i === segments.length - 1,
     }
   })
