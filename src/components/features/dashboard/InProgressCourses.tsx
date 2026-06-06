@@ -12,6 +12,7 @@ import { cn } from '@/lib/utils'
 export interface DashboardEnrollment extends EnrollmentDetail {
   course?: {
     title?: string
+    slug?: string
     coverUrl?: string | null
     instructor?: { firstName: string; lastName: string } | null
   }
@@ -98,7 +99,7 @@ export function InProgressCourses({ enrollments }: InProgressCoursesProps) {
 
             {/* CTA */}
             <Link
-              href={`/courses/${enrollment.courseId}`}
+              href={`/courses/${enrollment.course?.slug ?? enrollment.courseId}`}
               className={buttonVariants({
                 size: 'sm',
                 className: 'bg-nexus-accent hover:bg-nexus-accent-hover shrink-0 text-white',

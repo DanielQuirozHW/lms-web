@@ -11,6 +11,7 @@ import type { PaginatedData } from '@/types/api'
 import type { CourseModuleDetail, Enrollment, RatingSummary } from '@/types/models'
 import { LoadingSpinner } from '@/components/shared/feedback/LoadingSpinner'
 import { Suspense } from 'react'
+import { Breadcrumbs } from '@/components/shared/navigation/Breadcrumbs'
 import { CourseHero, type CourseDetailFull } from '@/components/features/courses/CourseHero'
 import { CourseModules } from '@/components/features/courses/CourseModules'
 import { EnrollButton } from '@/components/features/courses/EnrollButton'
@@ -83,6 +84,9 @@ export default async function CourseDetailPage({ params }: PageProps) {
 
   return (
     <div className="space-y-0">
+      {/* Inject course title into the breadcrumb rendered by NavigationShell */}
+      <Breadcrumbs overrides={{ [courseId]: course.title }} />
+
       {/* Hero — full-width, flush with layout edges */}
       <div className="-mx-4 -mt-4 lg:-mx-6 lg:-mt-6">
         <CourseHero course={course} rating={rating} />

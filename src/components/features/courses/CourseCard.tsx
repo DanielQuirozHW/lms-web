@@ -24,7 +24,7 @@ export function CourseCard({ course, enrollmentProgress }: CourseCardProps) {
 
   return (
     <Link
-      href={`/courses/${course.id}`}
+      href={`/courses/${course.slug}`}
       className={cn(
         'group border-nexus-border bg-nexus-card flex flex-col overflow-hidden rounded-xl border',
         'transition-transform duration-200 hover:scale-[1.02]'

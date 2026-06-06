@@ -1,8 +1,10 @@
 'use client'
 
+import { useEffect } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { ChevronRight, Home } from 'lucide-react'
+import { useBreadcrumbsStore } from '@/store/breadcrumbs.store'
 
 // ─── Segment label map ────────────────────────────────────────────────────────
 
@@ -32,10 +34,14 @@ const SEGMENT_LABELS: Record<string, string> = {
 // UUID-like pattern (hex chars and hyphens, 32+ chars)
 const UUID_RE = /^[0-9a-f-]{32,}$/i
 
-function resolveLabel(segment: string, prevSegment: string): string {
+function resolveLabel(
+  segment: string,
+  prevSegment: string,
+  overrides: Record<string, string>
+): string {
+  if (overrides[segment]) return overrides[segment]
   if (SEGMENT_LABELS[segment]) return SEGMENT_LABELS[segment]
   if (UUID_RE.test(segment)) {
-    // Infer from parent segment
     const parentMap: Record<string, string> = {
       courses: 'Curso',
       users: 'Usuario',
@@ -45,23 +51,46 @@ function resolveLabel(segment: string, prevSegment: string): string {
     }
     return parentMap[prevSegment] ?? segment.slice(0, 6) + '…'
   }
-  // Capitalize unknown segments
   return segment.charAt(0).toUpperCase() + segment.slice(1)
+}
+
+// ─── Props ────────────────────────────────────────────────────────────────────
+
+interface BreadcrumbsProps {
+  overrides?: Record<string, string>
 }
 
 // ─── Component ────────────────────────────────────────────────────────────────
 
-export function Breadcrumbs() {
+export function Breadcrumbs({ overrides }: BreadcrumbsProps) {
+  const { setOverrides, clearOverrides, overrides: storedOverrides } = useBreadcrumbsStore()
   const pathname = usePathname()
+
+  // Setter mode: write overrides to store on mount, clear on unmount; render nothing.
+  useEffect(() => {
+    if (overrides) {
+      setOverrides(overrides)
+      return () => clearOverrides()
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+
+  if (overrides !== undefined) return null
+
+  // Render mode (used by NavigationShell): reads from store so page-level overrides apply.
+  const activeOverrides = storedOverrides
   const segments = pathname.split('/').filter(Boolean)
 
-  // Only show breadcrumbs when there is more than 1 segment
   if (segments.length <= 1) return null
 
   const crumbs = segments.map((seg, i) => {
     const href = '/' + segments.slice(0, i + 1).join('/')
     const prev = i > 0 ? segments[i - 1] : ''
-    return { label: resolveLabel(seg, prev), href, isLast: i === segments.length - 1 }
+    return {
+      label: resolveLabel(seg, prev, activeOverrides),
+      href,
+      isLast: i === segments.length - 1,
+    }
   })
 
   return (

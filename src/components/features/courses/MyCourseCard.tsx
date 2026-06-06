@@ -47,7 +47,7 @@ export function MyCourseCard({ enrollment, course }: MyCourseCardProps) {
     : null
 
   // Link to course detail — the /learn route requires a lesson ID not available here
-  const continuePath = `/courses/${enrollment.courseId}`
+  const continuePath = `/courses/${course.slug}`
 
   function handleReenroll() {
     enroll(
@@ -139,7 +139,7 @@ export function MyCourseCard({ enrollment, course }: MyCourseCardProps) {
 
         {/* Progress link */}
         <Link
-          href={`/courses/${enrollment.courseId}/progress?enrollmentId=${enrollment.id}`}
+          href={`/courses/${course.slug}/progress?enrollmentId=${enrollment.id}`}
           className="text-nexus-muted hover:text-nexus-accent flex items-center gap-1 text-xs transition-colors"
         >
           <BarChart2 className="h-3.5 w-3.5" aria-hidden="true" />
