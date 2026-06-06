@@ -21,8 +21,10 @@ export default auth(async (req: NextAuthRequest) => {
 
   if (!skipMaintenanceCheck) {
     try {
+      // next: { revalidate } is ignored in Edge Middleware — does not cache.
+      // AbortSignal.timeout caps cold-start backend delays; the catch block fails open.
       const res = await fetch(`${API_URL}/admin/maintenance`, {
-        next: { revalidate: 30 },
+        signal: AbortSignal.timeout(2000),
       })
       if (res.ok) {
         const { data } = (await res.json()) as {
