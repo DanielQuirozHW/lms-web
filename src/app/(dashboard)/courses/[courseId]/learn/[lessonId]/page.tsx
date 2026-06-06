@@ -63,12 +63,13 @@ export default async function LessonPage({ params }: PageProps) {
   const session = await auth()
   const token = session?.accessToken
   if (!token) redirect('/login')
-  const headers = { Authorization: `Bearer ${token}` }
+  const authHeaders = { Authorization: `Bearer ${token}` }
 
-  // 1. Resolve course — accepts slug or UUID; subsequent calls use course.id
+  // 1. Resolve course — bypass React cache() to always fetch fresh data
   let course: Course
   try {
-    course = await fetchCourse(courseId, token)
+    const r = await api.get<Course>(`/courses/${courseId}`, { headers: authHeaders })
+    course = r.data
   } catch (err) {
     if (isApiError(err) && err.response?.data.statusCode === 404) notFound()
     throw err
@@ -76,10 +77,10 @@ export default async function LessonPage({ params }: PageProps) {
 
   // 2. Modules + enrollment check in parallel (use course.id, not the URL param)
   const [modulesResult, enrollmentResult] = await Promise.allSettled([
-    fetchModules(course.id, token),
+    api.get<CourseModuleDetail[]>(`/courses/${course.id}/modules`, { headers: authHeaders }),
     api.get<PaginatedData<EnrollmentDetail>>('/enrollments', {
       params: { courseId: course.id, limit: 1 },
-      headers,
+      headers: authHeaders,
     }),
   ])
 
@@ -89,7 +90,7 @@ export default async function LessonPage({ params }: PageProps) {
   if (!isEnrolled) redirect(`/courses/${course.slug}`)
 
   const modules: CourseModuleDetail[] =
-    modulesResult.status === 'fulfilled' ? modulesResult.value : []
+    modulesResult.status === 'fulfilled' ? modulesResult.value.data : []
 
   // 3. Find the module containing this lesson (needed for the PATCH URL)
   const moduleForLesson = modules.find((m) => m.lessons.some((l) => l.id === lessonId))
@@ -100,7 +101,7 @@ export default async function LessonPage({ params }: PageProps) {
   try {
     const r = await api.get<LessonDetail>(
       `/courses/${course.id}/modules/${moduleForLesson.id}/lessons/${lessonId}`,
-      { headers }
+      { headers: authHeaders }
     )
     lesson = r.data
   } catch (err) {
