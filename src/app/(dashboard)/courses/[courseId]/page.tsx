@@ -79,7 +79,7 @@ export default async function CourseDetailPage({ params }: PageProps) {
       : false
 
   // First lesson ID for the "Continue learning" link
-  const firstLessonId = modules[0]?.lessons[0]?.id
+  const firstLessonId = modules[0]?.lessons?.[0]?.id
 
   return (
     <div className="space-y-0">

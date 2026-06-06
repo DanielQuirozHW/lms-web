@@ -39,7 +39,7 @@ export function MyCourseCard({ enrollment, course }: MyCourseCardProps) {
   const { mutate: enroll, isPending } = useEnrollMutation()
   const { mutate: generateCert, isPending: isGenerating } = useGenerateCertificate()
 
-  const pct = Math.round(enrollment.progress.progressPercentage)
+  const pct = Math.round(enrollment.progress?.progressPercentage ?? 0)
   const { status } = enrollment
   const config = statusConfig[status]
   const instructorName = course.instructor

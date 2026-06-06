@@ -189,7 +189,7 @@ export function StudentList({ courseId, initialEnrollments, currentUserRoles }: 
             <tbody className="divide-nexus-border divide-y">
               {filtered.map((enrollment) => {
                 const s = getStudentDisplay(enrollment)
-                const pct = Math.round(enrollment.progress.progressPercentage)
+                const pct = Math.round(enrollment.progress?.progressPercentage ?? 0)
                 const { label, className } = statusConfig[enrollment.status] ?? statusConfig.ACTIVE
                 const isExpanded = expandedId === enrollment.id
 
@@ -303,7 +303,7 @@ export function StudentList({ courseId, initialEnrollments, currentUserRoles }: 
         <div className="space-y-3 md:hidden">
           {filtered.map((enrollment) => {
             const s = getStudentDisplay(enrollment)
-            const pct = Math.round(enrollment.progress.progressPercentage)
+            const pct = Math.round(enrollment.progress?.progressPercentage ?? 0)
             const { label, className } = statusConfig[enrollment.status] ?? statusConfig.ACTIVE
             const isExpanded = expandedId === enrollment.id
 

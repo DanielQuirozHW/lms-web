@@ -15,11 +15,11 @@ interface NavigationShellProps {
   children: React.ReactNode
 }
 
-function useNavGroups() {
+function useNavGroups(isPrivileged: boolean) {
   const pathname = usePathname()
   if (pathname.startsWith('/admin')) return getAdminNav()
   if (pathname.startsWith('/instructor')) return getInstructorNav()
-  return getDashboardNav()
+  return getDashboardNav(isPrivileged)
 }
 
 export function NavigationShell({ children }: NavigationShellProps) {
@@ -31,7 +31,9 @@ export function NavigationShell({ children }: NavigationShellProps) {
       typeof window !== 'undefined' && localStorage.getItem('nexus-sidebar-collapsed') === 'true'
   )
   const { data: session } = useSession()
-  const navGroups = useNavGroups()
+  const isPrivileged =
+    session?.user?.roles?.some((r) => r === 'ADMIN' || r === 'INSTRUCTOR') ?? false
+  const navGroups = useNavGroups(isPrivileged)
 
   function toggleCollapsed() {
     const next = !isCollapsed

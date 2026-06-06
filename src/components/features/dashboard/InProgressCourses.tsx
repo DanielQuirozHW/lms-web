@@ -37,7 +37,7 @@ export function InProgressCourses({ enrollments }: InProgressCoursesProps) {
     <ul className="space-y-3" aria-label="Cursos en progreso">
       {enrollments.map((enrollment) => {
         const course = enrollment.course
-        const pct = Math.round(enrollment.progress.progressPercentage)
+        const pct = Math.round(enrollment.progress?.progressPercentage ?? 0)
         const instructorName = course?.instructor
           ? `${course.instructor.firstName} ${course.instructor.lastName}`
           : null

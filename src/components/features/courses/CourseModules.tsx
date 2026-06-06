@@ -74,8 +74,7 @@ export function CourseModules({ modules, isEnrolled }: CourseModulesProps) {
     <div className="space-y-2" role="list" aria-label="Módulos del curso">
       {modules.map((module) => {
         const isOpen = openIds.has(module.id)
-        const totalDuration = module.lessons.reduce((sum, l) => sum + (l.duration ?? 0), 0)
-
+        const totalDuration = (module.lessons ?? []).reduce((sum, l) => sum + (l.duration ?? 0), 0)
         return (
           <div
             key={module.id}
@@ -98,15 +97,15 @@ export function CourseModules({ modules, isEnrolled }: CourseModulesProps) {
               />
               <span className="text-nexus-text flex-1 text-sm font-semibold">{module.title}</span>
               <span className="text-nexus-muted shrink-0 text-xs">
-                {module.lessons.length} lección{module.lessons.length !== 1 && 'es'}
+                {(module.lessons ?? []).length} lección{(module.lessons ?? []).length !== 1 && 'es'}
                 {totalDuration > 0 && ` · ${formatDuration(totalDuration)}`}
               </span>
             </button>
 
             {/* Lessons list */}
-            {isOpen && module.lessons.length > 0 && (
+            {isOpen && (module.lessons ?? []).length > 0 && (
               <ul className="border-nexus-border border-t">
-                {module.lessons.map((lesson) => (
+                {(module.lessons ?? []).map((lesson) => (
                   <LessonRow key={lesson.id} lesson={lesson} isEnrolled={isEnrolled} />
                 ))}
               </ul>
