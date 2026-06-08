@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useRef } from 'react'
+import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { useForm, useWatch } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
@@ -25,7 +26,7 @@ import {
   FormLabel,
   FormMessage,
 } from '@/components/ui/form'
-import { Button } from '@/components/ui/button'
+import { Button, buttonVariants } from '@/components/ui/button'
 import { LoadingSpinner } from '@/components/shared/feedback/LoadingSpinner'
 import { cn } from '@/lib/utils'
 import { formatDate, formatRelativeTime } from '@/lib/utils'
@@ -203,6 +204,8 @@ export function AssignmentPlayer({ lessonId, nextLessonHref }: AssignmentPlayerP
           form.reset()
           setFileUrl(null)
           setFileName(null)
+          toast.success('✓ Lección completada')
+          router.refresh()
           setPhase('submitted')
         },
         onError: () => toast.error('No se pudo enviar la tarea. Intentá de nuevo.'),
@@ -347,6 +350,10 @@ export function AssignmentPlayer({ lessonId, nextLessonHref }: AssignmentPlayerP
               ))}
             </div>
           </div>
+        )}
+
+        {submissionsCount === 0 && (
+          <p className="text-nexus-muted text-sm">Entregá la tarea para completar esta lección</p>
         )}
 
         {/* Submit button */}
@@ -561,13 +568,15 @@ export function AssignmentPlayer({ lessonId, nextLessonHref }: AssignmentPlayerP
           Ver mis entregas
         </Button>
         {nextLessonHref && (
-          <Button
-            onClick={() => router.push(nextLessonHref)}
-            className="bg-nexus-accent hover:bg-nexus-accent-hover text-white"
+          <Link
+            href={nextLessonHref}
+            className={buttonVariants({
+              className: 'bg-nexus-accent hover:bg-nexus-accent-hover text-white',
+            })}
           >
-            Continuar
+            Siguiente lección
             <ArrowRight className="ml-2 h-4 w-4" aria-hidden="true" />
-          </Button>
+          </Link>
         )}
       </div>
     </div>

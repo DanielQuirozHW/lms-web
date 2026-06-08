@@ -239,6 +239,7 @@ export default async function LessonPage({ params }: PageProps) {
           moduleId={moduleForLesson.id}
           lessonId={lessonId}
           isAlreadyCompleted={completedLessonIds.includes(lessonId)}
+          nextLessonHref={nextLesson ? `/courses/${course.slug}/learn/${nextLesson.id}` : null}
         />
       ) : lesson.type === 'VIDEO' ? (
         <div className="bg-nexus-card flex aspect-video items-center justify-center rounded-xl">

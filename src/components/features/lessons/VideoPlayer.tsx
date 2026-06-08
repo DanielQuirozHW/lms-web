@@ -1,9 +1,12 @@
 'use client'
 
 import { useRef, useState, useEffect, useCallback } from 'react'
+import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-import { Loader2 } from 'lucide-react'
+import { ArrowRight, Loader2 } from 'lucide-react'
+import { toast } from 'sonner'
 import { useUpdateProgress } from '@/hooks/mutations/lessons'
+import { buttonVariants } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
 
 const SPEEDS = [0.5, 1, 1.25, 1.5, 2] as const
@@ -17,6 +20,7 @@ interface VideoPlayerProps {
   courseId: string
   moduleId: string
   lessonId: string
+  nextLessonHref?: string | null
   initialWatchedSeconds?: number
   isAlreadyCompleted?: boolean
   onComplete?: () => void
@@ -27,6 +31,7 @@ export function VideoPlayer({
   courseId,
   moduleId,
   lessonId,
+  nextLessonHref,
   initialWatchedSeconds = 0,
   isAlreadyCompleted = false,
   onComplete,
@@ -36,6 +41,7 @@ export function VideoPlayer({
   const containerRef = useRef<HTMLDivElement>(null)
   const completionCalledRef = useRef(isAlreadyCompleted)
   const [isBuffering, setIsBuffering] = useState(true)
+  const [isCompleted, setIsCompleted] = useState(isAlreadyCompleted)
   const [playbackRate, setPlaybackRate] = useState<Speed>(1)
   const { mutate } = useUpdateProgress(courseId, moduleId, lessonId)
 
@@ -60,7 +66,9 @@ export function VideoPlayer({
         { completed: true },
         {
           onSuccess: () => {
+            setIsCompleted(true)
             onComplete?.()
+            toast.success('✓ Lección completada')
             router.refresh()
           },
         }
@@ -193,6 +201,23 @@ export function VideoPlayer({
       <p className="text-nexus-muted text-[10px]">
         Atajos: Espacio (pausa), ← → (±10s), M (mute), F (pantalla completa)
       </p>
+
+      {!isCompleted && (
+        <p className="text-nexus-muted text-xs">
+          Mirá el video completo para marcar esta lección como completada
+        </p>
+      )}
+      {isCompleted && nextLessonHref && (
+        <Link
+          href={nextLessonHref}
+          className={buttonVariants({
+            className: 'bg-nexus-accent hover:bg-nexus-accent-hover text-white',
+          })}
+        >
+          Siguiente lección
+          <ArrowRight className="ml-2 h-4 w-4" aria-hidden="true" />
+        </Link>
+      )}
     </div>
   )
 }

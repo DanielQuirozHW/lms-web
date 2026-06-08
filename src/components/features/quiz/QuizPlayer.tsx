@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import {
   CheckCircle2,
@@ -14,7 +15,7 @@ import {
   Loader2,
 } from 'lucide-react'
 import { toast } from 'sonner'
-import { Button } from '@/components/ui/button'
+import { Button, buttonVariants } from '@/components/ui/button'
 import { LoadingSpinner } from '@/components/shared/feedback/LoadingSpinner'
 import { cn } from '@/lib/utils'
 import { formatDate } from '@/lib/utils'
@@ -303,6 +304,7 @@ export function QuizPlayer({ lessonId, nextLessonHref }: QuizPlayerProps) {
   const canStart = maxAttempts === null || attemptsUsed < maxAttempts
   const allAnswered = displayQuestions.every((q) => isAnswered(answers[q.id]))
   const passingScore = settings?.passingScore ?? null
+  const alreadyPassed = attempts?.some((a) => a.passed === true) ?? false
 
   // ── Loading ──────────────────────────────────────────────────────────────────
 
@@ -377,6 +379,10 @@ export function QuizPlayer({ lessonId, nextLessonHref }: QuizPlayerProps) {
           setResult(r)
           setScoreBarWidth(0)
           setPhase('results')
+          if (r.passed) {
+            toast.success('✓ Lección completada')
+            router.refresh()
+          }
         },
         onError: () => toast.error('No se pudo enviar el quiz. Intentá de nuevo.'),
       }
@@ -407,6 +413,10 @@ export function QuizPlayer({ lessonId, nextLessonHref }: QuizPlayerProps) {
             </p>
           </div>
         </div>
+
+        {!alreadyPassed && (
+          <p className="text-nexus-muted text-sm">Aprobá el quiz para completar esta lección</p>
+        )}
 
         {/* Settings summary */}
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
@@ -709,13 +719,15 @@ export function QuizPlayer({ lessonId, nextLessonHref }: QuizPlayerProps) {
             </Button>
           )}
           {nextLessonHref && (
-            <Button
-              onClick={() => router.push(nextLessonHref)}
-              className="bg-nexus-accent hover:bg-nexus-accent-hover text-white"
+            <Link
+              href={nextLessonHref}
+              className={buttonVariants({
+                className: 'bg-nexus-accent hover:bg-nexus-accent-hover text-white',
+              })}
             >
-              Continuar
+              Siguiente lección
               <ArrowRight className="ml-2 h-4 w-4" aria-hidden="true" />
-            </Button>
+            </Link>
           )}
         </div>
       </div>
