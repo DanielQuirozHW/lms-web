@@ -238,6 +238,7 @@ export default async function LessonPage({ params }: PageProps) {
           courseId={course.id}
           moduleId={moduleForLesson.id}
           lessonId={lessonId}
+          isAlreadyCompleted={completedLessonIds.includes(lessonId)}
         />
       ) : lesson.type === 'VIDEO' ? (
         <div className="bg-nexus-card flex aspect-video items-center justify-center rounded-xl">
@@ -251,6 +252,7 @@ export default async function LessonPage({ params }: PageProps) {
           courseId={course.id}
           moduleId={moduleForLesson.id}
           lessonId={lessonId}
+          isAlreadyCompleted={completedLessonIds.includes(lessonId)}
         />
       ) : lesson.type === 'TEXT' ? (
         <p className="text-nexus-muted text-sm">Contenido no disponible.</p>

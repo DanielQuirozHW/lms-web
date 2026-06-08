@@ -80,6 +80,22 @@ export default async function CourseDetailPage({ params }: PageProps) {
       ? (enrollmentResult.value.data.data?.length ?? 0) > 0
       : false
 
+  const enrollmentId =
+    enrollmentResult.status === 'fulfilled'
+      ? (enrollmentResult.value.data.data?.[0]?.id ?? null)
+      : null
+
+  let progressPercentage = 0
+  if (enrollmentId) {
+    try {
+      const summaryRes = await api.get<{ progressPercentage: number }>(
+        `/enrollments/${enrollmentId}/progress-summary`,
+        { headers }
+      )
+      progressPercentage = summaryRes.data.progressPercentage ?? 0
+    } catch {}
+  }
+
   // First lesson ID for the "Continue learning" link
   const firstLessonId = modules[0]?.lessons?.[0]?.id
 
@@ -133,6 +149,22 @@ export default async function CourseDetailPage({ params }: PageProps) {
               price={course.price}
               firstLessonId={firstLessonId}
             />
+
+            {/* Progress bar — only when enrolled */}
+            {isEnrolled && (
+              <div className="mt-4">
+                <div className="text-nexus-muted mb-1 flex justify-between text-xs">
+                  <span>Tu progreso</span>
+                  <span className="text-nexus-text font-medium">{progressPercentage}%</span>
+                </div>
+                <div className="bg-nexus-border h-1.5 overflow-hidden rounded-full">
+                  <div
+                    className="bg-nexus-accent h-full rounded-full transition-all"
+                    style={{ width: `${progressPercentage}%` }}
+                  />
+                </div>
+              </div>
+            )}
 
             {/* Course stats */}
             <ul className="mt-5 space-y-2.5 text-sm" aria-label="Información del curso">
