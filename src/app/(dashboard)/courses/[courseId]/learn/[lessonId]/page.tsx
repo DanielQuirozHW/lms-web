@@ -111,6 +111,23 @@ export default async function LessonPage({ params }: PageProps) {
   const modules: CourseModuleDetail[] =
     modulesResult.status === 'fulfilled' ? modulesResult.value : []
 
+  const enrollmentId =
+    enrollmentResult.status === 'fulfilled' ? (enrollmentResult.value.data?.[0]?.id ?? null) : null
+
+  let completedLessonIds: string[] = []
+  if (enrollmentId) {
+    const progressRes = await fetch(`${BASE_URL}/enrollments/${enrollmentId}/progress-summary`, {
+      headers: authHeaders,
+      cache: 'no-store',
+    })
+    if (progressRes.ok) {
+      const progressJson = (await progressRes.json()) as {
+        data: { completedLessonIds: string[] }
+      }
+      completedLessonIds = progressJson?.data?.completedLessonIds ?? []
+    }
+  }
+
   // 3. Find the module containing this lesson
   const moduleForLesson = modules.find((m) => m.lessons.some((l) => l.id === lessonId))
   if (!moduleForLesson) notFound()
@@ -162,7 +179,7 @@ export default async function LessonPage({ params }: PageProps) {
       modules={modules}
       activeLessonId={lessonId}
       progressPercentage={progressPercentage}
-      completedLessonIds={[]}
+      completedLessonIds={completedLessonIds}
       breadcrumb={
         <nav
           aria-label="Breadcrumb"
