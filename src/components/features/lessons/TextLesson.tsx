@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import { useRouter } from 'next/navigation'
 import { CheckCircle, Loader2 } from 'lucide-react'
 import { toast } from 'sonner'
 import { sanitize } from '@/lib/sanitize'
@@ -25,6 +26,7 @@ export function TextLesson({
   isAlreadyCompleted = false,
   onComplete,
 }: TextLessonProps) {
+  const router = useRouter()
   const [isCompleted, setIsCompleted] = useState(isAlreadyCompleted)
   const { mutate, isPending } = useUpdateProgress(courseId, moduleId, lessonId)
 
@@ -62,6 +64,7 @@ export function TextLesson({
           setIsCompleted(true)
           onComplete?.()
           toast.success('Lección completada')
+          router.refresh()
         },
         onError: () => toast.error('No se pudo marcar como completada'),
       }

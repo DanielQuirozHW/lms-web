@@ -1,10 +1,8 @@
 import type { Metadata } from 'next'
-import { cache } from 'react'
 import { notFound, redirect } from 'next/navigation'
 import Link from 'next/link'
 import { Home, ChevronRight } from 'lucide-react'
 import { auth } from '@/lib/auth'
-import api, { isApiError } from '@/lib/api'
 import type { PaginatedData } from '@/types/api'
 import type { Course, LessonDetail, CourseModuleDetail, EnrollmentDetail } from '@/types/models'
 import { LessonPageShell } from '@/components/features/lessons/LessonPageShell'
@@ -20,33 +18,40 @@ interface PageProps {
   params: Promise<{ courseId: string; lessonId: string }>
 }
 
-// ─── Cached fetchers (dedup between generateMetadata and page) ────────────────
-
-const fetchCourse = cache(
-  async (identifier: string, token: string | undefined): Promise<Course> => {
-    const headers = token ? { Authorization: `Bearer ${token}` } : {}
-    return api.get<Course>(`/courses/${identifier}`, { headers }).then((r) => r.data)
-  }
-)
-
-const fetchModules = cache(
-  async (courseId: string, token: string | undefined): Promise<CourseModuleDetail[]> => {
-    const headers = token ? { Authorization: `Bearer ${token}` } : {}
-    return api
-      .get<CourseModuleDetail[]>(`/courses/${courseId}/modules`, { headers })
-      .then((r) => r.data)
-  }
-)
+// Use native fetch() — the shared Axios instance has a request interceptor that
+// fetches the token from /api/auth/token (browser-only). On the server it exits
+// early without setting the Authorization header, so all server-side requests
+// must bypass the Axios instance and call fetch() with explicit auth headers.
+const BASE_URL = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:3000/api/v1'
 
 // ─── Metadata ─────────────────────────────────────────────────────────────────
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   const { courseId, lessonId } = await params
   const session = await auth()
+  const token = session?.accessToken
+  if (!token) return { title: 'Lección | NexusLMS' }
+
+  const authHeaders = {
+    Authorization: `Bearer ${token}`,
+    'Content-Type': 'application/json',
+  }
 
   try {
-    const course = await fetchCourse(courseId, session?.accessToken)
-    const modules = await fetchModules(course.id, session?.accessToken)
+    const courseRes = await fetch(`${BASE_URL}/courses/${courseId}`, {
+      headers: authHeaders,
+      cache: 'no-store',
+    })
+    if (!courseRes.ok) return { title: 'Lección | NexusLMS' }
+    const { data: course } = (await courseRes.json()) as { data: Course }
+
+    const modulesRes = await fetch(`${BASE_URL}/courses/${course.id}/modules`, {
+      headers: authHeaders,
+      cache: 'no-store',
+    })
+    if (!modulesRes.ok) return { title: 'Lección | NexusLMS' }
+    const { data: modules } = (await modulesRes.json()) as { data: CourseModuleDetail[] }
+
     for (const mod of modules) {
       const lesson = mod.lessons.find((l) => l.id === lessonId)
       if (lesson) return { title: `${lesson.title} | NexusLMS` }
@@ -63,51 +68,61 @@ export default async function LessonPage({ params }: PageProps) {
   const session = await auth()
   const token = session?.accessToken
   if (!token) redirect('/login')
-  const authHeaders = { Authorization: `Bearer ${token}` }
 
-  // 1. Resolve course — bypass React cache() to always fetch fresh data
-  let course: Course
-  try {
-    const r = await api.get<Course>(`/courses/${courseId}`, { headers: authHeaders })
-    course = r.data
-  } catch (err) {
-    if (isApiError(err) && err.response?.data.statusCode === 404) notFound()
-    throw err
+  const authHeaders = {
+    Authorization: `Bearer ${token}`,
+    'Content-Type': 'application/json',
   }
 
-  // 2. Modules + enrollment check in parallel (use course.id, not the URL param)
+  // 1. Resolve course (slug or UUID accepted by the backend)
+  const courseRes = await fetch(`${BASE_URL}/courses/${courseId}`, {
+    headers: authHeaders,
+    cache: 'no-store',
+  })
+  if (courseRes.status === 404) notFound()
+  if (!courseRes.ok) redirect('/login')
+  const { data: course } = (await courseRes.json()) as { data: Course }
+
+  // 2. Modules + enrollment check in parallel (all secondary calls use course.id)
   const [modulesResult, enrollmentResult] = await Promise.allSettled([
-    api.get<CourseModuleDetail[]>(`/courses/${course.id}/modules`, { headers: authHeaders }),
-    api.get<PaginatedData<EnrollmentDetail>>('/enrollments', {
-      params: { courseId: course.id, limit: 1 },
+    fetch(`${BASE_URL}/courses/${course.id}/modules`, {
       headers: authHeaders,
+      cache: 'no-store',
+    }).then(async (r) => {
+      if (!r.ok) throw new Error(`${r.status}`)
+      const { data } = (await r.json()) as { data: CourseModuleDetail[] }
+      return data
+    }),
+    fetch(`${BASE_URL}/enrollments?courseId=${encodeURIComponent(course.id)}&limit=1`, {
+      headers: authHeaders,
+      cache: 'no-store',
+    }).then(async (r) => {
+      if (!r.ok) throw new Error(`${r.status}`)
+      const { data } = (await r.json()) as { data: PaginatedData<EnrollmentDetail> }
+      return data
     }),
   ])
 
-  // Redirect if not enrolled — redirect to slug-based course URL
+  // Redirect if not enrolled
   const isEnrolled =
-    enrollmentResult.status === 'fulfilled' && (enrollmentResult.value.data.data?.length ?? 0) > 0
+    enrollmentResult.status === 'fulfilled' && (enrollmentResult.value.data?.length ?? 0) > 0
   if (!isEnrolled) redirect(`/courses/${course.slug}`)
 
   const modules: CourseModuleDetail[] =
-    modulesResult.status === 'fulfilled' ? modulesResult.value.data : []
+    modulesResult.status === 'fulfilled' ? modulesResult.value : []
 
-  // 3. Find the module containing this lesson (needed for the PATCH URL)
+  // 3. Find the module containing this lesson
   const moduleForLesson = modules.find((m) => m.lessons.some((l) => l.id === lessonId))
   if (!moduleForLesson) notFound()
 
-  // 4. Fetch the lesson detail (use course.id for the API path)
-  let lesson: LessonDetail
-  try {
-    const r = await api.get<LessonDetail>(
-      `/courses/${course.id}/modules/${moduleForLesson.id}/lessons/${lessonId}`,
-      { headers: authHeaders }
-    )
-    lesson = r.data
-  } catch (err) {
-    if (isApiError(err) && err.response?.data.statusCode === 404) notFound()
-    throw err
-  }
+  // 4. Fetch the lesson detail
+  const lessonRes = await fetch(
+    `${BASE_URL}/courses/${course.id}/modules/${moduleForLesson.id}/lessons/${lessonId}`,
+    { headers: authHeaders, cache: 'no-store' }
+  )
+  if (lessonRes.status === 404) notFound()
+  if (!lessonRes.ok) redirect('/login')
+  const { data: lesson } = (await lessonRes.json()) as { data: LessonDetail }
 
   // 5. Compute prev / next lessons (across all modules, published only)
   const allLessons = modules
@@ -132,7 +147,7 @@ export default async function LessonPage({ params }: PageProps) {
 
   // 6. Enrollment progress for the sidebar progress bar
   const enrollment =
-    enrollmentResult.status === 'fulfilled' ? enrollmentResult.value.data.data?.[0] : null
+    enrollmentResult.status === 'fulfilled' ? enrollmentResult.value.data?.[0] : null
   const progressPercentage = enrollment?.progress?.progressPercentage ?? 0
 
   // Determine if the current lesson has a blocking quiz/assignment
@@ -147,7 +162,7 @@ export default async function LessonPage({ params }: PageProps) {
       modules={modules}
       activeLessonId={lessonId}
       progressPercentage={progressPercentage}
-      completedLessonIds={[]} // per-lesson completion requires dedicated endpoint
+      completedLessonIds={[]}
       breadcrumb={
         <nav
           aria-label="Breadcrumb"

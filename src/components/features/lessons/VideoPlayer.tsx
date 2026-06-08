@@ -1,6 +1,7 @@
 'use client'
 
 import { useRef, useState, useEffect, useCallback } from 'react'
+import { useRouter } from 'next/navigation'
 import { Loader2 } from 'lucide-react'
 import { useUpdateProgress } from '@/hooks/mutations/lessons'
 import { cn } from '@/lib/utils'
@@ -30,6 +31,7 @@ export function VideoPlayer({
   isAlreadyCompleted = false,
   onComplete,
 }: VideoPlayerProps) {
+  const router = useRouter()
   const videoRef = useRef<HTMLVideoElement>(null)
   const containerRef = useRef<HTMLDivElement>(null)
   const completionCalledRef = useRef(isAlreadyCompleted)
@@ -54,8 +56,15 @@ export function VideoPlayer({
 
     if (video.currentTime / video.duration >= COMPLETION_THRESHOLD) {
       completionCalledRef.current = true
-      mutate({ completed: true })
-      onComplete?.()
+      mutate(
+        { completed: true },
+        {
+          onSuccess: () => {
+            onComplete?.()
+            router.refresh()
+          },
+        }
+      )
     }
   }
 
