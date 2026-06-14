@@ -115,6 +115,7 @@ export default async function LessonPage({ params }: PageProps) {
     enrollmentResult.status === 'fulfilled' ? (enrollmentResult.value.data?.[0]?.id ?? null) : null
 
   let completedLessonIds: string[] = []
+  let progressPercentage = 0
   if (enrollmentId) {
     const progressRes = await fetch(`${BASE_URL}/enrollments/${enrollmentId}/progress-summary`, {
       headers: authHeaders,
@@ -122,9 +123,10 @@ export default async function LessonPage({ params }: PageProps) {
     })
     if (progressRes.ok) {
       const progressJson = (await progressRes.json()) as {
-        data: { completedLessonIds: string[] }
+        data: { completedLessonIds: string[]; progressPercentage: number }
       }
       completedLessonIds = progressJson?.data?.completedLessonIds ?? []
+      progressPercentage = progressJson?.data?.progressPercentage ?? 0
     }
   }
 
@@ -161,11 +163,6 @@ export default async function LessonPage({ params }: PageProps) {
     currentIndex < allLessons.length - 1
       ? { id: allLessons[currentIndex + 1].id, title: allLessons[currentIndex + 1].title }
       : null
-
-  // 6. Enrollment progress for the sidebar progress bar
-  const enrollment =
-    enrollmentResult.status === 'fulfilled' ? enrollmentResult.value.data?.[0] : null
-  const progressPercentage = enrollment?.progress?.progressPercentage ?? 0
 
   // Determine if the current lesson has a blocking quiz/assignment
   const blocksProgress = (lesson.quizSettings?.blocksProgress ?? false) || false

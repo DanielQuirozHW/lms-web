@@ -65,6 +65,11 @@ export default async function MyCoursesPage({ searchParams }: PageProps) {
   const session = await auth()
   const token = session?.accessToken
   const headers = token ? { Authorization: `Bearer ${token}` } : {}
+  const BASE_URL = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:3000/api/v1'
+  const authHeaders: Record<string, string> = {
+    'Content-Type': 'application/json',
+    ...(token ? { Authorization: `Bearer ${token}` } : {}),
+  }
 
   // 5 parallel requests: 4 lightweight count queries + main paginated enrollments
   const [allRes, activeRes, completedRes, cancelledRes, enrollmentsRes] = await Promise.allSettled([
@@ -106,18 +111,45 @@ export default async function MyCoursesPage({ searchParams }: PageProps) {
     totalPages: 1,
   }
 
-  // Fetch course detail for every enrollment on the page in parallel
-  const courseResults = await Promise.allSettled(
-    enrollments.map((enrollment) =>
-      api.get<CatalogCourse>(`/courses/${enrollment.courseId}`, { headers }).then((r) => r.data)
-    )
-  )
+  // Fetch course details and progress summaries in parallel
+  const [courseResults, summaryResults] = await Promise.all([
+    Promise.allSettled(
+      enrollments.map((enrollment) =>
+        api.get<CatalogCourse>(`/courses/${enrollment.courseId}`, { headers }).then((r) => r.data)
+      )
+    ),
+    Promise.allSettled(
+      enrollments.map((e) =>
+        fetch(`${BASE_URL}/enrollments/${e.id}/progress-summary`, {
+          headers: authHeaders,
+          cache: 'no-store',
+        }).then(async (r) => {
+          if (!r.ok) return null
+          return (await r.json()) as { data: { progressPercentage: number } }
+        })
+      )
+    ),
+  ])
+
+  const progressMap = new Map<string, number>()
+  summaryResults.forEach((result, i) => {
+    const id = enrollments[i]?.id
+    if (!id) return
+    if (result.status === 'fulfilled' && result.value) {
+      progressMap.set(id, result.value.data?.progressPercentage ?? 0)
+    }
+  })
 
   const items: EnrolledCourseItem[] = enrollments
     .map((enrollment, i) => {
       const result = courseResults[i]
       if (!result || result.status !== 'fulfilled') return null
-      return { enrollment, course: result.value }
+      const progressPercentage =
+        progressMap.get(enrollment.id) ?? enrollment.progress.progressPercentage
+      return {
+        enrollment: { ...enrollment, progress: { ...enrollment.progress, progressPercentage } },
+        course: result.value,
+      }
     })
     .filter((item): item is EnrolledCourseItem => item !== null)
 
