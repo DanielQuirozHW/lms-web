@@ -74,10 +74,11 @@ export type CourseModuleDetail = components['schemas']['ModuleDetailResponseDto'
 // ✅ MAPPED — LessonResponseDto: content, videoUrl, duration are all required nullable
 export type Lesson = components['schemas']['LessonResponseDto']
 
-// ⚠ PARTIAL — LessonDetailResponseDto.quizSettings uses QuizSettingsDto (lacks lessonId);
-//             assignmentSettings uses AssignmentSettingsDto (lacks isGroupAssignment,
-//             groupId, maxAttempts) vs full AssignmentSettings in manual type
-export type { LessonDetail } from './models'
+// ✅ MAPPED — LessonDetailResponseDto: quizSettings uses LessonQuizSettingsDto (now has
+//             lessonId) and assignmentSettings uses LessonAssignmentSettingsDto (now has
+//             isGroupAssignment, groupId, maxAttempts) — both structurally identical to
+//             QuizSettingsResponseDto and AssignmentSettingsResponseDto respectively
+export type LessonDetail = components['schemas']['LessonDetailResponseDto']
 
 // ✅ MAPPED — LessonResourceDto: { id, title, url, type, createdAt } — exact match
 export type LessonResource = components['schemas']['LessonResourceDto']
@@ -108,11 +109,12 @@ export type QuestionOption = components['schemas']['QuestionOptionResponseDto']
 // ✅ MAPPED — QuestionResponseDto matches (uses QuestionOptionResponseDto for options)
 export type Question = components['schemas']['QuestionResponseDto']
 
-// ⚠ PARTIAL — AttemptSummaryDto.score, completedAt, passed are still optional
-//             (field?: T | null) vs required nullable in manual QuizAttempt type
-// ⚠ PARTIAL — AttemptAnswerDto.selectedOptionId, textAnswer, isCorrect are still
-//             optional vs required nullable in manual QuizAnswer type
-export type { QuizAttempt, QuizAnswer, QuizAttemptResult } from './models'
+// ✅ MAPPED — AttemptSummaryDto: score, completedAt, passed are now required nullable
+export type QuizAttempt = components['schemas']['AttemptSummaryDto']
+// ✅ MAPPED — AttemptAnswerDto: selectedOptionId, textAnswer, isCorrect now required nullable
+export type QuizAnswer = components['schemas']['AttemptAnswerDto']
+// ✅ MAPPED — AttemptResultDto: extends AttemptSummaryDto + answers: AttemptAnswerDto[]
+export type QuizAttemptResult = components['schemas']['AttemptResultDto']
 
 // ─── Assignment ───────────────────────────────────────────────────────────────
 // ✅ MAPPED — AssignmentSettingsResponseDto: passingScore, dueDate, groupId,
@@ -142,9 +144,9 @@ export type Rubric = components['schemas']['RubricResponseDto']
 //             Note: models.ts updated to align levelId: string → string | null
 export type RubricAssessmentAnswer = components['schemas']['RubricAssessmentAnswerResponseDto']
 
-// ⚠ PARTIAL — RubricAssessmentResponseDto uses assessedAt (single timestamp) vs
-//             createdAt + updatedAt in manual type; extra feedback field
-export type { RubricAssessment } from './models'
+// ✅ MAPPED — RubricAssessmentResponseDto: uses assessedAt (single timestamp) — models.ts
+//             updated to align (removed createdAt/updatedAt, added assessedAt + feedback)
+export type RubricAssessment = components['schemas']['RubricAssessmentResponseDto']
 
 // ─── Gradebook ────────────────────────────────────────────────────────────────
 // ✅ MAPPED — GradebookItemResponseDto: weight is now required (number | null) — exact match

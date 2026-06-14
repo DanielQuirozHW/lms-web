@@ -304,10 +304,10 @@ export interface RubricAssessment {
   id: string
   rubricId: string
   submissionId: string
-  score: number
   assessorId: string
-  createdAt: string
-  updatedAt: string
+  score: number
+  feedback: string | null
+  assessedAt: string
   answers: RubricAssessmentAnswer[]
 }
 

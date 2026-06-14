@@ -2596,9 +2596,11 @@ export interface components {
       /** Format: date-time */
       createdAt: string
     }
-    QuizSettingsDto: {
+    LessonQuizSettingsDto: {
       /** @example clxyz123 */
       id: string
+      /** @example lesson-uuid */
+      lessonId: string
       /** @example 3 */
       maxAttempts: number | null
       /** @example 70 */
@@ -2608,9 +2610,11 @@ export interface components {
       /** @example false */
       shuffleQuestions: boolean
     }
-    AssignmentSettingsDto: {
+    LessonAssignmentSettingsDto: {
       /** @example clxyz123 */
       id: string
+      /** @example lesson-uuid */
+      lessonId: string
       /**
        * @example MANUAL
        * @enum {string}
@@ -2627,6 +2631,10 @@ export interface components {
       dueDate: string | null
       /** @example false */
       allowLateSubmission: boolean
+      /** @example false */
+      isGroupAssignment: boolean
+      groupId: string | null
+      maxAttempts: number | null
     }
     LessonDetailResponseDto: {
       /** @example clxyz123 */
@@ -2660,8 +2668,8 @@ export interface components {
       /** Format: date-time */
       updatedAt: string
       resources: components['schemas']['LessonResourceDto'][]
-      quizSettings: components['schemas']['QuizSettingsDto'] | null
-      assignmentSettings: components['schemas']['AssignmentSettingsDto'] | null
+      quizSettings: components['schemas']['LessonQuizSettingsDto'] | null
+      assignmentSettings: components['schemas']['LessonAssignmentSettingsDto'] | null
     }
     UpdateLessonDto: {
       /** @example Introduction to Variables */
@@ -3474,12 +3482,12 @@ export interface components {
       lessonId: string
       enrollmentId: string
       attemptNumber: number
-      score?: number | null
+      score: number | null
       /** Format: date-time */
       startedAt: string
       /** Format: date-time */
-      completedAt?: string | null
-      passed?: boolean | null
+      completedAt: string | null
+      passed: boolean | null
     }
     SubmitAnswerItemDto: {
       /** Format: uuid */
@@ -3494,21 +3502,21 @@ export interface components {
     AttemptAnswerDto: {
       id: string
       questionId: string
-      selectedOptionId?: string | null
-      textAnswer?: string | null
-      isCorrect?: boolean | null
+      selectedOptionId: string | null
+      textAnswer: string | null
+      isCorrect: boolean | null
     }
     AttemptResultDto: {
       id: string
       lessonId: string
       enrollmentId: string
       attemptNumber: number
-      score?: number | null
+      score: number | null
       /** Format: date-time */
       startedAt: string
       /** Format: date-time */
-      completedAt?: string | null
-      passed?: boolean | null
+      completedAt: string | null
+      passed: boolean | null
       answers: components['schemas']['AttemptAnswerDto'][]
     }
     UploadResponseDto: {
