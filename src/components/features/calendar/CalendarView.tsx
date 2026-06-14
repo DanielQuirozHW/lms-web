@@ -137,7 +137,6 @@ export function CalendarView() {
   )
 
   const { data, isLoading } = useCalendarEvents(startDate, endDate)
-  const events = data?.data ?? []
 
   const { mutate: createEvent, isPending } = useCreateCalendarEvent()
 
@@ -148,12 +147,12 @@ export function CalendarView() {
 
   const eventsByDay = useMemo(() => {
     const map = new Map<string, CalendarEvent[]>()
-    for (const event of events) {
+    for (const event of data?.data ?? []) {
       const key = event.startDate.split('T')[0]
       map.set(key, [...(map.get(key) ?? []), event])
     }
     return map
-  }, [events])
+  }, [data])
 
   const weeks = useMemo(
     () => getCalendarWeeks(currentDate.getFullYear(), currentDate.getMonth()),
