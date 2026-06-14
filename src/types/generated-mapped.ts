@@ -46,36 +46,37 @@ export type PublicUser = components['schemas']['UserPublicResponseDto']
 export type Category = components['schemas']['CategoryResponseDto']
 
 // ─── Course ───────────────────────────────────────────────────────────────────
-// ⚠ PARTIAL — CourseResponseDto.description, coverUrl, price, categoryId are
-//             optional (field?: T | null) vs required (field: T | null) in manual
-// ❌ MANUAL — CatalogCourse and CoursesFilter are frontend-only composite types
-export type { Course, CourseDetail, CatalogCourse, CoursesFilter } from './models'
+// ✅ MAPPED — CourseResponseDto: description, coverUrl, price, categoryId,
+//             enrollmentPeriodStart/End are now all required nullable — exact match
+//             (enrollmentPeriodStart/End were optional in manual; required is stricter, OK)
+export type Course = components['schemas']['CourseResponseDto']
+// ✅ MAPPED — CourseDetailResponseDto: extends Course + lessonsCount + enrollmentsCount
+export type CourseDetail = components['schemas']['CourseDetailResponseDto']
 
-// ⚠ PARTIAL — EnrollmentCodeResponseDto.maxUses and expiresAt are optional
-//             vs required nullable in manual type
-export type { EnrollmentCode } from './models'
+// ❌ MANUAL — CatalogCourse and CoursesFilter are frontend-only composite types
+export type { CatalogCourse, CoursesFilter } from './models'
+
+// ✅ MAPPED — EnrollmentCodeResponseDto: maxUses and expiresAt are now required nullable
+export type EnrollmentCode = components['schemas']['EnrollmentCodeResponseDto']
 
 // ─── Module ───────────────────────────────────────────────────────────────────
 // ✅ MAPPED — ModuleResponseDto: description and unlockAfterDays are now required
 //             (string | null and number | null) — exact match
 export type CourseModule = components['schemas']['ModuleResponseDto']
 
-// ⚠ PARTIAL — ModuleDetailResponseDto.lessons uses LessonSummaryDto which has
-//             duration?: number | null (optional) vs required in LessonSummary
-export type { CourseModuleDetail } from './models'
+// ✅ MAPPED — LessonSummaryDto.duration is now required (number | null) — exact match
+export type LessonSummary = components['schemas']['LessonSummaryDto']
+
+// ✅ MAPPED — ModuleDetailResponseDto: uses updated LessonSummaryDto (duration required)
+export type CourseModuleDetail = components['schemas']['ModuleDetailResponseDto']
 
 // ─── Lesson ───────────────────────────────────────────────────────────────────
-// ⚠ PARTIAL — LessonSummaryDto.duration is optional (duration?: number | null)
-//             vs required (duration: number | null) in manual type
-export type { LessonSummary } from './models'
-
-// ✅ MAPPED — LessonResponseDto: content, videoUrl, duration are now all required
-//             nullable (field: T | null) — exact match
+// ✅ MAPPED — LessonResponseDto: content, videoUrl, duration are all required nullable
 export type Lesson = components['schemas']['LessonResponseDto']
 
-// ⚠ PARTIAL — LessonDetailResponseDto.quizSettings and assignmentSettings are
-//             optional; QuizSettingsDto lacks lessonId; AssignmentSettingsDto
-//             lacks isGroupAssignment, groupId, maxAttempts
+// ⚠ PARTIAL — LessonDetailResponseDto.quizSettings uses QuizSettingsDto (lacks lessonId);
+//             assignmentSettings uses AssignmentSettingsDto (lacks isGroupAssignment,
+//             groupId, maxAttempts) vs full AssignmentSettings in manual type
 export type { LessonDetail } from './models'
 
 // ✅ MAPPED — LessonResourceDto: { id, title, url, type, createdAt } — exact match
@@ -89,50 +90,61 @@ export type LessonProgress = components['schemas']['LessonProgressResponseDto']
 // ✅ MAPPED — EnrollmentResponseDto: completedAt is now required nullable — exact match
 export type Enrollment = components['schemas']['EnrollmentResponseDto']
 
-// ⚠ PARTIAL — ProgressSummaryDto.finalGrade and status are still optional;
-//             adds completedLessonIds not in manual EnrollmentProgress
-// ⚠ PARTIAL — EnrollmentDetailResponseDto.progress uses ProgressSummaryDto above
-export type { EnrollmentProgress, EnrollmentDetail } from './models'
+// ✅ MAPPED — ProgressSummaryDto: finalGrade and status are now required; has extra
+//             completedLessonIds: string[] field (additive, structurally compatible)
+export type EnrollmentProgress = components['schemas']['ProgressSummaryDto']
+
+// ✅ MAPPED — EnrollmentDetailResponseDto: progress uses ProgressSummaryDto (now MAPPED)
+export type EnrollmentDetail = components['schemas']['EnrollmentDetailResponseDto']
 
 // ─── Quiz ─────────────────────────────────────────────────────────────────────
-// ⚠ PARTIAL — QuizSettingsResponseDto.maxAttempts and passingScore are still
-//             optional vs required nullable in manual type
-export type { QuizSettings } from './models'
+// ✅ MAPPED — QuizSettingsResponseDto: maxAttempts and passingScore are now required
+//             nullable; lessonId present — exact match
+export type QuizSettings = components['schemas']['QuizSettingsResponseDto']
 
-// ✅ MAPPED — QuestionOptionResponseDto: { id, text, order, isCorrect? }
-//             isCorrect?: boolean | null in generated vs boolean in manual — compatible
+// ✅ MAPPED — QuestionOptionResponseDto: { id, text, order, isCorrect? } — exact match
 export type QuestionOption = components['schemas']['QuestionOptionResponseDto']
 
 // ✅ MAPPED — QuestionResponseDto matches (uses QuestionOptionResponseDto for options)
 export type Question = components['schemas']['QuestionResponseDto']
 
 // ⚠ PARTIAL — AttemptSummaryDto.score, completedAt, passed are still optional
-//             vs required nullable in manual QuizAttempt type
+//             (field?: T | null) vs required nullable in manual QuizAttempt type
 // ⚠ PARTIAL — AttemptAnswerDto.selectedOptionId, textAnswer, isCorrect are still
 //             optional vs required nullable in manual QuizAnswer type
 export type { QuizAttempt, QuizAnswer, QuizAttemptResult } from './models'
 
 // ─── Assignment ───────────────────────────────────────────────────────────────
-// ⚠ PARTIAL — AssignmentSettingsResponseDto.passingScore, dueDate, groupId,
-//             maxAttempts are still optional vs required nullable in manual type
-// ⚠ PARTIAL — SubmissionResponseDto.fileUrl, grade, feedback, gradedById,
-//             gradedAt, groupId are still optional vs required nullable in manual
-export type { AssignmentSettings, Submission } from './models'
+// ✅ MAPPED — AssignmentSettingsResponseDto: passingScore, dueDate, groupId,
+//             maxAttempts are now all required nullable — exact match
+export type AssignmentSettings = components['schemas']['AssignmentSettingsResponseDto']
+
+// ✅ MAPPED — SubmissionResponseDto: fileUrl, grade, feedback, gradedById,
+//             gradedAt, groupId are now all required nullable — exact match
+export type Submission = components['schemas']['SubmissionResponseDto']
 
 // ─── Rubric ───────────────────────────────────────────────────────────────────
-// ⚠ PARTIAL — RubricLevelResponseDto: extra criterionId field; description still optional
-// ⚠ PARTIAL — RubricCriterionResponseDto: extra rubricId field; description still optional
-// ⚠ PARTIAL — RubricResponseDto: description still optional; criteria required vs optional
-// ⚠ PARTIAL — RubricAssessmentAnswerResponseDto: extra assessmentId; levelId is
-//             optional string | null vs required string; comment still optional
-// ⚠ PARTIAL — RubricAssessmentResponseDto: uses assessedAt instead of createdAt/updatedAt
-export type {
-  RubricLevel,
-  RubricCriterion,
-  Rubric,
-  RubricAssessmentAnswer,
-  RubricAssessment,
-} from './models'
+// ✅ MAPPED — RubricLevelResponseDto: description is now required nullable;
+//             extra criterionId field is additive (structurally compatible)
+export type RubricLevel = components['schemas']['RubricLevelResponseDto']
+
+// ✅ MAPPED — RubricCriterionResponseDto: description is now required nullable;
+//             extra rubricId field is additive (structurally compatible)
+export type RubricCriterion = components['schemas']['RubricCriterionResponseDto']
+
+// ✅ MAPPED — RubricResponseDto: description is now required nullable; criteria is
+//             now required array (was optional in manual — stricter is OK)
+export type Rubric = components['schemas']['RubricResponseDto']
+
+// ✅ MAPPED — RubricAssessmentAnswerResponseDto: comment is now required nullable;
+//             levelId is string | null (backend correction — null for open-ended questions);
+//             extra assessmentId field is additive (structurally compatible)
+//             Note: models.ts updated to align levelId: string → string | null
+export type RubricAssessmentAnswer = components['schemas']['RubricAssessmentAnswerResponseDto']
+
+// ⚠ PARTIAL — RubricAssessmentResponseDto uses assessedAt (single timestamp) vs
+//             createdAt + updatedAt in manual type; extra feedback field
+export type { RubricAssessment } from './models'
 
 // ─── Gradebook ────────────────────────────────────────────────────────────────
 // ✅ MAPPED — GradebookItemResponseDto: weight is now required (number | null) — exact match
@@ -149,24 +161,30 @@ export type CourseGroup = components['schemas']['GroupResponseDto']
 export type GroupMember = components['schemas']['GroupMemberResponseDto']
 
 // ─── Forum ────────────────────────────────────────────────────────────────────
-// ⚠ PARTIAL — ThreadResponseDto.courseId is still optional (courseId?: string | null)
-//             vs required (courseId: string | null) in manual type
-// ⚠ PARTIAL — PostResponseDto.parentId is still optional vs required nullable
-export type { ForumThread, ForumPost, ForumThreadDetail } from './models'
+// ✅ MAPPED — ThreadResponseDto: courseId is now required nullable — exact match
+export type ForumThread = components['schemas']['ThreadResponseDto']
+
+// ✅ MAPPED — PostResponseDto: parentId is now required nullable — exact match
+export type ForumPost = components['schemas']['PostResponseDto']
+
+// ✅ MAPPED — ThreadDetailResponseDto: extends ThreadResponseDto + posts array
+export type ForumThreadDetail = components['schemas']['ThreadDetailResponseDto']
 
 // ─── Messages ─────────────────────────────────────────────────────────────────
-// ⚠ PARTIAL — MessageResponseDto.readAt is still optional vs required nullable
+// ✅ MAPPED — MessageResponseDto: readAt is now required nullable — exact match
+export type Message = components['schemas']['MessageResponseDto']
+
 // ❌ MANUAL — Conversation has no generated equivalent
-export type { Message, Conversation } from './models'
+export type { Conversation } from './models'
 
 // ─── Notifications ────────────────────────────────────────────────────────────
-// ⚠ PARTIAL — NotificationResponseDto.referenceId and referenceType are still
-//             optional vs required nullable in manual type
-export type { Notification } from './models'
+// ✅ MAPPED — NotificationResponseDto: referenceId and referenceType are now
+//             required nullable — exact match
+export type Notification = components['schemas']['NotificationResponseDto']
 
 // ─── Ratings ─────────────────────────────────────────────────────────────────
-// ⚠ PARTIAL — RatingResponseDto.review is still optional vs required nullable
-export type { CourseRating } from './models'
+// ✅ MAPPED — RatingResponseDto: review is now required nullable — exact match
+export type CourseRating = components['schemas']['RatingResponseDto']
 
 // ✅ MAPPED — RatingSummaryDto: { averageScore, totalRatings, scale } — exact match
 export type RatingSummary = components['schemas']['RatingSummaryDto']

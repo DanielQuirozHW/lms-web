@@ -295,7 +295,7 @@ export interface Rubric {
 export interface RubricAssessmentAnswer {
   id: string
   criterionId: string
-  levelId: string
+  levelId: string | null
   score: number
   comment: string | null
 }

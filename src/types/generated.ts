@@ -2025,12 +2025,12 @@ export interface components {
        * @description Weighted final grade (0–100)
        * @example 87.5
        */
-      finalGrade?: number | null
+      finalGrade: number | null
       /**
        * @description Current enrollment status
        * @enum {string}
        */
-      status?: 'ACTIVE' | 'COMPLETED' | 'CANCELLED'
+      status: 'ACTIVE' | 'COMPLETED' | 'CANCELLED'
       /**
        * @example [
        *       "lesson-id-1"
@@ -2083,11 +2083,11 @@ export interface components {
       /** @example PROMO2026 */
       code: string
       /** @example 100 */
-      maxUses?: number | null
+      maxUses: number | null
       /** @example 3 */
       usedCount: number
       /** Format: date-time */
-      expiresAt?: string | null
+      expiresAt: string | null
       /** @example true */
       isActive: boolean
       /** Format: date-time */
@@ -2130,9 +2130,9 @@ export interface components {
       /** @example introduction-to-typescript */
       slug: string
       /** @example Learn TypeScript from scratch */
-      description?: string | null
+      description: string | null
       /** @example https://example.com/cover.jpg */
-      coverUrl?: string | null
+      coverUrl: string | null
       /**
        * @example DRAFT
        * @enum {string}
@@ -2147,23 +2147,23 @@ export interface components {
        * @description Price in USD, null means free
        * @example 29.99
        */
-      price?: number | null
+      price: number | null
       /** @example instructor-uuid */
       instructorId: string
       /** @example category-uuid */
-      categoryId?: string | null
+      categoryId: string | null
       /**
        * Format: date-time
        * @description Enrollment open date (from CourseSettings)
        * @example null
        */
-      enrollmentPeriodStart?: string | null
+      enrollmentPeriodStart: string | null
       /**
        * Format: date-time
        * @description Enrollment close date (from CourseSettings)
        * @example null
        */
-      enrollmentPeriodEnd?: string | null
+      enrollmentPeriodEnd: string | null
       /** Format: date-time */
       createdAt: string
       /** Format: date-time */
@@ -2177,9 +2177,9 @@ export interface components {
       /** @example introduction-to-typescript */
       slug: string
       /** @example Learn TypeScript from scratch */
-      description?: string | null
+      description: string | null
       /** @example https://example.com/cover.jpg */
-      coverUrl?: string | null
+      coverUrl: string | null
       /**
        * @example DRAFT
        * @enum {string}
@@ -2194,23 +2194,23 @@ export interface components {
        * @description Price in USD, null means free
        * @example 29.99
        */
-      price?: number | null
+      price: number | null
       /** @example instructor-uuid */
       instructorId: string
       /** @example category-uuid */
-      categoryId?: string | null
+      categoryId: string | null
       /**
        * Format: date-time
        * @description Enrollment open date (from CourseSettings)
        * @example null
        */
-      enrollmentPeriodStart?: string | null
+      enrollmentPeriodStart: string | null
       /**
        * Format: date-time
        * @description Enrollment close date (from CourseSettings)
        * @example null
        */
-      enrollmentPeriodEnd?: string | null
+      enrollmentPeriodEnd: string | null
       /** Format: date-time */
       createdAt: string
       /** Format: date-time */
@@ -2254,8 +2254,8 @@ export interface components {
       title: string
       body: string
       isRead: boolean
-      referenceId?: string | null
-      referenceType?: string | null
+      referenceId: string | null
+      referenceType: string | null
       /** Format: date-time */
       createdAt: string
     }
@@ -2457,7 +2457,7 @@ export interface components {
        * @description Duration in seconds
        * @example 300
        */
-      duration?: number | null
+      duration: number | null
       /** @example false */
       isPreview: boolean
       /** @example true */
@@ -2660,8 +2660,8 @@ export interface components {
       /** Format: date-time */
       updatedAt: string
       resources: components['schemas']['LessonResourceDto'][]
-      quizSettings?: components['schemas']['QuizSettingsDto'] | null
-      assignmentSettings?: components['schemas']['AssignmentSettingsDto'] | null
+      quizSettings: components['schemas']['QuizSettingsDto'] | null
+      assignmentSettings: components['schemas']['AssignmentSettingsDto'] | null
     }
     UpdateLessonDto: {
       /** @example Introduction to Variables */
@@ -2743,7 +2743,7 @@ export interface components {
       id: string
       title: string
       authorId: string
-      courseId?: string | null
+      courseId: string | null
       isPinned: boolean
       isClosed: boolean
       postCount: number
@@ -2759,7 +2759,7 @@ export interface components {
       threadId: string
       authorId: string
       content: string
-      parentId?: string | null
+      parentId: string | null
       isAcceptedAnswer: boolean
       /** @description Sum of all vote values (+1 upvote, -1 downvote) */
       voteScore: number
@@ -2772,7 +2772,7 @@ export interface components {
       id: string
       title: string
       authorId: string
-      courseId?: string | null
+      courseId: string | null
       isPinned: boolean
       isClosed: boolean
       postCount: number
@@ -2818,7 +2818,7 @@ export interface components {
       receiverId: string
       content: string
       /** Format: date-time */
-      readAt?: string | null
+      readAt: string | null
       /** Format: date-time */
       createdAt: string
     }
@@ -2838,7 +2838,7 @@ export interface components {
       userId: string
       courseId: string
       score: number
-      review?: string | null
+      review: string | null
       /** Format: date-time */
       createdAt: string
       /** Format: date-time */
@@ -3208,13 +3208,13 @@ export interface components {
       /** @enum {string} */
       gradingType: 'AUTOMATIC' | 'MANUAL'
       maxScore: number
-      passingScore?: number | null
+      passingScore: number | null
       /** Format: date-time */
-      dueDate?: string | null
+      dueDate: string | null
       allowLateSubmission: boolean
       isGroupAssignment: boolean
-      groupId?: string | null
-      maxAttempts?: number | null
+      groupId: string | null
+      maxAttempts: number | null
     }
     SubmitAssignmentDto: {
       /** @example My assignment submission text */
@@ -3227,16 +3227,16 @@ export interface components {
       enrollmentId: string
       lessonId: string
       content: string
-      fileUrl?: string | null
+      fileUrl: string | null
       /** Format: date-time */
       submittedAt: string
       attemptNumber: number
-      grade?: number | null
-      feedback?: string | null
-      gradedById?: string | null
+      grade: number | null
+      feedback: string | null
+      gradedById: string | null
       /** Format: date-time */
-      gradedAt?: string | null
-      groupId?: string | null
+      gradedAt: string | null
+      groupId: string | null
     }
     GradeAnswerItemDto: {
       /** @example crit-uuid */
@@ -3259,7 +3259,7 @@ export interface components {
       id: string
       courseId: string
       title: string
-      description?: string | null
+      description: string | null
       totalPoints: number
       /** Format: date-time */
       createdAt: string
@@ -3329,7 +3329,7 @@ export interface components {
       id: string
       criterionId: string
       title: string
-      description?: string | null
+      description: string | null
       points: number
       order: number
     }
@@ -3337,7 +3337,7 @@ export interface components {
       id: string
       rubricId: string
       title: string
-      description?: string | null
+      description: string | null
       order: number
       points: number
       levels: components['schemas']['RubricLevelResponseDto'][]
@@ -3346,7 +3346,7 @@ export interface components {
       id: string
       courseId: string
       title: string
-      description?: string | null
+      description: string | null
       totalPoints: number
       criteria: components['schemas']['RubricCriterionResponseDto'][]
       /** Format: date-time */
@@ -3397,11 +3397,11 @@ export interface components {
       id: string
       assessmentId: string
       criterionId: string
-      levelId?: string | null
+      levelId: string | null
       /** @description Points awarded for this criterion */
       score: number
       /** @description Assessor comment for this criterion */
-      comment?: string | null
+      comment: string | null
     }
     RubricAssessmentResponseDto: {
       id: string
@@ -3411,7 +3411,7 @@ export interface components {
       /** @description Sum of all answer scores */
       score: number
       /** @description Overall assessor feedback */
-      feedback?: string | null
+      feedback: string | null
       /** Format: date-time */
       assessedAt: string
       answers: components['schemas']['RubricAssessmentAnswerResponseDto'][]
@@ -3425,8 +3425,8 @@ export interface components {
     QuizSettingsResponseDto: {
       id: string
       lessonId: string
-      maxAttempts?: number | null
-      passingScore?: number | null
+      maxAttempts: number | null
+      passingScore: number | null
       blocksProgress: boolean
       shuffleQuestions: boolean
     }
