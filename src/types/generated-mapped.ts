@@ -233,3 +233,13 @@ export type StudentGradeItem = components['schemas']['ItemGradeDto']
 export type StudentGradeCategory = components['schemas']['CategoryGradeDto']
 // ✅ MAPPED — StudentGradeResponseDto: finalGrade now required; categories uses CategoryGradeDto
 export type StudentGrade = components['schemas']['StudentGradeResponseDto']
+
+// ─── Admin Stats ──────────────────────────────────────────────────────────────
+// ✅ MAPPED — AdminStatsDto: response for GET /admin/stats
+//             { totalUsers, totalCourses, totalEnrollments, activeEnrollments, completedEnrollments }
+export type AdminStats = components['schemas']['AdminStatsDto']
+
+// ─── Course Settings ──────────────────────────────────────────────────────────
+// ✅ MAPPED — CourseSettingsResponseDto: response for PATCH /courses/:id/settings
+//             maxEnrollments: number | null (correctly typed in response DTO)
+export type CourseSettings = components['schemas']['CourseSettingsResponseDto']

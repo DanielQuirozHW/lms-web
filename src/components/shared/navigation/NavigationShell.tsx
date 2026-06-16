@@ -8,6 +8,9 @@ import { Header } from './Header'
 import { Breadcrumbs } from './Breadcrumbs'
 import { ImpersonationBanner } from '@/components/shared/auth/ImpersonationBanner'
 import { GlobalAnnouncementBanner } from '@/components/shared/announcements/GlobalAnnouncementBanner'
+import { SessionTimeoutModal } from '@/components/shared/session/SessionTimeoutModal'
+import { useSessionTimeout } from '@/hooks/useSessionTimeout'
+import { useLogoutMutation } from '@/hooks/mutations/auth'
 import { getDashboardNav, getInstructorNav, getAdminNav } from '@/lib/navigation'
 import { cn } from '@/lib/utils'
 
@@ -34,6 +37,14 @@ export function NavigationShell({ children }: NavigationShellProps) {
   const isPrivileged =
     session?.user?.roles?.some((r) => r === 'ADMIN' || r === 'INSTRUCTOR') ?? false
   const navGroups = useNavGroups(isPrivileged)
+
+  const { mutate: logout } = useLogoutMutation()
+  // RefreshTokenExpired is treated as unauthenticated — don't track inactivity (MISTAKES [002])
+  const sessionActive = !!session && session.error !== 'RefreshTokenExpired'
+  const { showWarning, minutesRemaining, keepAlive } = useSessionTimeout({
+    enabled: sessionActive,
+    onTimeout: () => logout(),
+  })
 
   function toggleCollapsed() {
     const next = !isCollapsed
@@ -67,6 +78,14 @@ export function NavigationShell({ children }: NavigationShellProps) {
         {/* pb-20 on mobile so content clears the fixed bottom nav */}
         <main className="flex-1 p-4 pb-20 lg:p-6 lg:pb-6">{children}</main>
       </div>
+
+      {showWarning && (
+        <SessionTimeoutModal
+          minutesRemaining={minutesRemaining}
+          onKeepAlive={keepAlive}
+          onSignOut={() => logout()}
+        />
+      )}
     </div>
   )
 }

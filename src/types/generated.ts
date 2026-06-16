@@ -3379,6 +3379,8 @@ export interface components {
       /** Format: date-time */
       submittedAt: string
       attemptNumber: number
+      /** @enum {string} */
+      status: 'SUBMITTED' | 'GRADING' | 'GRADED' | 'RETURNED'
       grade: number | null
       feedback: string | null
       gradedById: string | null
@@ -5630,7 +5632,7 @@ export interface operations {
           'application/json': components['schemas']['UserPrivateResponseDto']
         }
       }
-      /** @description Cannot assign ADMIN role via this endpoint */
+      /** @description Cannot assign ADMIN role, demote yourself, or demote the last admin */
       400: {
         headers: {
           [name: string]: unknown
