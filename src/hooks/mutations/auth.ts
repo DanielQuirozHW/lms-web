@@ -44,6 +44,22 @@ export function useRegisterMutation() {
   })
 }
 
+export function useForgotPasswordMutation() {
+  return useMutation({
+    mutationFn: async (email: string) => {
+      await api.post('/auth/forgot-password', { email })
+    },
+  })
+}
+
+export function useResetPasswordMutation() {
+  return useMutation({
+    mutationFn: async ({ token, newPassword }: { token: string; newPassword: string }) => {
+      await api.post('/auth/reset-password', { token, newPassword })
+    },
+  })
+}
+
 export function useLogoutMutation() {
   return useMutation({
     mutationFn: async () => {

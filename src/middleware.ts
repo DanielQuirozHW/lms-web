@@ -4,7 +4,14 @@ import type { NextAuthRequest } from 'next-auth'
 import { API_URL, isCorporate } from '@/lib/config'
 
 // '/' is the public landing page — must be accessible without authentication
-const PUBLIC_PATHS = new Set(['/', '/login', '/register', '/verify-email'])
+const PUBLIC_PATHS = new Set([
+  '/',
+  '/login',
+  '/register',
+  '/verify-email',
+  '/forgot-password',
+  '/reset-password',
+])
 const MAINTENANCE_PATH = '/maintenance'
 const INSTRUCTOR_PREFIX = '/instructor'
 const ADMIN_PREFIX = '/admin'
