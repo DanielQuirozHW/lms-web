@@ -645,6 +645,23 @@ export interface paths {
     patch?: never
     trace?: never
   }
+  '/api/v1/users/{id}/role': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    /** Update user role (admin only) */
+    patch: operations['UsersController_updateRole']
+    trace?: never
+  }
   '/api/v1/users/{id}': {
     parameters: {
       query?: never
@@ -1707,6 +1724,23 @@ export interface paths {
     patch?: never
     trace?: never
   }
+  '/api/v1/admin/stats': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    /** Platform-wide aggregate statistics (admin only) */
+    get: operations['AdminController_getStats']
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
   '/api/v1/admin/impersonate/stop': {
     parameters: {
       query?: never
@@ -2262,7 +2296,7 @@ export interface components {
     RegisterDto: {
       /** @example john.doe@example.com */
       email: string
-      /** @example password123 */
+      /** @example Password1 */
       password: string
       /** @example John */
       firstName: string
@@ -2383,14 +2417,21 @@ export interface components {
       avatarUrl?: string
     }
     ChangePasswordDto: {
-      /** @example currentPassword123 */
+      /** @example CurrentPassword1 */
       currentPassword: string
-      /** @example newPassword456 */
+      /** @example NewPassword1 */
       newPassword: string
     }
     DeleteAccountDto: {
       /** @description Current password to confirm account deletion */
       password: string
+    }
+    UpdateRoleDto: {
+      /**
+       * @example INSTRUCTOR
+       * @enum {string}
+       */
+      role: 'STUDENT' | 'INSTRUCTOR' | 'ADMIN'
     }
     UserPublicResponseDto: {
       /** @example clxyz123 */
@@ -3539,6 +3580,18 @@ export interface components {
       key: string
       /** @example https://cdn.example.com/lessons/course-id/lesson-id/abc.mp4 */
       publicUrl: string
+    }
+    AdminStatsDto: {
+      /** @example 1250 */
+      totalUsers: number
+      /** @example 45 */
+      totalCourses: number
+      /** @example 3820 */
+      totalEnrollments: number
+      /** @example 2100 */
+      activeEnrollments: number
+      /** @example 890 */
+      completedEnrollments: number
     }
     StopImpersonationDto: {
       /**
@@ -5323,6 +5376,52 @@ export interface operations {
       }
       /** @description Forbidden — admin role required */
       403: {
+        headers: {
+          [name: string]: unknown
+        }
+        content?: never
+      }
+    }
+  }
+  UsersController_updateRole: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        id: string
+      }
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['UpdateRoleDto']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['UserPrivateResponseDto']
+        }
+      }
+      /** @description Cannot assign ADMIN role via this endpoint */
+      400: {
+        headers: {
+          [name: string]: unknown
+        }
+        content?: never
+      }
+      /** @description Forbidden — admin role required */
+      403: {
+        headers: {
+          [name: string]: unknown
+        }
+        content?: never
+      }
+      /** @description User not found */
+      404: {
         headers: {
           [name: string]: unknown
         }
@@ -8425,6 +8524,32 @@ export interface operations {
         content: {
           'application/json': components['schemas']['UploadResponseDto']
         }
+      }
+    }
+  }
+  AdminController_getStats: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['AdminStatsDto']
+        }
+      }
+      /** @description Forbidden — admin role required */
+      403: {
+        headers: {
+          [name: string]: unknown
+        }
+        content?: never
       }
     }
   }
