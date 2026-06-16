@@ -335,6 +335,23 @@ export interface paths {
     patch: operations['CoursesController_archive']
     trace?: never
   }
+  '/api/v1/courses/{id}/settings': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    /** Update course settings (owner or admin only) */
+    patch: operations['CoursesController_updateSettings']
+    trace?: never
+  }
   '/api/v1/notifications': {
     parameters: {
       query?: never
@@ -550,6 +567,40 @@ export interface paths {
     put?: never
     /** Verify email address with the 6-digit code */
     post: operations['AuthController_verifyEmail']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/v1/auth/forgot-password': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    /** Request a password reset link (returns token for dev/testing) */
+    post: operations['AuthController_forgotPassword']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/v1/auth/reset-password': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    /** Reset password using a valid reset token */
+    post: operations['AuthController_resetPassword']
     delete?: never
     options?: never
     head?: never
@@ -2269,6 +2320,44 @@ export interface components {
        */
       price?: number
     }
+    UpdateCourseSettingsDto: {
+      /** @description When enrollment opens (ISO 8601) */
+      enrollmentStartDate?: string
+      /** @description When enrollment closes (ISO 8601) */
+      enrollmentEndDate?: string
+      /** @description When course content becomes available (ISO 8601) */
+      courseStartDate?: string
+      hasModules?: boolean
+      forumEnabled?: boolean
+      forumPublic?: boolean
+      certificateEnabled?: boolean
+      ratingEnabled?: boolean
+      /** @enum {string} */
+      ratingScale?: 'STARS_5' | 'NUMERIC_10' | 'NUMERIC_100'
+      /** @description Maximum number of active enrollments (null = unlimited) */
+      maxEnrollments?: Record<string, never>
+      /** @description Require lessons to be completed in order */
+      isSequential?: boolean
+    }
+    CourseSettingsResponseDto: {
+      id: string
+      courseId: string
+      /** Format: date-time */
+      enrollmentStartDate: string | null
+      /** Format: date-time */
+      enrollmentEndDate: string | null
+      /** Format: date-time */
+      courseStartDate: string | null
+      hasModules: boolean
+      forumEnabled: boolean
+      forumPublic: boolean
+      certificateEnabled: boolean
+      ratingEnabled: boolean
+      /** @enum {string} */
+      ratingScale: 'STARS_5' | 'NUMERIC_10' | 'NUMERIC_100'
+      maxEnrollments: number | null
+      isSequential: boolean
+    }
     UnreadCountDto: {
       count: number
     }
@@ -2370,6 +2459,16 @@ export interface components {
        * @example 123456
        */
       code: string
+    }
+    ForgotPasswordDto: {
+      /** @example john.doe@example.com */
+      email: string
+    }
+    ResetPasswordDto: {
+      /** @description 64-char hex reset token from forgot-password */
+      token: string
+      /** @example NewPassword1 */
+      newPassword: string
     }
     CategoryResponseDto: {
       id: string
@@ -4756,6 +4855,59 @@ export interface operations {
       }
     }
   }
+  CoursesController_updateSettings: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        id: string
+      }
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['UpdateCourseSettingsDto']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['CourseSettingsResponseDto']
+        }
+      }
+      /** @description Validation failed */
+      400: {
+        headers: {
+          [name: string]: unknown
+        }
+        content?: never
+      }
+      /** @description Missing or invalid access token */
+      401: {
+        headers: {
+          [name: string]: unknown
+        }
+        content?: never
+      }
+      /** @description Forbidden — must be course owner or admin */
+      403: {
+        headers: {
+          [name: string]: unknown
+        }
+        content?: never
+      }
+      /** @description Course not found */
+      404: {
+        headers: {
+          [name: string]: unknown
+        }
+        content?: never
+      }
+    }
+  }
   NotificationsController_getNotifications: {
     parameters: {
       query?: {
@@ -5136,6 +5288,78 @@ export interface operations {
       }
       /** @description Missing or invalid access token */
       401: {
+        headers: {
+          [name: string]: unknown
+        }
+        content?: never
+      }
+    }
+  }
+  AuthController_forgotPassword: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['ForgotPasswordDto']
+      }
+    }
+    responses: {
+      /** @description Reset token generated (if account exists) */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content?: never
+      }
+      /** @description Validation failed */
+      400: {
+        headers: {
+          [name: string]: unknown
+        }
+        content?: never
+      }
+      /** @description Too many requests */
+      429: {
+        headers: {
+          [name: string]: unknown
+        }
+        content?: never
+      }
+    }
+  }
+  AuthController_resetPassword: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['ResetPasswordDto']
+      }
+    }
+    responses: {
+      /** @description Password reset successfully */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content?: never
+      }
+      /** @description Token invalid, expired, or password fails complexity */
+      400: {
+        headers: {
+          [name: string]: unknown
+        }
+        content?: never
+      }
+      /** @description Too many requests */
+      429: {
         headers: {
           [name: string]: unknown
         }
