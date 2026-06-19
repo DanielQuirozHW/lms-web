@@ -565,6 +565,29 @@ export interface Announcement {
   updatedAt: string
 }
 
+// ─── User Stats ───────────────────────────────────────────────────────────────
+
+export interface OverallProgressStats {
+  percentage: number
+}
+
+export interface StreakStats {
+  currentStreak: number
+  longestStreak: number
+}
+
+export interface LastActiveLessonStats {
+  courseId: string
+  courseSlug: string
+  lessonId: string
+  lessonTitle: string | null
+}
+
+export interface DailyActivity {
+  date: string
+  lessonsCompleted: number
+}
+
 // ─── Calendar ─────────────────────────────────────────────────────────────────
 
 export interface CalendarEvent {

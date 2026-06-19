@@ -2,14 +2,16 @@
 
 import Link from 'next/link'
 import { Flame } from 'lucide-react'
-import type { DashboardEnrollment } from './InProgressCourses'
+import {
+  useOverallProgressStats,
+  useStreakStats,
+  useLastActiveLessonStats,
+} from '@/hooks/queries/users'
 
 interface DashboardHeroProps {
   firstName: string
   activeEnrollments: number
   completedLessons: number
-  overallProgress: number
-  firstEnrollment?: DashboardEnrollment
   dayLabel: string
 }
 
@@ -17,17 +19,21 @@ export function DashboardHero({
   firstName,
   activeEnrollments,
   completedLessons,
-  overallProgress,
-  firstEnrollment,
   dayLabel,
 }: DashboardHeroProps) {
+  const { data: progressData } = useOverallProgressStats()
+  const { data: streakData } = useStreakStats()
+  const { data: lastLesson } = useLastActiveLessonStats()
+
+  const overallProgress = progressData?.percentage ?? 0
+  const streakDays = streakData?.currentStreak ?? 0
+  const continueHref = lastLesson
+    ? `/courses/${lastLesson.courseSlug}/learn/${lastLesson.lessonId}`
+    : '/my-courses'
+
   const r = 44
   const circumference = 2 * Math.PI * r
   const dashOffset = circumference * (1 - overallProgress / 100)
-
-  const continueHref = firstEnrollment
-    ? `/courses/${firstEnrollment.course?.slug ?? firstEnrollment.courseId}`
-    : '/my-courses'
 
   return (
     <div
@@ -102,7 +108,9 @@ export function DashboardHero({
 
           <div className="flex items-center gap-1.5 rounded-full bg-white/20 px-3 py-1.5">
             <Flame className="h-3.5 w-3.5 shrink-0 text-amber-300" aria-hidden="true" />
-            <span className="text-xs font-semibold text-white">0 días</span>
+            <span className="text-xs font-semibold text-white">
+              {streakDays} día{streakDays !== 1 ? 's' : ''}
+            </span>
           </div>
         </div>
       </div>

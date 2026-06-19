@@ -6,6 +6,7 @@ import type { PaginatedData } from '@/types/api'
 import type { CalendarEvent } from '@/types/models'
 import { LoadingSpinner } from '@/components/shared/feedback/LoadingSpinner'
 import { DashboardHero } from '@/components/features/dashboard/DashboardHero'
+import { WeeklyActivity } from '@/components/features/dashboard/WeeklyActivity'
 import { StatsCards } from '@/components/features/dashboard/StatsCards'
 import {
   InProgressCourses,
@@ -61,14 +62,6 @@ export default async function DashboardPage() {
     (sum, e) => sum + (e.progress?.completedLessons ?? 0),
     0
   )
-  const overallProgress =
-    enrollments.length > 0
-      ? Math.round(
-          enrollments.reduce((sum, e) => sum + (e.progress?.progressPercentage ?? 0), 0) /
-            enrollments.length
-        )
-      : 0
-
   const firstName = session?.user?.firstName ?? session?.user?.name?.split(' ')[0] ?? 'Usuario'
 
   const rawDayLabel = todayDate.toLocaleDateString('es-ES', {
@@ -77,8 +70,6 @@ export default async function DashboardPage() {
     month: 'long',
   })
   const dayLabel = rawDayLabel.charAt(0).toUpperCase() + rawDayLabel.slice(1)
-
-  const firstEnrollment = enrollments[0] as DashboardEnrollment | undefined
 
   return (
     <div className="space-y-8">
@@ -90,8 +81,6 @@ export default async function DashboardPage() {
         firstName={firstName}
         activeEnrollments={activeEnrollments}
         completedLessons={completedLessons}
-        overallProgress={overallProgress}
-        firstEnrollment={firstEnrollment}
         dayLabel={dayLabel}
       />
 
@@ -103,6 +92,9 @@ export default async function DashboardPage() {
           upcomingEvents={events.length}
         />
       </Suspense>
+
+      {/* Weekly activity chart */}
+      <WeeklyActivity />
 
       {/* Two-column section */}
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
