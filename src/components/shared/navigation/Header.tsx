@@ -1,10 +1,9 @@
 'use client'
 
 import { usePathname, useRouter } from 'next/navigation'
-import { Bell, LogOut, Menu, Search, User, Sun, Moon } from 'lucide-react'
+import { Award, Bell, LogOut, Menu, Search, Settings, Sun, Moon, User } from 'lucide-react'
 import { useSession, signOut } from 'next-auth/react'
 import { useTheme } from 'next-themes'
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Button } from '@/components/ui/button'
 import {
   DropdownMenu,
@@ -42,7 +41,6 @@ const PAGE_TITLES: Record<string, string> = {
 
 function getPageTitle(pathname: string): string {
   if (PAGE_TITLES[pathname]) return PAGE_TITLES[pathname]
-  // Dynamic routes: try stripping the last segment
   const parent = pathname.split('/').slice(0, -1).join('/')
   if (parent && PAGE_TITLES[parent]) return PAGE_TITLES[parent]
   return ''
@@ -80,7 +78,7 @@ export function Header({ onMobileMenuOpen, onSearchOpen, className }: HeaderProp
   return (
     <header
       className={cn(
-        'border-nexus-border bg-nexus-surface/95 sticky top-0 z-30 flex h-13 items-center gap-3 border-b px-4 backdrop-blur-sm',
+        'border-nexus-border bg-nexus-surface/95 sticky top-0 z-30 flex h-14 items-center gap-3 border-b px-4 backdrop-blur-sm',
         className
       )}
     >
@@ -96,7 +94,7 @@ export function Header({ onMobileMenuOpen, onSearchOpen, className }: HeaderProp
       </Button>
 
       {/* Desktop: page title / Mobile: centred logo */}
-      <div className="flex flex-1 items-center">
+      <div className="flex min-w-0 flex-1 items-center">
         {pageTitle && (
           <span className="text-nexus-text hidden text-sm font-semibold lg:block">{pageTitle}</span>
         )}
@@ -108,20 +106,35 @@ export function Header({ onMobileMenuOpen, onSearchOpen, className }: HeaderProp
         <div className="hidden flex-1 lg:block" />
       </div>
 
+      {/* Inline search box (desktop) */}
+      <button
+        type="button"
+        onClick={onSearchOpen}
+        className="bg-nexus-search-bg text-nexus-muted hover:text-nexus-text hidden h-9 w-[280px] shrink-0 cursor-text items-center gap-2.5 rounded-[13px] px-3 text-sm transition-colors duration-150 lg:flex"
+        aria-label="Buscar cursos (Ctrl+K)"
+      >
+        <Search className="h-4 w-4 shrink-0" aria-hidden="true" />
+        <span className="flex-1 text-left">Buscar...</span>
+        <kbd className="border-nexus-border flex items-center gap-0.5 rounded border px-1.5 py-0.5 font-mono text-[11px]">
+          <span>⌘</span>
+          <span>K</span>
+        </kbd>
+      </button>
+
       {/* Right actions */}
       <div className="flex shrink-0 items-center gap-0.5">
-        {/* Global search */}
+        {/* Mobile search icon */}
         <Button
           variant="ghost"
           size="icon"
           onClick={onSearchOpen}
-          className="text-nexus-muted hover:text-nexus-text hover:bg-nexus-card h-8 w-8"
-          aria-label="Buscar cursos (Ctrl+K)"
+          className="text-nexus-muted hover:text-nexus-text hover:bg-nexus-card h-8 w-8 lg:hidden"
+          aria-label="Buscar cursos"
         >
           <Search className="h-4 w-4" />
         </Button>
 
-        {/* Theme toggle — CSS icon-swap avoids hydration mismatch */}
+        {/* Theme toggle */}
         <Button
           variant="ghost"
           size="icon"
@@ -145,11 +158,11 @@ export function Header({ onMobileMenuOpen, onSearchOpen, className }: HeaderProp
           size="icon"
           className="text-nexus-muted hover:text-nexus-text hover:bg-nexus-card relative h-8 w-8"
           onClick={() => router.push('/notifications')}
-          aria-label={`Notifications${unreadCount > 0 ? ` (${unreadCount} unread)` : ''}`}
+          aria-label={`Notificaciones${unreadCount > 0 ? ` (${unreadCount} sin leer)` : ''}`}
         >
           <Bell className="h-4 w-4" />
           {unreadCount > 0 && (
-            <span className="bg-nexus-accent absolute top-1.5 right-1.5 h-1.5 w-1.5 rounded-full" />
+            <span className="bg-nexus-danger absolute top-1.5 right-1.5 h-2 w-2 rounded-full" />
           )}
         </Button>
 
@@ -159,12 +172,17 @@ export function Header({ onMobileMenuOpen, onSearchOpen, className }: HeaderProp
             className="hover:bg-nexus-card ml-1 flex cursor-pointer items-center rounded-lg p-1 transition-colors duration-150 focus-visible:outline-none"
             aria-label="User menu"
           >
-            <Avatar className="h-7 w-7">
-              <AvatarImage src={user?.avatarUrl ?? undefined} alt={fullName} />
-              <AvatarFallback className="bg-nexus-accent-muted text-nexus-accent text-xs font-medium">
-                {initials}
-              </AvatarFallback>
-            </Avatar>
+            <div
+              className="flex h-8 w-8 shrink-0 items-center justify-center overflow-hidden rounded-full text-xs font-bold text-white"
+              style={{ background: 'var(--nexus-brand-gradient)' }}
+            >
+              {user?.avatarUrl ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img src={user.avatarUrl} alt={fullName} className="h-full w-full object-cover" />
+              ) : (
+                initials
+              )}
+            </div>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="w-52">
             <DropdownMenuGroup>
@@ -179,6 +197,14 @@ export function Header({ onMobileMenuOpen, onSearchOpen, className }: HeaderProp
             <DropdownMenuItem onClick={() => router.push('/profile')}>
               <User className="h-4 w-4" />
               Perfil
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => router.push('/profile')}>
+              <Settings className="h-4 w-4" />
+              Configuración
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => router.push('/certificates')}>
+              <Award className="h-4 w-4" />
+              Mis certificados
             </DropdownMenuItem>
             <DropdownMenuSeparator />
             <DropdownMenuItem variant="destructive" onClick={handleLogout}>

@@ -8,7 +8,6 @@ import { useSession } from 'next-auth/react'
 import { cn } from '@/lib/utils'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { Sheet, SheetContent, SheetTitle } from '@/components/ui/sheet'
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
 import { useNotificationsStore } from '@/store/notifications.store'
 import { useMessagesStore } from '@/store/messages.store'
@@ -43,39 +42,49 @@ function isActive(item: NavItem, pathname: string): boolean {
   return pathname === item.href || pathname.startsWith(item.href + '/')
 }
 
-// ─── Logo ─────────────────────────────────────────────────────────────────────
+// ─── Brand logo + collapse toggle ────────────────────────────────────────────
 
-function NexusLogo({ collapsed }: { collapsed: boolean }) {
+function NexusLogo({ collapsed, onToggle }: { collapsed: boolean; onToggle?: () => void }) {
   return (
-    <Link
-      href="/dashboard"
+    <div
       className={cn(
-        'flex items-center gap-2.5 py-3.5 transition-all duration-200',
-        collapsed ? 'justify-center px-0' : 'px-4'
+        'border-nexus-border flex shrink-0 items-center border-b transition-all duration-200',
+        collapsed ? 'h-16 flex-col justify-center gap-2 px-0' : 'h-16 gap-3 px-4'
       )}
     >
-      <svg
-        width="24"
-        height="24"
-        viewBox="0 0 28 28"
-        fill="none"
-        xmlns="http://www.w3.org/2000/svg"
-        className="shrink-0"
-        aria-hidden="true"
+      <Link
+        href="/dashboard"
+        className={cn(
+          'flex min-w-0 flex-1 items-center gap-3',
+          collapsed && 'flex-none justify-center'
+        )}
+        aria-label="NexusLMS home"
       >
-        <path
-          d="M14 1.5L25.5 8v14L14 28.5 2.5 22V8L14 1.5z"
-          fill="currentColor"
-          className="text-nexus-accent"
-        />
-        <path d="M14 7.5l8.5 4.9V18L14 23l-8.5-4.9v-5.6L14 7.5z" fill="white" fillOpacity="0.2" />
-      </svg>
-      {!collapsed && (
-        <span className="text-nexus-text text-[15px] font-bold tracking-tight">
-          Nexus<span className="text-nexus-accent">LMS</span>
-        </span>
+        {/* Gradient brand icon */}
+        <div
+          className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl text-lg font-bold text-white"
+          style={{ background: 'var(--nexus-brand-gradient)' }}
+          aria-hidden="true"
+        >
+          N
+        </div>
+        {!collapsed && (
+          <span className="text-nexus-text truncate text-[15px] font-bold tracking-tight">
+            Nexus<span className="text-nexus-accent">LMS</span>
+          </span>
+        )}
+      </Link>
+
+      {onToggle && (
+        <button
+          onClick={onToggle}
+          className="text-nexus-faint hover:text-nexus-muted hover:bg-nexus-card shrink-0 rounded-lg p-1.5 transition-colors duration-150"
+          aria-label={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
+        >
+          {collapsed ? <ChevronRight className="h-4 w-4" /> : <ChevronLeft className="h-4 w-4" />}
+        </button>
       )}
-    </Link>
+    </div>
   )
 }
 
@@ -106,11 +115,11 @@ function NavGroups({
 
   return (
     <TooltipProvider delay={400}>
-      <div className={cn('flex flex-col gap-1 py-2', collapsed ? 'px-2' : 'px-3')}>
+      <div className={cn('flex flex-col gap-1 py-3', collapsed ? 'px-2' : 'px-3')}>
         {navGroups.map((group, gi) => (
-          <div key={gi} className={cn('flex flex-col gap-0.5', gi > 0 && 'mt-4')}>
+          <div key={gi} className={cn('flex flex-col gap-0.5', gi > 0 && 'mt-5')}>
             {group.label && !collapsed && (
-              <p className="text-nexus-faint px-3 pb-1 text-[10px] font-semibold tracking-widest uppercase select-none">
+              <p className="text-nexus-faint px-3 pb-1.5 text-[10px] font-semibold tracking-widest uppercase select-none">
                 {group.label}
               </p>
             )}
@@ -119,30 +128,34 @@ function NavGroups({
               const active = isActive(item, pathname)
               const count = badgeCount(item)
 
-              const linkClassName = cn(
-                'relative flex items-center gap-2.5 rounded-md text-sm font-medium transition-colors duration-150',
-                collapsed ? 'h-9 w-9 justify-center' : 'h-9 px-3',
-                active
-                  ? 'bg-nexus-accent-muted text-nexus-accent'
-                  : 'text-nexus-muted hover:bg-nexus-card hover:text-nexus-text'
+              const baseClass = cn(
+                'relative flex items-center gap-2.5 rounded-xl text-sm font-medium transition-all duration-150',
+                collapsed ? 'h-10 w-10 justify-center' : 'h-10 px-3',
+                active ? 'text-white' : 'text-nexus-muted hover:bg-nexus-card hover:text-nexus-text'
               )
+
+              const activeStyle = active
+                ? {
+                    background: 'var(--nexus-nav-active-gradient)',
+                    boxShadow: 'var(--nexus-nav-active-shadow)',
+                  }
+                : undefined
 
               if (collapsed) {
                 return (
                   <Tooltip key={item.href}>
-                    {/* TooltipTrigger is the styled hover target; Link fills it for navigation */}
-                    <TooltipTrigger className={linkClassName}>
+                    <TooltipTrigger className={baseClass} style={activeStyle}>
                       <Link
                         href={item.href}
                         onClick={onNavigate}
-                        className="absolute inset-0 flex items-center justify-center rounded-md"
+                        className="absolute inset-0 flex items-center justify-center rounded-xl"
                         tabIndex={-1}
                         aria-label={item.label}
                       >
-                        <Icon className="h-4 w-4 shrink-0" aria-hidden="true" />
+                        <Icon className="h-4.5 w-4.5 shrink-0" aria-hidden="true" />
                       </Link>
                       {count > 0 && (
-                        <span className="bg-nexus-accent pointer-events-none absolute top-0.5 right-0.5 h-2 w-2 rounded-full" />
+                        <span className="bg-nexus-danger pointer-events-none absolute top-1 right-1 h-2 w-2 rounded-full" />
                       )}
                     </TooltipTrigger>
                     <TooltipContent side="right">{item.label}</TooltipContent>
@@ -155,12 +168,13 @@ function NavGroups({
                   key={item.href}
                   href={item.href}
                   onClick={onNavigate}
-                  className={linkClassName}
+                  className={baseClass}
+                  style={activeStyle}
                 >
-                  <Icon className="h-4 w-4 shrink-0" aria-hidden="true" />
+                  <Icon className="h-4.5 w-4.5 shrink-0" aria-hidden="true" />
                   <span className="flex-1 truncate">{item.label}</span>
                   {count > 0 && (
-                    <span className="bg-nexus-accent flex h-4.5 min-w-4.5 items-center justify-center rounded-full px-1 text-[10px] font-semibold text-white">
+                    <span className="bg-nexus-danger flex h-5 min-w-5 items-center justify-center rounded-full px-1 text-[10px] font-semibold text-white">
                       {count > 99 ? '99+' : count}
                     </span>
                   )}
@@ -174,7 +188,7 @@ function NavGroups({
   )
 }
 
-// ─── User footer ──────────────────────────────────────────────────────────────
+// ─── User footer card ─────────────────────────────────────────────────────────
 
 function UserFooter({ collapsed }: { collapsed: boolean }) {
   const { data: session } = useSession()
@@ -186,19 +200,27 @@ function UserFooter({ collapsed }: { collapsed: boolean }) {
   const fullName = [firstName, lastName].filter(Boolean).join(' ') || 'User'
   const initials = [firstName[0], lastName[0]].filter(Boolean).join('').toUpperCase() || 'U'
 
+  const avatarEl = (
+    <div
+      className="flex h-8 w-8 shrink-0 items-center justify-center overflow-hidden rounded-lg text-xs font-bold text-white"
+      style={{ background: 'var(--nexus-brand-gradient)' }}
+      aria-hidden="true"
+    >
+      {user.avatarUrl ? (
+        // eslint-disable-next-line @next/next/no-img-element
+        <img src={user.avatarUrl} alt={fullName} className="h-full w-full object-cover" />
+      ) : (
+        initials
+      )}
+    </div>
+  )
+
   if (collapsed) {
     return (
       <TooltipProvider delay={400}>
         <div className="border-nexus-border flex justify-center border-t px-2 py-3">
           <Tooltip>
-            <TooltipTrigger className="cursor-default">
-              <Avatar className="h-8 w-8 shrink-0">
-                <AvatarImage src={user.avatarUrl ?? undefined} alt={fullName} />
-                <AvatarFallback className="bg-nexus-accent-muted text-nexus-accent text-xs font-medium">
-                  {initials}
-                </AvatarFallback>
-              </Avatar>
-            </TooltipTrigger>
+            <TooltipTrigger className="cursor-default">{avatarEl}</TooltipTrigger>
             <TooltipContent side="right">{fullName}</TooltipContent>
           </Tooltip>
         </div>
@@ -207,16 +229,13 @@ function UserFooter({ collapsed }: { collapsed: boolean }) {
   }
 
   return (
-    <div className="border-nexus-border flex items-center gap-3 border-t px-4 py-3">
-      <Avatar className="h-8 w-8 shrink-0">
-        <AvatarImage src={user.avatarUrl ?? undefined} alt={fullName} />
-        <AvatarFallback className="bg-nexus-accent-muted text-nexus-accent text-xs font-medium">
-          {initials}
-        </AvatarFallback>
-      </Avatar>
-      <div className="min-w-0 flex-1">
-        <p className="text-nexus-text truncate text-sm font-medium">{fullName}</p>
-        {user.email && <p className="text-nexus-faint truncate text-xs">{user.email}</p>}
+    <div className="border-nexus-border border-t px-3 py-3">
+      <div className="bg-nexus-card flex items-center gap-3 rounded-xl px-3 py-2.5">
+        {avatarEl}
+        <div className="min-w-0 flex-1">
+          <p className="text-nexus-text truncate text-sm font-semibold">{fullName}</p>
+          {user.email && <p className="text-nexus-faint truncate text-xs">{user.email}</p>}
+        </div>
       </div>
     </div>
   )
@@ -270,7 +289,7 @@ function MobileBottomNav({
             <div className="relative">
               <Icon className="h-5 w-5" aria-hidden="true" />
               {count > 0 && (
-                <span className="bg-nexus-accent absolute -top-1 -right-1 h-2 w-2 rounded-full" />
+                <span className="bg-nexus-danger absolute -top-1 -right-1 h-2 w-2 rounded-full" />
               )}
             </div>
             <span className="truncate">{item.label}</span>
@@ -312,42 +331,21 @@ export function Sidebar({
       <aside
         className={cn(
           'border-nexus-border bg-nexus-surface sticky top-0 hidden h-screen flex-col overflow-x-hidden border-r transition-[width] duration-200 ease-in-out lg:flex',
-          isCollapsed ? 'w-13' : 'w-55'
+          isCollapsed ? 'w-[78px]' : 'w-[268px]'
         )}
       >
-        <NexusLogo collapsed={isCollapsed} />
+        <NexusLogo collapsed={isCollapsed} onToggle={onToggle} />
 
         <ScrollArea className="flex-1">
           <NavGroups {...sharedNavProps} collapsed={isCollapsed} />
         </ScrollArea>
 
         <UserFooter collapsed={isCollapsed} />
-
-        {/* Collapse toggle */}
-        <div className="border-nexus-border border-t">
-          <button
-            onClick={onToggle}
-            className={cn(
-              'text-nexus-faint hover:text-nexus-muted hover:bg-nexus-card flex w-full items-center py-3 text-xs font-medium transition-colors duration-150',
-              isCollapsed ? 'justify-center' : 'gap-2 px-4'
-            )}
-            aria-label={isCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
-          >
-            {isCollapsed ? (
-              <ChevronRight className="h-3.5 w-3.5" />
-            ) : (
-              <>
-                <ChevronLeft className="h-3.5 w-3.5 shrink-0" />
-                <span>Contraer</span>
-              </>
-            )}
-          </button>
-        </div>
       </aside>
 
       {/* Mobile: Sheet drawer */}
       <Sheet open={mobileOpen} onOpenChange={onMobileOpenChange}>
-        <SheetContent side="left" className="bg-nexus-surface border-nexus-border w-55 p-0">
+        <SheetContent side="left" className="bg-nexus-surface border-nexus-border w-[268px] p-0">
           <SheetTitle className="sr-only">Navigation menu</SheetTitle>
           <div className="flex h-full flex-col">
             <NexusLogo collapsed={false} />
