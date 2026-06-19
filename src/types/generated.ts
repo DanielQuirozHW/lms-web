@@ -679,6 +679,91 @@ export interface paths {
     patch: operations['UsersController_changePassword']
     trace?: never
   }
+  '/api/v1/users/me/stats/weekly-activity': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    /** Get last 7 days of lesson completion activity */
+    get: operations['UsersController_getWeeklyActivity']
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/v1/users/me/login-history': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    /** Get last 10 login events for the current user */
+    get: operations['UsersController_getLoginHistory']
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/v1/users/me/stats/streak': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    /** Get current and longest lesson completion streaks */
+    get: operations['UsersController_getStreak']
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/v1/users/me/stats/last-active-lesson': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    /** Get the most recently watched lesson across all enrollments */
+    get: operations['UsersController_getLastActiveLesson']
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/v1/users/me/stats/overall-progress': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    /** Get aggregate progress across all active enrollments */
+    get: operations['UsersController_getOverallProgress']
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
   '/api/v1/users': {
     parameters: {
       query?: never
@@ -2502,6 +2587,17 @@ export interface components {
       avatarUrl: string | null
       /** @example false */
       isVerified: boolean
+      /** @example null */
+      phone?: string | null
+      /**
+       * Format: date-time
+       * @example null
+       */
+      birthDate?: string | null
+      /** @example null */
+      location?: string | null
+      /** @example null */
+      bio?: string | null
       /** Format: date-time */
       createdAt: string
       /** Format: date-time */
@@ -2514,6 +2610,18 @@ export interface components {
       lastName?: string
       /** @example https://example.com/avatar.jpg */
       avatarUrl?: string
+      /** @example +52 55 1234 5678 */
+      phone?: string
+      /**
+       * Format: date-time
+       * @description ISO 8601 date string
+       * @example 1995-08-20
+       */
+      birthDate?: string
+      /** @example Mexico City, MX */
+      location?: string
+      /** @example Full-stack developer passionate about education. */
+      bio?: string
     }
     ChangePasswordDto: {
       /** @example CurrentPassword1 */
@@ -2524,6 +2632,55 @@ export interface components {
     DeleteAccountDto: {
       /** @description Current password to confirm account deletion */
       password: string
+    }
+    WeeklyActivityDayDto: {
+      /** @example 2026-06-13 */
+      date: string
+      /** @example L */
+      dayLabel: string
+      /** @example 2 */
+      completedLessons: number
+      /** @example 45 */
+      minutesWatched: number
+    }
+    WeeklyActivityResponseDto: {
+      days: components['schemas']['WeeklyActivityDayDto'][]
+      /** @example 120 */
+      totalMinutesThisWeek: number
+      /** @example 7 */
+      totalLessonsThisWeek: number
+    }
+    LoginEventResponseDto: {
+      /** @example clxyz123 */
+      id: string
+      /** @example 192.168.1.1 */
+      ipAddress: string | null
+      /** @example Mozilla/5.0... */
+      userAgent: string | null
+      /** Format: date-time */
+      createdAt: string
+    }
+    StreakResponseDto: {
+      /** @example 5 */
+      currentStreak: number
+      /** @example 21 */
+      longestStreak: number
+    }
+    LastActiveLessonResponseDto: {
+      lessonId: string
+      moduleId: string
+      courseId: string
+      courseSlug: string
+      /** Format: date-time */
+      lastWatchedAt: string
+    }
+    OverallProgressResponseDto: {
+      /** @example 12 */
+      completedLessons: number
+      /** @example 48 */
+      totalLessons: number
+      /** @example 25 */
+      progressPercentage: number
     }
     UpdateRoleDto: {
       /**
@@ -4508,6 +4665,7 @@ export interface operations {
     parameters: {
       query?: {
         categoryId?: string
+        status?: 'DRAFT' | 'PUBLISHED' | 'ARCHIVED'
       }
       header?: never
       path?: never
@@ -5575,6 +5733,143 @@ export interface operations {
         content?: never
       }
       /** @description Current password is incorrect */
+      401: {
+        headers: {
+          [name: string]: unknown
+        }
+        content?: never
+      }
+    }
+  }
+  UsersController_getWeeklyActivity: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['WeeklyActivityResponseDto']
+        }
+      }
+      /** @description Missing or invalid access token */
+      401: {
+        headers: {
+          [name: string]: unknown
+        }
+        content?: never
+      }
+    }
+  }
+  UsersController_getLoginHistory: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['LoginEventResponseDto'][]
+        }
+      }
+      /** @description Missing or invalid access token */
+      401: {
+        headers: {
+          [name: string]: unknown
+        }
+        content?: never
+      }
+    }
+  }
+  UsersController_getStreak: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['StreakResponseDto']
+        }
+      }
+      /** @description Missing or invalid access token */
+      401: {
+        headers: {
+          [name: string]: unknown
+        }
+        content?: never
+      }
+    }
+  }
+  UsersController_getLastActiveLesson: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['LastActiveLessonResponseDto']
+        }
+      }
+      /** @description Missing or invalid access token */
+      401: {
+        headers: {
+          [name: string]: unknown
+        }
+        content?: never
+      }
+      /** @description No lesson activity found */
+      404: {
+        headers: {
+          [name: string]: unknown
+        }
+        content?: never
+      }
+    }
+  }
+  UsersController_getOverallProgress: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['OverallProgressResponseDto']
+        }
+      }
+      /** @description Missing or invalid access token */
       401: {
         headers: {
           [name: string]: unknown
