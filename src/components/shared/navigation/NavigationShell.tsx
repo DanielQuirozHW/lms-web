@@ -9,6 +9,7 @@ import { Breadcrumbs } from './Breadcrumbs'
 import { ImpersonationBanner } from '@/components/shared/auth/ImpersonationBanner'
 import { GlobalAnnouncementBanner } from '@/components/shared/announcements/GlobalAnnouncementBanner'
 import { SessionTimeoutModal } from '@/components/shared/session/SessionTimeoutModal'
+import { GlobalSearch } from '@/components/shared/search/GlobalSearch'
 import { useSessionTimeout } from '@/hooks/useSessionTimeout'
 import { useLogoutMutation } from '@/hooks/mutations/auth'
 import { getDashboardNav, getInstructorNav, getAdminNav } from '@/lib/navigation'
@@ -27,6 +28,7 @@ function useNavGroups(isPrivileged: boolean) {
 
 export function NavigationShell({ children }: NavigationShellProps) {
   const [mobileOpen, setMobileOpen] = useState(false)
+  const [searchOpen, setSearchOpen] = useState(false)
   // Lazy initializer: reads localStorage at client mount; falls back to false on SSR.
   // No effect needed — avoids the extra render cycle from setState-in-effect.
   const [isCollapsed, setIsCollapsed] = useState(
@@ -72,12 +74,17 @@ export function NavigationShell({ children }: NavigationShellProps) {
       />
       {/* Content area transitions alongside sidebar width */}
       <div className="flex min-w-0 flex-1 flex-col transition-all duration-200">
-        <Header onMobileMenuOpen={() => setMobileOpen(true)} />
+        <Header
+          onMobileMenuOpen={() => setMobileOpen(true)}
+          onSearchOpen={() => setSearchOpen(true)}
+        />
         <GlobalAnnouncementBanner />
         <Breadcrumbs />
         {/* pb-20 on mobile so content clears the fixed bottom nav */}
         <main className="flex-1 p-4 pb-20 lg:p-6 lg:pb-6">{children}</main>
       </div>
+
+      <GlobalSearch open={searchOpen} onOpenChange={setSearchOpen} />
 
       {showWarning && (
         <SessionTimeoutModal

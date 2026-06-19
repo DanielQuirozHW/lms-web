@@ -1,7 +1,7 @@
 'use client'
 
 import { usePathname, useRouter } from 'next/navigation'
-import { Bell, LogOut, Menu, User, Sun, Moon } from 'lucide-react'
+import { Bell, LogOut, Menu, Search, User, Sun, Moon } from 'lucide-react'
 import { useSession, signOut } from 'next-auth/react'
 import { useTheme } from 'next-themes'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
@@ -50,10 +50,11 @@ function getPageTitle(pathname: string): string {
 
 interface HeaderProps {
   onMobileMenuOpen: () => void
+  onSearchOpen: () => void
   className?: string
 }
 
-export function Header({ onMobileMenuOpen, className }: HeaderProps) {
+export function Header({ onMobileMenuOpen, onSearchOpen, className }: HeaderProps) {
   const router = useRouter()
   const pathname = usePathname()
   const { data: session } = useSession()
@@ -109,6 +110,17 @@ export function Header({ onMobileMenuOpen, className }: HeaderProps) {
 
       {/* Right actions */}
       <div className="flex shrink-0 items-center gap-0.5">
+        {/* Global search */}
+        <Button
+          variant="ghost"
+          size="icon"
+          onClick={onSearchOpen}
+          className="text-nexus-muted hover:text-nexus-text hover:bg-nexus-card h-8 w-8"
+          aria-label="Buscar cursos (Ctrl+K)"
+        >
+          <Search className="h-4 w-4" />
+        </Button>
+
         {/* Theme toggle — CSS icon-swap avoids hydration mismatch */}
         <Button
           variant="ghost"
