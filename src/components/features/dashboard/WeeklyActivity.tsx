@@ -20,9 +20,8 @@ export function WeeklyActivity() {
   const { data, isLoading } = useWeeklyActivity()
   const todayIndex = getTodayIndex()
 
-  const days = isLoading
-    ? Array.from({ length: 7 }, () => ({ lessonsCompleted: 0 }))
-    : (data ?? Array.from({ length: 7 }, () => ({ lessonsCompleted: 0 })))
+  const EMPTY = Array.from({ length: 7 }, () => ({ date: '', lessonsCompleted: 0 }))
+  const days = isLoading ? EMPTY : (data?.days ?? EMPTY)
 
   const maxValue = Math.max(...days.map((d) => d.lessonsCompleted), 1)
 

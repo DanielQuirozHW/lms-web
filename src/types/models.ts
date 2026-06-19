@@ -588,6 +588,12 @@ export interface DailyActivity {
   lessonsCompleted: number
 }
 
+export interface WeeklyActivityStats {
+  days: DailyActivity[]
+  totalMinutesThisWeek: number
+  totalLessonsThisWeek: number
+}
+
 // ─── Calendar ─────────────────────────────────────────────────────────────────
 
 export interface CalendarEvent {

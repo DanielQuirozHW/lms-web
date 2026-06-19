@@ -209,6 +209,52 @@
   --sidebar-ring: #8b7cff;
 }
 
+/* ─── Highlight.js syntax tokens (github-dark-inspired, scoped to pre) ──────── */
+pre code .hljs-comment,
+pre code .hljs-quote {
+  color: #8b949e;
+}
+pre code .hljs-keyword,
+pre code .hljs-selector-tag,
+pre code .hljs-deletion {
+  color: #ff7b72;
+}
+pre code .hljs-literal,
+pre code .hljs-number,
+pre code .hljs-built_in {
+  color: #79c0ff;
+}
+pre code .hljs-string,
+pre code .hljs-doctag,
+pre code .hljs-addition {
+  color: #a5d6ff;
+}
+pre code .hljs-function,
+pre code .hljs-name {
+  color: #d2a8ff;
+}
+pre code .hljs-variable,
+pre code .hljs-attr,
+pre code .hljs-params {
+  color: #ffa657;
+}
+pre code .hljs-title,
+pre code .hljs-section {
+  color: #d2a8ff;
+}
+pre code .hljs-type {
+  color: #79c0ff;
+}
+pre code .hljs-tag {
+  color: #7ee787;
+}
+pre code .hljs-punctuation {
+  color: #e6edf3;
+}
+pre code .hljs-operator {
+  color: #e6edf3;
+}
+
 @layer base {
   * {
     @apply border-border outline-ring/50;

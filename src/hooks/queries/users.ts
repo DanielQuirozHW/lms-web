@@ -5,7 +5,7 @@ import type {
   OverallProgressStats,
   StreakStats,
   LastActiveLessonStats,
-  DailyActivity,
+  WeeklyActivityStats,
 } from '@/types/models'
 import type { PaginatedData } from '@/types/api'
 
@@ -57,7 +57,8 @@ export function useLastActiveLessonStats() {
 export function useWeeklyActivity() {
   return useQuery({
     queryKey: userKeys.weeklyActivity(),
-    queryFn: () => api.get<DailyActivity[]>('/users/me/stats/weekly-activity').then((r) => r.data),
+    queryFn: () =>
+      api.get<WeeklyActivityStats>('/users/me/stats/weekly-activity').then((r) => r.data),
     staleTime: 5 * 60 * 1000,
   })
 }

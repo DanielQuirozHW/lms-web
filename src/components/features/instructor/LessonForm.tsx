@@ -17,6 +17,7 @@ import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
 import { useCreateLesson, useUpdateLesson } from '@/hooks/mutations/modules'
+import { RichTextEditor } from './RichTextEditor'
 import type { LessonType } from '@/types/models'
 import type { LessonWithDetails } from '@/hooks/queries/modules'
 
@@ -133,7 +134,12 @@ export function LessonForm({ courseId, moduleId, lesson, onClose, onSuccess }: L
         if (e.target === e.currentTarget && !isPending) onClose()
       }}
     >
-      <div className="border-nexus-border bg-nexus-card w-full max-w-lg rounded-2xl border p-6 shadow-2xl">
+      <div
+        className={cn(
+          'border-nexus-border bg-nexus-card w-full rounded-2xl border p-6 shadow-2xl',
+          lessonType === 'TEXT' ? 'max-w-3xl' : 'max-w-lg'
+        )}
+      >
         {/* Header */}
         <div className="mb-5 flex items-center justify-between">
           <h2 id="lesson-form-title" className="text-nexus-text text-base font-semibold">
@@ -233,20 +239,11 @@ export function LessonForm({ courseId, moduleId, lesson, onClose, onSuccess }: L
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel className="text-nexus-text font-medium">Contenido</FormLabel>
-                    <FormControl>
-                      <textarea
-                        rows={5}
-                        placeholder="Contenido de la lección en texto o HTML..."
-                        className={cn(
-                          inputClass,
-                          'w-full resize-none rounded-lg border px-3 py-2 text-sm',
-                          'placeholder:text-nexus-muted/60',
-                          'focus:border-nexus-accent focus:ring-nexus-accent/50 focus:ring-2 focus:outline-none',
-                          'transition-colors'
-                        )}
-                        {...field}
-                      />
-                    </FormControl>
+                    <RichTextEditor
+                      value={field.value}
+                      onChange={(html) => field.onChange(html)}
+                      placeholder="Escribe el contenido de la lección…"
+                    />
                     <FormMessage className="text-xs" />
                   </FormItem>
                 )}
