@@ -21,6 +21,17 @@
   --color-nexus-success: var(--nexus-success);
   --color-nexus-warning: var(--nexus-warning);
   --color-nexus-danger: var(--nexus-danger);
+  /* ─── Shell-specific tokens (nav hover, icon buttons, user card) ──────────── */
+  --color-nexus-nav-hover: var(--nexus-nav-hover-bg);
+  --color-nexus-nav-hover-fg: var(--nexus-nav-hover-text);
+  --color-nexus-iconbtn: var(--nexus-iconbtn-bg);
+  --color-nexus-iconbtn-fg: var(--nexus-iconbtn-color);
+  --color-nexus-iconbtn-hover: var(--nexus-iconbtn-hover-bg);
+  --color-nexus-iconbtn-hover-fg: var(--nexus-iconbtn-hover-color);
+  --color-nexus-usercard: var(--nexus-usercard-bg);
+  --color-nexus-usercard-border: var(--nexus-usercard-border);
+  --color-nexus-user-email: var(--nexus-user-email);
+  --color-nexus-unread-row: var(--nexus-unread-row);
   /* ─────────────────────────────────────────────────────────────────────────── */
   --color-background: var(--background);
   --color-foreground: var(--foreground);
@@ -78,11 +89,23 @@
   --nexus-faint: #a6a8bd;
   --nexus-border: #ecedf6;
   --nexus-border-strong: rgba(109, 91, 240, 0.2);
-  --nexus-search-bg: #ecedf6;
+  --nexus-search-bg: #f4f4fb;
   --nexus-nav-active-gradient: linear-gradient(135deg, #7c6cff, #6d5bf0);
-  --nexus-nav-active-shadow: 0 4px 16px rgba(109, 91, 240, 0.35);
+  --nexus-nav-active-shadow: rgba(109, 91, 240, 0.75) 0px 12px 22px -10px;
   --nexus-brand-gradient: linear-gradient(135deg, #8b7cff, #6d5bf0);
+  --nexus-brand-shadow: rgba(109, 91, 240, 0.6) 0px 8px 18px -6px;
   --nexus-success: #16a34a;
+  /* ─── Shell-specific — light mode ────────────────────────────────────────── */
+  --nexus-nav-hover-bg: #f3f2fe;
+  --nexus-nav-hover-text: #6d5bf0;
+  --nexus-iconbtn-bg: #f4f4fb;
+  --nexus-iconbtn-color: #5a5c72;
+  --nexus-iconbtn-hover-bg: #edecfb;
+  --nexus-iconbtn-hover-color: #6d5bf0;
+  --nexus-usercard-bg: #f5f4fe;
+  --nexus-usercard-border: transparent;
+  --nexus-user-email: #8e90a6;
+  --nexus-unread-row: #f7f6fe;
   --nexus-warning: #d97706;
   --nexus-danger: #dc2626;
   /* ─── shadcn/ui — light mode ──────────────────────────────────────────────── */
@@ -129,15 +152,27 @@
   --nexus-accent-hover: #a090ff;
   --nexus-accent-muted: rgba(139, 124, 255, 0.15);
   --nexus-text: #edeef6;
-  --nexus-muted: #8b8da8;
-  --nexus-faint: #5a5c72;
+  --nexus-muted: #a6a8c4;
+  --nexus-faint: #6e7194;
   --nexus-border: #21233d;
   --nexus-border-strong: rgba(139, 124, 255, 0.25);
-  --nexus-search-bg: #1c1e35;
-  --nexus-nav-active-gradient: linear-gradient(135deg, #9080ff, #7c6cff);
-  --nexus-nav-active-shadow: 0 4px 20px rgba(139, 124, 255, 0.4);
-  --nexus-brand-gradient: linear-gradient(135deg, #9080ff, #7c6cff);
+  --nexus-search-bg: #1e2039;
+  --nexus-nav-active-gradient: linear-gradient(135deg, #7c6cff, #6d5bf0);
+  --nexus-nav-active-shadow: rgba(109, 91, 240, 0.75) 0px 12px 22px -10px;
+  --nexus-brand-gradient: linear-gradient(135deg, #8b7cff, #6d5bf0);
+  --nexus-brand-shadow: rgba(109, 91, 240, 0.6) 0px 8px 18px -6px;
   --nexus-success: #22c55e;
+  /* ─── Shell-specific — dark mode ─────────────────────────────────────────── */
+  --nexus-nav-hover-bg: #1e2039;
+  --nexus-nav-hover-text: #c9c2ff;
+  --nexus-iconbtn-bg: #1e2039;
+  --nexus-iconbtn-color: #a6a8c4;
+  --nexus-iconbtn-hover-bg: #262a48;
+  --nexus-iconbtn-hover-color: #c9c2ff;
+  --nexus-usercard-bg: #1b1d33;
+  --nexus-usercard-border: #262845;
+  --nexus-user-email: #8688a6;
+  --nexus-unread-row: rgba(124, 108, 255, 0.07);
   --nexus-warning: #f59e0b;
   --nexus-danger: #ef4444;
   /* ─── shadcn/ui — dark mode ───────────────────────────────────────────────── */

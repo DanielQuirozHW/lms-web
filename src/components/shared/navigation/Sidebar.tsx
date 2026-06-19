@@ -63,7 +63,10 @@ function NexusLogo({ collapsed, onToggle }: { collapsed: boolean; onToggle?: () 
         {/* Gradient brand icon */}
         <div
           className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl text-lg font-bold text-white"
-          style={{ background: 'var(--nexus-brand-gradient)' }}
+          style={{
+            background: 'var(--nexus-brand-gradient)',
+            boxShadow: 'var(--nexus-brand-shadow)',
+          }}
           aria-hidden="true"
         >
           N
@@ -131,7 +134,9 @@ function NavGroups({
               const baseClass = cn(
                 'relative flex items-center gap-2.5 rounded-xl text-sm font-medium transition-all duration-150',
                 collapsed ? 'h-10 w-10 justify-center' : 'h-10 px-3',
-                active ? 'text-white' : 'text-nexus-muted hover:bg-nexus-card hover:text-nexus-text'
+                active
+                  ? 'text-white'
+                  : 'text-nexus-muted hover:bg-nexus-nav-hover hover:text-nexus-nav-hover-fg'
               )
 
               const activeStyle = active
@@ -174,7 +179,10 @@ function NavGroups({
                   <Icon className="h-4.5 w-4.5 shrink-0" aria-hidden="true" />
                   <span className="flex-1 truncate">{item.label}</span>
                   {count > 0 && (
-                    <span className="bg-nexus-danger flex h-5 min-w-5 items-center justify-center rounded-full px-1 text-[10px] font-semibold text-white">
+                    <span
+                      className="flex h-5 min-w-5 items-center justify-center rounded-full px-1 text-[10px] font-semibold text-white"
+                      style={{ background: 'var(--nexus-nav-active-gradient)' }}
+                    >
                       {count > 99 ? '99+' : count}
                     </span>
                   )}
@@ -230,11 +238,11 @@ function UserFooter({ collapsed }: { collapsed: boolean }) {
 
   return (
     <div className="border-nexus-border border-t px-3 py-3">
-      <div className="bg-nexus-card flex items-center gap-3 rounded-xl px-3 py-2.5">
+      <div className="bg-nexus-usercard border-nexus-usercard-border flex items-center gap-3 rounded-xl border px-3 py-2.5">
         {avatarEl}
         <div className="min-w-0 flex-1">
           <p className="text-nexus-text truncate text-sm font-semibold">{fullName}</p>
-          {user.email && <p className="text-nexus-faint truncate text-xs">{user.email}</p>}
+          {user.email && <p className="text-nexus-user-email truncate text-xs">{user.email}</p>}
         </div>
       </div>
     </div>

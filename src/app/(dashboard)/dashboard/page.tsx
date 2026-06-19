@@ -5,6 +5,7 @@ import api from '@/lib/api'
 import type { PaginatedData } from '@/types/api'
 import type { CalendarEvent } from '@/types/models'
 import { LoadingSpinner } from '@/components/shared/feedback/LoadingSpinner'
+import { DashboardHero } from '@/components/features/dashboard/DashboardHero'
 import { StatsCards } from '@/components/features/dashboard/StatsCards'
 import {
   InProgressCourses,
@@ -60,21 +61,39 @@ export default async function DashboardPage() {
     (sum, e) => sum + (e.progress?.completedLessons ?? 0),
     0
   )
+  const overallProgress =
+    enrollments.length > 0
+      ? Math.round(
+          enrollments.reduce((sum, e) => sum + (e.progress?.progressPercentage ?? 0), 0) /
+            enrollments.length
+        )
+      : 0
+
+  const firstName = session?.user?.firstName ?? session?.user?.name?.split(' ')[0] ?? 'Usuario'
+
+  const rawDayLabel = todayDate.toLocaleDateString('es-ES', {
+    weekday: 'long',
+    day: 'numeric',
+    month: 'long',
+  })
+  const dayLabel = rawDayLabel.charAt(0).toUpperCase() + rawDayLabel.slice(1)
+
+  const firstEnrollment = enrollments[0] as DashboardEnrollment | undefined
 
   return (
     <div className="space-y-8">
       {/* Sync notification count to Zustand store for the header badge */}
       <NotificationsSync unreadCount={unreadCount} />
 
-      {/* Page header */}
-      <div>
-        <h1 className="text-nexus-text text-2xl font-bold tracking-tight">Dashboard</h1>
-        <p className="text-nexus-muted mt-1 text-sm">
-          {activeEnrollments > 0 || completedLessons > 0
-            ? `${activeEnrollments} curso${activeEnrollments !== 1 ? 's' : ''} activo${activeEnrollments !== 1 ? 's' : ''} · ${completedLessons} lección${completedLessons !== 1 ? 'es' : ''} completada${completedLessons !== 1 ? 's' : ''}`
-            : 'Bienvenido a NexusLMS'}
-        </p>
-      </div>
+      {/* Hero banner */}
+      <DashboardHero
+        firstName={firstName}
+        activeEnrollments={activeEnrollments}
+        completedLessons={completedLessons}
+        overallProgress={overallProgress}
+        firstEnrollment={firstEnrollment}
+        dayLabel={dayLabel}
+      />
 
       {/* Stat cards */}
       <Suspense fallback={<LoadingSpinner rows={1} />}>
