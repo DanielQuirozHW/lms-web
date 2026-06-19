@@ -1,5 +1,5 @@
 import { useQuery } from '@tanstack/react-query'
-import api from '@/lib/api'
+import api, { isApiError } from '@/lib/api'
 import type {
   User,
   OverallProgressStats,
@@ -34,6 +34,8 @@ export function useOverallProgressStats() {
     queryFn: () =>
       api.get<OverallProgressStats>('/users/me/stats/overall-progress').then((r) => r.data),
     staleTime: 5 * 60 * 1000,
+    throwOnError: false,
+    retry: false,
   })
 }
 
@@ -42,15 +44,26 @@ export function useStreakStats() {
     queryKey: userKeys.streak(),
     queryFn: () => api.get<StreakStats>('/users/me/stats/streak').then((r) => r.data),
     staleTime: 5 * 60 * 1000,
+    throwOnError: false,
+    retry: false,
   })
 }
 
 export function useLastActiveLessonStats() {
   return useQuery({
     queryKey: userKeys.lastActiveLesson(),
-    queryFn: () =>
-      api.get<LastActiveLessonStats>('/users/me/stats/last-active-lesson').then((r) => r.data),
+    queryFn: async () => {
+      try {
+        const r = await api.get<LastActiveLessonStats>('/users/me/stats/last-active-lesson')
+        return r.data
+      } catch (err) {
+        if (isApiError(err) && err.response?.status === 404) return null
+        throw err
+      }
+    },
     staleTime: 5 * 60 * 1000,
+    throwOnError: false,
+    retry: false,
   })
 }
 
@@ -60,5 +73,7 @@ export function useWeeklyActivity() {
     queryFn: () =>
       api.get<WeeklyActivityStats>('/users/me/stats/weekly-activity').then((r) => r.data),
     staleTime: 5 * 60 * 1000,
+    throwOnError: false,
+    retry: false,
   })
 }

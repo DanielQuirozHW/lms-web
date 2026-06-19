@@ -23,7 +23,7 @@ export function WeeklyActivity() {
   const EMPTY = Array.from({ length: 7 }, () => ({ date: '', lessonsCompleted: 0 }))
   const days = isLoading ? EMPTY : (data?.days ?? EMPTY)
 
-  const maxValue = Math.max(...days.map((d) => d.lessonsCompleted), 1)
+  const maxValue = Math.max(...days.map((d) => d.lessonsCompleted ?? 0), 1)
 
   return (
     <div className="bg-nexus-card border-nexus-border rounded-xl border p-5">
@@ -36,7 +36,8 @@ export function WeeklyActivity() {
       >
         {days.map((day, i) => {
           const isToday = i === todayIndex
-          const rawH = (day.lessonsCompleted / maxValue) * BAR_H
+          const completed = day.lessonsCompleted ?? 0
+          const rawH = (completed / maxValue) * BAR_H
           const barH = isLoading ? BAR_H * 0.25 : Math.max(rawH, 4)
           const x = i * (BAR_W + BAR_GAP)
           const y = BAR_H - barH
@@ -51,7 +52,7 @@ export function WeeklyActivity() {
                 rx={6}
                 fill={isToday ? 'var(--nexus-accent)' : 'var(--nexus-accent-muted)'}
               />
-              {day.lessonsCompleted > 0 && !isLoading && (
+              {completed > 0 && !isLoading && (
                 <text
                   x={x + BAR_W / 2}
                   y={y - 4}
@@ -61,7 +62,7 @@ export function WeeklyActivity() {
                   fontFamily="var(--font-plus-jakarta-sans)"
                   fontWeight={600}
                 >
-                  {day.lessonsCompleted}
+                  {completed}
                 </text>
               )}
               <text
