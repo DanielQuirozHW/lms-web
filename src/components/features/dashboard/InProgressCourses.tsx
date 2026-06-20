@@ -4,18 +4,11 @@ import Image from 'next/image'
 import Link from 'next/link'
 import { BookOpen, ArrowRight } from 'lucide-react'
 import { EmptyState } from '@/components/shared/feedback/EmptyState'
-import type { EnrollmentDetail } from '@/types/models'
+import type { UserEnrollmentItem } from '@/types/models'
 import { cn } from '@/lib/utils'
 
-// The API embeds course data in enrollment responses — this extends the base type.
-export interface DashboardEnrollment extends EnrollmentDetail {
-  course?: {
-    title?: string
-    slug?: string
-    coverUrl?: string | null
-    instructor?: { firstName: string; lastName: string } | null
-  }
-}
+// Re-export so dashboard/page.tsx can import the type from one place.
+export type DashboardEnrollment = UserEnrollmentItem
 
 interface InProgressCoursesProps {
   enrollments: DashboardEnrollment[]
@@ -36,10 +29,7 @@ export function InProgressCourses({ enrollments }: InProgressCoursesProps) {
   return (
     <ul className="flex flex-col gap-[14px]" aria-label="Cursos en progreso">
       {enrollments.map((enrollment) => {
-        const course = enrollment.course
-        const pct = Math.round(enrollment.progress?.progressPercentage ?? 0)
-        const completedLessons = enrollment.progress?.completedLessons ?? 0
-        const totalLessons = enrollment.progress?.totalLessons ?? 0
+        const pct = Math.round(enrollment.progressPercentage ?? 0)
 
         return (
           <li
@@ -50,14 +40,12 @@ export function InProgressCourses({ enrollments }: InProgressCoursesProps) {
             {/* Square thumbnail */}
             <div
               className="relative h-[62px] w-[62px] shrink-0 overflow-hidden rounded-[14px]"
-              style={{
-                boxShadow: '0 10px 20px -10px rgba(31,30,46,0.45)',
-              }}
+              style={{ boxShadow: '0 10px 20px -10px rgba(31,30,46,0.45)' }}
             >
-              {course?.coverUrl ? (
+              {enrollment.coverUrl ? (
                 <Image
-                  src={course.coverUrl}
-                  alt={course.title ?? 'Portada del curso'}
+                  src={enrollment.coverUrl}
+                  alt={enrollment.courseTitle}
                   fill
                   sizes="62px"
                   className="object-cover"
@@ -74,13 +62,8 @@ export function InProgressCourses({ enrollments }: InProgressCoursesProps) {
 
             {/* Info + progress */}
             <div className="flex min-w-0 flex-1 flex-col gap-[9px]">
-              {totalLessons > 0 && (
-                <p className="text-nexus-muted text-xs font-medium">
-                  {completedLessons} / {totalLessons} lecciones
-                </p>
-              )}
               <p className="text-nexus-text truncate font-bold" style={{ fontSize: '15.5px' }}>
-                {course?.title ?? 'Curso sin título'}
+                {enrollment.courseTitle}
               </p>
               <div className="flex items-center gap-2.75">
                 <div
@@ -111,7 +94,7 @@ export function InProgressCourses({ enrollments }: InProgressCoursesProps) {
 
             {/* CTA */}
             <Link
-              href={`/courses/${enrollment.course?.slug ?? enrollment.courseId}`}
+              href={`/courses/${enrollment.courseId}`}
               className="inline-flex shrink-0 items-center gap-[7px] rounded-xl px-[17px] py-[11px] text-sm font-bold text-white transition-opacity hover:opacity-90"
               style={{
                 background: 'linear-gradient(135deg, #7c6cff, #6d5bf0)',

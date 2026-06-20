@@ -19,6 +19,7 @@ const PAGE_TITLES: Record<string, string> = {
   '/calendar': 'Calendario',
   '/notifications': 'Notificaciones',
   '/profile': 'Perfil',
+  '/settings': 'Configuración',
   '/instructor': 'Dashboard Instructor',
   '/instructor/courses': 'Mis Cursos',
   '/instructor/courses/new': 'Nuevo Curso',
@@ -48,7 +49,7 @@ const ICONBTN =
 
 const AVATAR_MENU_ITEMS = [
   { icon: User, label: 'Perfil', href: '/profile' },
-  { icon: Settings, label: 'Configuración', href: '/profile' },
+  { icon: Settings, label: 'Configuración', href: '/settings' },
   { icon: Award, label: 'Mis certificados', href: '/certificates' },
 ] as const
 

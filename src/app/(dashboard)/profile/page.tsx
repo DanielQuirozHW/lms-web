@@ -1,37 +1,56 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
-import { CheckCircle, Mail } from 'lucide-react'
+import { BookOpen, Bookmark, Award } from 'lucide-react'
 import { auth } from '@/lib/auth'
 import api from '@/lib/api'
 import type { User } from '@/types/models'
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { ProfileForm } from '@/components/features/profile/ProfileForm'
-import { PasswordForm } from '@/components/features/profile/PasswordForm'
-import { DeleteAccountDialog } from '@/components/features/profile/DeleteAccountDialog'
+import { ProfileIdentityCard } from '@/components/features/profile/ProfileIdentityCard'
+import { ProfileStatsGrid } from '@/components/features/profile/ProfileStatsGrid'
+import { ProfileConsistencyCard } from '@/components/features/profile/ProfileConsistencyCard'
+import { ProfileRecentActivity } from '@/components/features/profile/ProfileRecentActivity'
 
 export const metadata: Metadata = {
-  title: 'Mi perfil | NexusLMS',
-  description: 'Gestioná tu perfil, contraseña y preferencias de cuenta.',
-  openGraph: {
-    title: 'Mi perfil | NexusLMS',
-    description: 'Gestioná tu perfil, contraseña y preferencias de cuenta.',
-    type: 'website',
-  },
+  title: 'Perfil | NexusLMS',
+  description: 'Tu perfil, actividad y progreso en la plataforma.',
 }
+
+const QUICK_ACCESS = [
+  {
+    icon: BookOpen,
+    label: 'Mis cursos',
+    description: 'Ver tu progreso',
+    href: '/my-courses',
+    bg: 'rgba(124,108,255,.10)',
+    color: 'var(--nexus-accent)',
+  },
+  {
+    icon: Bookmark,
+    label: 'Guardados',
+    description: 'Lecciones marcadas',
+    href: '/bookmarks',
+    bg: 'rgba(234,140,12,.10)',
+    color: '#EA8C0C',
+  },
+  {
+    icon: Award,
+    label: 'Certificados',
+    description: 'Tus logros',
+    href: '/certificates',
+    bg: 'rgba(16,185,129,.10)',
+    color: '#10B981',
+  },
+]
 
 export default async function ProfilePage() {
   const session = await auth()
   const token = session?.accessToken
   const headers = token ? { Authorization: `Bearer ${token}` } : {}
 
-  // Fetch up-to-date user data from the API
   let user: User | null = null
   try {
     const r = await api.get<User>('/users/me', { headers })
     user = r.data
   } catch {
-    // Fall back to session data if the request fails
     if (session?.user) {
       user = {
         id: '',
@@ -53,73 +72,70 @@ export default async function ProfilePage() {
   const initials = `${user.firstName[0] ?? ''}${user.lastName[0] ?? ''}`.toUpperCase() || 'U'
 
   return (
-    <div className="mx-auto max-w-2xl space-y-8">
-      {/* Page header */}
-      <div className="flex items-center gap-4">
-        <Avatar className="size-16">
-          <AvatarImage src={user.avatarUrl ?? undefined} alt={fullName} />
-          <AvatarFallback className="bg-nexus-accent/20 text-nexus-accent text-xl">
-            {initials}
-          </AvatarFallback>
-        </Avatar>
-        <div>
-          <div className="flex items-center gap-2">
-            <h1 className="text-nexus-text text-2xl font-bold">{fullName}</h1>
-            {user.isVerified ? (
-              <span
-                className="text-nexus-success flex items-center gap-1 text-xs font-semibold"
-                aria-label="Email verificado"
-              >
-                <CheckCircle className="h-4 w-4" aria-hidden="true" />
-                Verificado
-              </span>
-            ) : (
-              <Link
-                href="/verify-email"
-                className="text-nexus-accent hover:text-nexus-accent-hover flex items-center gap-1 text-xs font-medium transition-colors"
-              >
-                <Mail className="h-3.5 w-3.5" aria-hidden="true" />
-                Verificar email
-              </Link>
-            )}
+    <div className="mx-auto max-w-270 space-y-5 pb-14">
+      {/* Identity card */}
+      <ProfileIdentityCard user={user} initials={initials} fullName={fullName} />
+
+      {/* Stats grid */}
+      <ProfileStatsGrid />
+
+      {/* Consistency + Quick access */}
+      <div className="grid grid-cols-1 gap-5 lg:grid-cols-2">
+        <ProfileConsistencyCard />
+
+        {/* Quick access */}
+        <div
+          className="bg-nexus-card border-nexus-border flex flex-col gap-4 rounded-[22px] border p-5"
+          style={{ boxShadow: '0 1px 6px rgba(0,0,0,.04)' }}
+        >
+          <div>
+            <h2 className="text-nexus-text text-[16px] font-extrabold">Accesos rápidos</h2>
+            <p className="text-nexus-muted mt-0.5 text-[13px]">
+              Navega rápido a tus secciones principales
+            </p>
           </div>
-          <p className="text-nexus-muted text-sm">{user.email}</p>
+          <div className="flex flex-col gap-3">
+            {QUICK_ACCESS.map(({ icon: Icon, label, description, href, bg, color }) => (
+              <Link
+                key={href}
+                href={href}
+                className="border-nexus-border hover:bg-nexus-menu-hover flex items-center gap-4 rounded-[14px] border p-4 transition-colors"
+              >
+                <div
+                  className="flex h-11 w-11 shrink-0 items-center justify-center rounded-[12px]"
+                  style={{ background: bg }}
+                >
+                  <Icon className="h-5 w-5" style={{ color }} aria-hidden="true" />
+                </div>
+                <div className="min-w-0">
+                  <p className="text-nexus-text text-[14px] font-bold">{label}</p>
+                  <p className="text-nexus-muted text-[12.5px]">{description}</p>
+                </div>
+              </Link>
+            ))}
+          </div>
         </div>
       </div>
 
-      {/* Profile info card */}
-      <Card className="border-nexus-border bg-nexus-card ring-0">
-        <CardHeader className="border-nexus-border border-b">
-          <CardTitle className="text-nexus-text">Información personal</CardTitle>
-        </CardHeader>
-        <CardContent className="pt-6">
-          <ProfileForm user={user} />
-        </CardContent>
-      </Card>
+      {/* Recent activity + Achievements stub */}
+      <div className="grid grid-cols-1 gap-5 lg:grid-cols-[1.4fr_1fr]">
+        <ProfileRecentActivity />
 
-      {/* Change password card */}
-      <Card className="border-nexus-border bg-nexus-card ring-0">
-        <CardHeader className="border-nexus-border border-b">
-          <CardTitle className="text-nexus-text">Cambiar contraseña</CardTitle>
-        </CardHeader>
-        <CardContent className="pt-6">
-          <PasswordForm />
-        </CardContent>
-      </Card>
-
-      {/* Danger zone */}
-      <section
-        aria-labelledby="danger-zone-heading"
-        className="border-destructive/30 rounded-xl border p-6"
-      >
-        <h2 id="danger-zone-heading" className="text-destructive mb-1 text-base font-semibold">
-          Zona de peligro
-        </h2>
-        <p className="text-nexus-muted mb-4 text-sm">
-          Una vez que eliminés tu cuenta, no hay vuelta atrás. Pensalo bien.
-        </p>
-        <DeleteAccountDialog />
-      </section>
+        {/* Achievements placeholder */}
+        <div
+          className="bg-nexus-card border-nexus-border flex flex-col gap-4 rounded-[22px] border p-5"
+          style={{ boxShadow: '0 1px 6px rgba(0,0,0,.04)' }}
+        >
+          <div>
+            <h2 className="text-nexus-text text-[16px] font-extrabold">Logros</h2>
+            <p className="text-nexus-muted mt-0.5 text-[13px]">Tus insignias y reconocimientos</p>
+          </div>
+          <div className="flex flex-1 flex-col items-center justify-center gap-2 py-6">
+            <Award className="text-nexus-faint h-10 w-10" aria-hidden="true" />
+            <p className="text-nexus-muted text-[13px]">Próximamente</p>
+          </div>
+        </div>
+      </div>
     </div>
   )
 }

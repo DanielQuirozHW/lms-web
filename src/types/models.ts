@@ -181,6 +181,24 @@ export interface EnrollmentDetail extends Enrollment {
   progress: EnrollmentProgress
 }
 
+// Flat shape returned by GET /enrollments (user's own list).
+// Nested `progress` and `course` objects are NOT included in this endpoint —
+// only the fields below are guaranteed.
+export interface UserEnrollmentItem {
+  id: string
+  userId: string
+  courseId: string
+  status: EnrollmentStatus
+  enrollmentType: EnrollmentType
+  enrolledAt: string
+  completedAt: string | null
+  updatedAt: string
+  courseTitle: string
+  coverUrl: string | null
+  progressPercentage: number
+  // TODO: categoryName not yet available in list response — omit until added to backend DTO
+}
+
 // ─── Quiz ─────────────────────────────────────────────────────────────────────
 
 export interface QuizSettings {
@@ -592,6 +610,19 @@ export interface WeeklyActivityStats {
   days: DailyActivity[]
   totalMinutesThisWeek: number
   totalLessonsThisWeek: number
+}
+
+export interface ActivityHeatmapDay {
+  date: string
+  level: 0 | 1 | 2 | 3
+}
+
+export interface ActivityHeatmapWeek {
+  days: ActivityHeatmapDay[]
+}
+
+export interface ActivityHeatmapResponse {
+  weeks: ActivityHeatmapWeek[]
 }
 
 // ─── Calendar ─────────────────────────────────────────────────────────────────

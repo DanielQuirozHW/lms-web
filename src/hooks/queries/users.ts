@@ -6,6 +6,8 @@ import type {
   StreakStats,
   LastActiveLessonStats,
   WeeklyActivityStats,
+  ActivityHeatmapResponse,
+  EnrollmentDetail,
 } from '@/types/models'
 import type { PaginatedData } from '@/types/api'
 
@@ -17,6 +19,8 @@ export const userKeys = {
   streak: () => ['users', 'me', 'stats', 'streak'] as const,
   lastActiveLesson: () => ['users', 'me', 'stats', 'last-active-lesson'] as const,
   weeklyActivity: () => ['users', 'me', 'stats', 'weekly-activity'] as const,
+  activityHeatmap: () => ['users', 'me', 'stats', 'activity-heatmap'] as const,
+  myEnrollments: () => ['users', 'me', 'enrollments'] as const,
 }
 
 export function useUsers(page: number = 1, limit: number = 20) {
@@ -73,6 +77,30 @@ export function useWeeklyActivity() {
     queryFn: () =>
       api.get<WeeklyActivityStats>('/users/me/stats/weekly-activity').then((r) => r.data),
     staleTime: 5 * 60 * 1000,
+    throwOnError: false,
+    retry: false,
+  })
+}
+
+export function useActivityHeatmap() {
+  return useQuery({
+    queryKey: userKeys.activityHeatmap(),
+    queryFn: () =>
+      api.get<ActivityHeatmapResponse>('/users/me/stats/activity-heatmap').then((r) => r.data),
+    staleTime: 5 * 60 * 1000,
+    throwOnError: false,
+    retry: false,
+  })
+}
+
+export function useMyEnrollments() {
+  return useQuery({
+    queryKey: userKeys.myEnrollments(),
+    queryFn: () =>
+      api
+        .get<PaginatedData<EnrollmentDetail>>('/users/me/enrollments', { params: { limit: 100 } })
+        .then((r) => r.data),
+    staleTime: 2 * 60 * 1000,
     throwOnError: false,
     retry: false,
   })
