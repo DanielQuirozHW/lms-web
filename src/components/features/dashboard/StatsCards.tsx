@@ -9,39 +9,86 @@ interface StatsCardsProps {
   upcomingEvents: number
 }
 
-interface StatItem {
-  label: string
-  value: number
+interface StatConfig {
   icon: LucideIcon
+  label: string
+  iconBg: string
+  iconColor: string
+  badgeColor: string
+  badgeBg: string
 }
+
+const STAT_CONFIGS: StatConfig[] = [
+  {
+    icon: BookOpen,
+    label: 'Cursos en progreso',
+    iconBg: 'var(--nexus-stat-1-bg)',
+    iconColor: 'var(--nexus-stat-1-color)',
+    badgeColor: 'var(--nexus-green)',
+    badgeBg: 'var(--nexus-green-bg)',
+  },
+  {
+    icon: CheckCircle2,
+    label: 'Lecciones completadas',
+    iconBg: 'var(--nexus-stat-2-bg)',
+    iconColor: 'var(--nexus-stat-2-color)',
+    badgeColor: 'var(--nexus-green)',
+    badgeBg: 'var(--nexus-green-bg)',
+  },
+  {
+    icon: CalendarDays,
+    label: 'Próximos eventos',
+    iconBg: 'var(--nexus-stat-3-bg)',
+    iconColor: 'var(--nexus-stat-3-color)',
+    badgeColor: 'var(--nexus-orange)',
+    badgeBg: 'var(--nexus-orange-bg)',
+  },
+]
 
 export function StatsCards({
   activeEnrollments,
   completedLessons,
   upcomingEvents,
 }: StatsCardsProps) {
-  const stats: StatItem[] = [
-    { label: 'Cursos en progreso', value: activeEnrollments, icon: BookOpen },
-    { label: 'Lecciones completadas', value: completedLessons, icon: CheckCircle2 },
-    { label: 'Próximos eventos', value: upcomingEvents, icon: CalendarDays },
-  ]
+  const values = [activeEnrollments, completedLessons, upcomingEvents]
+  const badges = [`+${activeEnrollments}`, `+${completedLessons} sem.`, 'esta sem.']
 
   return (
-    <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-      {stats.map(({ label, value, icon: Icon }) => (
-        <div
-          key={label}
-          className="border-nexus-border border-l-nexus-accent bg-nexus-card flex items-center gap-4 rounded-xl border border-l-4 p-5"
-        >
-          <div className="bg-nexus-accent/15 flex h-12 w-12 shrink-0 items-center justify-center rounded-full">
-            <Icon className="text-nexus-accent h-6 w-6" aria-hidden="true" />
+    <div className="grid grid-cols-1 gap-[18px] sm:grid-cols-3">
+      {STAT_CONFIGS.map((cfg, i) => {
+        const Icon = cfg.icon
+        return (
+          <div
+            key={cfg.label}
+            className="border-nexus-border bg-nexus-card flex flex-col gap-[14px] rounded-[18px] border p-5"
+            style={{ boxShadow: 'var(--nexus-card-shadow)' }}
+          >
+            <div className="flex items-center justify-between">
+              <div
+                className="flex h-[46px] w-[46px] shrink-0 items-center justify-center rounded-[13px]"
+                style={{ background: cfg.iconBg, color: cfg.iconColor }}
+              >
+                <Icon className="h-6 w-6" aria-hidden="true" />
+              </div>
+              <span
+                className="rounded-full px-[10px] py-1 text-xs font-bold"
+                style={{ color: cfg.badgeColor, background: cfg.badgeBg }}
+              >
+                {badges[i]}
+              </span>
+            </div>
+            <div>
+              <p
+                className="text-nexus-text leading-none font-extrabold tracking-[-0.02em]"
+                style={{ fontSize: '34px' }}
+              >
+                {values[i]}
+              </p>
+              <p className="text-nexus-muted mt-[5px] text-[14px]">{cfg.label}</p>
+            </div>
           </div>
-          <div>
-            <p className="text-nexus-text text-3xl font-bold tabular-nums">{value}</p>
-            <p className="text-nexus-muted text-sm">{label}</p>
-          </div>
-        </div>
-      ))}
+        )
+      })}
     </div>
   )
 }

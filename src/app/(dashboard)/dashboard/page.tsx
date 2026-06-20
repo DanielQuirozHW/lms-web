@@ -1,4 +1,5 @@
 import type { Metadata } from 'next'
+import Link from 'next/link'
 import { Suspense } from 'react'
 import { auth } from '@/lib/auth'
 import api from '@/lib/api'
@@ -72,7 +73,7 @@ export default async function DashboardPage() {
   const dayLabel = rawDayLabel.charAt(0).toUpperCase() + rawDayLabel.slice(1)
 
   return (
-    <div className="space-y-8">
+    <div className="flex flex-col gap-[22px]">
       {/* Sync notification count to Zustand store for the header badge */}
       <NotificationsSync unreadCount={unreadCount} />
 
@@ -85,36 +86,43 @@ export default async function DashboardPage() {
       />
 
       {/* Stat cards */}
-      <Suspense fallback={<LoadingSpinner rows={1} />}>
-        <StatsCards
-          activeEnrollments={activeEnrollments}
-          completedLessons={completedLessons}
-          upcomingEvents={events.length}
-        />
-      </Suspense>
+      <StatsCards
+        activeEnrollments={activeEnrollments}
+        completedLessons={completedLessons}
+        upcomingEvents={events.length}
+      />
 
-      {/* Weekly activity chart */}
-      <WeeklyActivity />
-
-      {/* Two-column section */}
-      <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
-        <section aria-labelledby="in-progress-heading">
-          <h2 id="in-progress-heading" className="text-nexus-text mb-4 text-base font-semibold">
-            En progreso
-          </h2>
+      {/* Two-column main section: 1.55fr / 1fr */}
+      <div className="grid grid-cols-1 gap-[22px] lg:grid-cols-[1.55fr_1fr]">
+        {/* Left — In Progress */}
+        <div className="flex flex-col gap-[14px]">
+          <div className="flex items-center justify-between">
+            <h2 className="text-nexus-text text-lg font-extrabold tracking-[-0.01em]">
+              En progreso
+            </h2>
+            <Link href="/my-courses" className="text-nexus-accent text-[13px] font-bold">
+              Ver todos
+            </Link>
+          </div>
           <Suspense fallback={<LoadingSpinner rows={3} />}>
             <InProgressCourses enrollments={enrollments} />
           </Suspense>
-        </section>
+        </div>
 
-        <section aria-labelledby="events-heading">
-          <h2 id="events-heading" className="text-nexus-text mb-4 text-base font-semibold">
-            Próximos 7 días
-          </h2>
-          <Suspense fallback={<LoadingSpinner rows={4} />}>
-            <UpcomingEvents events={events} />
-          </Suspense>
-        </section>
+        {/* Right — Weekly Activity + Upcoming Events */}
+        <div className="flex flex-col gap-[22px]">
+          <WeeklyActivity />
+
+          <div
+            className="border-nexus-border bg-nexus-card rounded-[18px] border p-5"
+            style={{ boxShadow: 'var(--nexus-card-shadow)' }}
+          >
+            <h3 className="text-nexus-text mb-4 text-base font-extrabold">Próximos 7 días</h3>
+            <Suspense fallback={<LoadingSpinner rows={4} />}>
+              <UpcomingEvents events={events} />
+            </Suspense>
+          </div>
+        </div>
       </div>
     </div>
   )

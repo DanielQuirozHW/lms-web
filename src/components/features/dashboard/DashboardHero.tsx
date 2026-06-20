@@ -1,7 +1,7 @@
 'use client'
 
 import Link from 'next/link'
-import { Flame } from 'lucide-react'
+import { Flame, ArrowRight } from 'lucide-react'
 import {
   useOverallProgressStats,
   useStreakStats,
@@ -31,35 +31,41 @@ export function DashboardHero({
     ? `/courses/${lastLesson.courseSlug}/learn/${lastLesson.lessonId}`
     : '/my-courses'
 
-  const r = 44
+  const r = 60.5
   const circumference = 2 * Math.PI * r
   const dashOffset = circumference * (1 - overallProgress / 100)
 
   return (
     <div
-      className="relative overflow-hidden rounded-2xl px-7 py-8"
-      style={{ background: 'linear-gradient(135deg, #7c6cff 0%, #6d5bf0 60%, #5a4be0 100%)' }}
+      className="relative overflow-hidden rounded-[22px] px-8 py-[30px]"
+      style={{
+        background: 'linear-gradient(125deg, #6d5bf0 0%, #8b5bf0 55%, #b05be0 100%)',
+        boxShadow: 'rgba(109, 91, 240, 0.6) 0px 22px 44px -22px',
+      }}
     >
-      {/* Decorative background circles */}
+      {/* Decorative circle 1 — upper-center */}
       <div
-        className="pointer-events-none absolute -top-12 -right-12 h-52 w-52 rounded-full opacity-[0.08]"
-        style={{ background: 'radial-gradient(circle, #ffffff 0%, transparent 70%)' }}
+        className="pointer-events-none absolute h-[240px] w-[240px] rounded-full bg-white/[.08]"
+        style={{ right: '200px', top: '-60px' }}
         aria-hidden="true"
       />
+      {/* Decorative circle 2 — lower-right */}
       <div
-        className="pointer-events-none absolute -bottom-6 left-[38%] h-44 w-44 rounded-full opacity-[0.05]"
-        style={{ background: 'radial-gradient(circle, #ffffff 0%, transparent 70%)' }}
+        className="pointer-events-none absolute h-[220px] w-[220px] rounded-full bg-white/[.07]"
+        style={{ right: '-40px', bottom: '-90px' }}
         aria-hidden="true"
       />
 
       <div className="relative flex items-center justify-between gap-6">
-        {/* Left */}
+        {/* Left — text + CTA */}
         <div className="min-w-0 flex-1">
-          <p className="mb-1 text-[13px] font-medium text-white/65">{dayLabel}</p>
-          <h1 className="text-[22px] leading-snug font-extrabold text-white">
+          <p className="mb-2 text-[13px] font-semibold tracking-[0.04em] text-white/85 uppercase">
+            {dayLabel}
+          </p>
+          <h1 className="text-[32px] leading-[1.08] font-extrabold tracking-[-0.025em] text-white">
             Hola de nuevo, {firstName} 👋
           </h1>
-          <p className="mt-1.5 text-sm text-white/75">
+          <p className="mt-[10px] mb-[18px] max-w-[440px] text-[15px] text-white/90">
             {activeEnrollments} curso{activeEnrollments !== 1 ? 's' : ''} activo
             {activeEnrollments !== 1 ? 's' : ''}
             {' · '}
@@ -67,31 +73,32 @@ export function DashboardHero({
           </p>
           <Link
             href={continueHref}
-            className="mt-5 inline-flex h-9 items-center rounded-xl bg-white/20 px-4 text-sm font-semibold text-white backdrop-blur-sm transition-colors hover:bg-white/30"
+            className="inline-flex items-center gap-2 rounded-xl bg-white px-5 py-3 text-[14.5px] font-bold text-[#6d5bf0] transition-opacity hover:opacity-90"
           >
             Continuar aprendiendo
+            <ArrowRight className="h-[17px] w-[17px]" aria-hidden="true" />
           </Link>
         </div>
 
         {/* Right — progress ring + streak */}
-        <div className="flex shrink-0 flex-col items-center gap-3">
-          <div className="relative h-[110px] w-[110px]">
-            <svg viewBox="0 0 100 100" className="h-full w-full -rotate-90" aria-hidden="true">
+        <div className="flex shrink-0 flex-col items-center gap-[10px]">
+          <div className="relative h-[132px] w-[132px]">
+            <svg viewBox="0 0 132 132" className="h-full w-full -rotate-90" aria-hidden="true">
               <circle
-                cx="50"
-                cy="50"
+                cx="66"
+                cy="66"
                 r={r}
                 fill="none"
-                stroke="rgba(255,255,255,0.2)"
-                strokeWidth="8"
+                stroke="rgba(255,255,255,0.25)"
+                strokeWidth="11"
               />
               <circle
-                cx="50"
-                cy="50"
+                cx="66"
+                cy="66"
                 r={r}
                 fill="none"
                 stroke="white"
-                strokeWidth="8"
+                strokeWidth="11"
                 strokeLinecap="round"
                 strokeDasharray={circumference}
                 strokeDashoffset={dashOffset}
@@ -99,16 +106,16 @@ export function DashboardHero({
               />
             </svg>
             <div className="absolute inset-0 flex flex-col items-center justify-center">
-              <span className="text-[22px] leading-none font-extrabold text-white">
+              <span className="text-[30px] leading-none font-extrabold text-white">
                 {overallProgress}%
               </span>
-              <span className="mt-0.5 text-[10px] font-medium text-white/65">progreso</span>
+              <span className="mt-[3px] text-[12px] text-white/85">progreso</span>
             </div>
           </div>
 
-          <div className="flex items-center gap-1.5 rounded-full bg-white/20 px-3 py-1.5">
-            <Flame className="h-3.5 w-3.5 shrink-0 text-amber-300" aria-hidden="true" />
-            <span className="text-xs font-semibold text-white">
+          <div className="flex items-center gap-[6px] rounded-full bg-white/[.16] px-3 py-[6px]">
+            <Flame className="h-4 w-4 shrink-0 text-amber-300" aria-hidden="true" />
+            <span className="text-[13px] font-semibold text-white">
               {streakDays} día{streakDays !== 1 ? 's' : ''}
             </span>
           </div>
