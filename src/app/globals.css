@@ -127,6 +127,17 @@
   --nexus-orange: #ea8c0c;
   --nexus-orange-bg: #fef1e2;
   --nexus-card-shadow: rgba(31, 30, 46, 0.4) 0px 12px 26px -20px;
+  --nexus-ccard-hover-shadow: rgba(31, 30, 46, 0.5) 0px 20px 34px -20px;
+  --nexus-progress-track: #eeedf6;
+  /* ─── Course card palette chip colors — light ────────────────────────────── */
+  --chip-0-bg: #efedfe;
+  --chip-0-color: #6d5bf0;
+  --chip-1-bg: #fef1e2;
+  --chip-1-color: #ea8c0c;
+  --chip-2-bg: #e4f5fd;
+  --chip-2-color: #0e9fd9;
+  --chip-3-bg: #e5f7ef;
+  --chip-3-color: #10b981;
   /* ─── Dropdown menu tokens — light ──────────────────────────────────────── */
   --nexus-menu-shadow: 0 22px 50px -20px rgba(31, 30, 46, 0.4);
   --nexus-menu-hover: #f4f3fb;
@@ -210,6 +221,17 @@
   --nexus-orange: #f5b14d;
   --nexus-orange-bg: rgba(234, 140, 12, 0.14);
   --nexus-card-shadow: none;
+  --nexus-ccard-hover-shadow: none;
+  --nexus-progress-track: rgba(255, 255, 255, 0.08);
+  /* ─── Course card palette chip colors — dark ─────────────────────────────── */
+  --chip-0-bg: rgba(124, 108, 255, 0.18);
+  --chip-0-color: #a99cff;
+  --chip-1-bg: rgba(234, 140, 12, 0.18);
+  --chip-1-color: #f5b14d;
+  --chip-2-bg: rgba(14, 159, 217, 0.18);
+  --chip-2-color: #46c2f0;
+  --chip-3-bg: rgba(16, 185, 129, 0.18);
+  --chip-3-color: #34d89e;
   /* ─── Dropdown menu tokens — dark ───────────────────────────────────────── */
   --nexus-menu-shadow: 0 22px 50px -24px rgba(0, 0, 0, 0.7);
   --nexus-menu-hover: #1e2039;
@@ -304,4 +326,16 @@ pre code .hljs-operator {
   html {
     @apply font-sans;
   }
+}
+
+/* Course card hover — uses CSS variables so dark mode adapts automatically */
+.nexus-ccard {
+  transition:
+    transform 0.2s ease,
+    box-shadow 0.2s ease,
+    border-color 0.2s ease;
+}
+.nexus-ccard:hover {
+  transform: translateY(-3px);
+  box-shadow: var(--nexus-ccard-hover-shadow);
 }
