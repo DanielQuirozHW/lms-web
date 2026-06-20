@@ -764,6 +764,58 @@ export interface paths {
     patch?: never
     trace?: never
   }
+  '/api/v1/users/me/stats/activity-heatmap': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    /** Get 84-day (12-week) lesson completion heatmap */
+    get: operations['UsersController_getActivityHeatmap']
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/v1/users/me/activity/recent': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    /** Get recent activity across completed lessons, certificates, and saved lessons */
+    get: operations['UsersController_getRecentActivity']
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/v1/users/me/notification-preferences': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    /** Get notification preferences (returns defaults if not yet configured) */
+    get: operations['UsersController_getNotificationPreferences']
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    /** Update notification preferences */
+    patch: operations['UsersController_updateNotificationPreferences']
+    trace?: never
+  }
   '/api/v1/users': {
     parameters: {
       query?: never
@@ -2291,6 +2343,18 @@ export interface components {
        * @example 29.99
        */
       price?: number
+      /**
+       * @example BEGINNER
+       * @enum {string}
+       */
+      level?: 'BEGINNER' | 'INTERMEDIATE' | 'ADVANCED'
+      /**
+       * @example [
+       *       "Understand TypeScript basics",
+       *       "Build typed interfaces"
+       *     ]
+       */
+      whatYouWillLearn?: string[]
     }
     CourseResponseDto: {
       /** @example clxyz123 */
@@ -2322,6 +2386,18 @@ export interface components {
       instructorId: string
       /** @example category-uuid */
       categoryId: string | null
+      /**
+       * @example BEGINNER
+       * @enum {string}
+       */
+      level: 'BEGINNER' | 'INTERMEDIATE' | 'ADVANCED'
+      /**
+       * @example [
+       *       "Understand TypeScript basics",
+       *       "Build typed interfaces"
+       *     ]
+       */
+      whatYouWillLearn: string[]
       /**
        * Format: date-time
        * @description Enrollment open date (from CourseSettings)
@@ -2370,6 +2446,18 @@ export interface components {
       /** @example category-uuid */
       categoryId: string | null
       /**
+       * @example BEGINNER
+       * @enum {string}
+       */
+      level: 'BEGINNER' | 'INTERMEDIATE' | 'ADVANCED'
+      /**
+       * @example [
+       *       "Understand TypeScript basics",
+       *       "Build typed interfaces"
+       *     ]
+       */
+      whatYouWillLearn: string[]
+      /**
        * Format: date-time
        * @description Enrollment open date (from CourseSettings)
        * @example null
@@ -2389,6 +2477,11 @@ export interface components {
       lessonsCount: number
       /** @example 340 */
       enrollmentsCount: number
+      /**
+       * @description Sum of all lesson durations in seconds
+       * @example 14400
+       */
+      totalDuration: number
     }
     UpdateCourseDto: {
       /** @example Introduction to TypeScript */
@@ -2404,6 +2497,18 @@ export interface components {
        * @example 29.99
        */
       price?: number
+      /**
+       * @example BEGINNER
+       * @enum {string}
+       */
+      level?: 'BEGINNER' | 'INTERMEDIATE' | 'ADVANCED'
+      /**
+       * @example [
+       *       "Understand TypeScript basics",
+       *       "Build typed interfaces"
+       *     ]
+       */
+      whatYouWillLearn?: string[]
     }
     UpdateCourseSettingsDto: {
       /** @description When enrollment opens (ISO 8601) */
@@ -2667,9 +2772,13 @@ export interface components {
       longestStreak: number
     }
     LastActiveLessonResponseDto: {
+      /** @example lesson-uuid */
       lessonId: string
+      /** @example module-uuid */
       moduleId: string
+      /** @example course-uuid */
       courseId: string
+      /** @example introduction-to-typescript */
       courseSlug: string
       /** Format: date-time */
       lastWatchedAt: string
@@ -2681,6 +2790,85 @@ export interface components {
       totalLessons: number
       /** @example 25 */
       progressPercentage: number
+    }
+    HeatmapDayDto: {
+      /** @example 2024-06-01 */
+      date: string
+      /** @example 3 */
+      count: number
+      /**
+       * @description 0 = none, 1 = 1–2, 2 = 3–4, 3 = 5+
+       * @example 1
+       */
+      level: number
+    }
+    HeatmapWeekDto: {
+      days: components['schemas']['HeatmapDayDto'][]
+    }
+    ActivityHeatmapResponseDto: {
+      weeks: components['schemas']['HeatmapWeekDto'][]
+      /**
+       * @description Total days covered (always 84 = 12 weeks)
+       * @example 84
+       */
+      totalDays: number
+    }
+    RecentActivityItemDto: {
+      /**
+       * @example LESSON_COMPLETED
+       * @enum {string}
+       */
+      type: 'LESSON_COMPLETED' | 'CERTIFICATE_EARNED' | 'LESSON_SAVED'
+      /** @example Introduction to TypeScript */
+      title: string
+      /** @example TypeScript Basics */
+      subtitle: string
+      /** Format: date-time */
+      date: string
+    }
+    NotificationPreferencesResponseDto: {
+      /** @example true */
+      lessonRemindersEmail: boolean
+      /** @example true */
+      lessonRemindersPush: boolean
+      /** @example false */
+      newCoursesEmail: boolean
+      /** @example true */
+      newCoursesPush: boolean
+      /** @example true */
+      forumRepliesEmail: boolean
+      /** @example true */
+      forumRepliesPush: boolean
+      /** @example true */
+      achievementsEmail: boolean
+      /** @example true */
+      achievementsPush: boolean
+      /** @example false */
+      platformNewsEmail: boolean
+      /** @example false */
+      platformNewsPush: boolean
+    }
+    UpdateNotificationPreferencesDto: {
+      /** @example true */
+      lessonRemindersEmail?: boolean
+      /** @example true */
+      lessonRemindersPush?: boolean
+      /** @example false */
+      newCoursesEmail?: boolean
+      /** @example true */
+      newCoursesPush?: boolean
+      /** @example true */
+      forumRepliesEmail?: boolean
+      /** @example true */
+      forumRepliesPush?: boolean
+      /** @example true */
+      achievementsEmail?: boolean
+      /** @example true */
+      achievementsPush?: boolean
+      /** @example false */
+      platformNewsEmail?: boolean
+      /** @example false */
+      platformNewsPush?: boolean
     }
     UpdateRoleDto: {
       /**
@@ -2839,6 +3027,11 @@ export interface components {
        * @example false
        */
       isPreview?: boolean
+      /**
+       * @description Override auto-calculated reading time in minutes (TEXT lessons only)
+       * @example 5
+       */
+      readingTime?: number
     }
     LessonResponseDto: {
       /** @example clxyz123 */
@@ -2863,6 +3056,11 @@ export interface components {
        * @example 480
        */
       duration: number | null
+      /**
+       * @description Estimated reading time in minutes (TEXT lessons only)
+       * @example 5
+       */
+      readingTime: number | null
       /** @example false */
       isPreview: boolean
       /** @example false */
@@ -2956,6 +3154,11 @@ export interface components {
        * @example 480
        */
       duration: number | null
+      /**
+       * @description Estimated reading time in minutes (TEXT lessons only)
+       * @example 5
+       */
+      readingTime: number | null
       /** @example false */
       isPreview: boolean
       /** @example false */
@@ -2998,6 +3201,11 @@ export interface components {
        * @example false
        */
       isPreview?: boolean
+      /**
+       * @description Override auto-calculated reading time in minutes (TEXT lessons only)
+       * @example 5
+       */
+      readingTime?: number
     }
     UpdateProgressDto: {
       /**
@@ -4664,6 +4872,7 @@ export interface operations {
   CoursesController_findAll: {
     parameters: {
       query?: {
+        search?: string
         categoryId?: string
         status?: 'DRAFT' | 'PUBLISHED' | 'ARCHIVED'
       }
@@ -5833,18 +6042,11 @@ export interface operations {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['LastActiveLessonResponseDto']
+          'application/json': components['schemas']['LastActiveLessonResponseDto'] | null
         }
       }
       /** @description Missing or invalid access token */
       401: {
-        headers: {
-          [name: string]: unknown
-        }
-        content?: never
-      }
-      /** @description No lesson activity found */
-      404: {
         headers: {
           [name: string]: unknown
         }
@@ -5868,6 +6070,123 @@ export interface operations {
         content: {
           'application/json': components['schemas']['OverallProgressResponseDto']
         }
+      }
+      /** @description Missing or invalid access token */
+      401: {
+        headers: {
+          [name: string]: unknown
+        }
+        content?: never
+      }
+    }
+  }
+  UsersController_getActivityHeatmap: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActivityHeatmapResponseDto']
+        }
+      }
+      /** @description Missing or invalid access token */
+      401: {
+        headers: {
+          [name: string]: unknown
+        }
+        content?: never
+      }
+    }
+  }
+  UsersController_getRecentActivity: {
+    parameters: {
+      query?: {
+        limit?: number
+      }
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['RecentActivityItemDto'][]
+        }
+      }
+      /** @description Missing or invalid access token */
+      401: {
+        headers: {
+          [name: string]: unknown
+        }
+        content?: never
+      }
+    }
+  }
+  UsersController_getNotificationPreferences: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['NotificationPreferencesResponseDto']
+        }
+      }
+      /** @description Missing or invalid access token */
+      401: {
+        headers: {
+          [name: string]: unknown
+        }
+        content?: never
+      }
+    }
+  }
+  UsersController_updateNotificationPreferences: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['UpdateNotificationPreferencesDto']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['NotificationPreferencesResponseDto']
+        }
+      }
+      /** @description Validation failed */
+      400: {
+        headers: {
+          [name: string]: unknown
+        }
+        content?: never
       }
       /** @description Missing or invalid access token */
       401: {
