@@ -4,6 +4,23 @@
  */
 
 export interface paths {
+  '/api/v1/health/version': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    /** Get API version */
+    get: operations['HealthController_getVersion']
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
   '/api/v1/health': {
     parameters: {
       query?: never
@@ -677,6 +694,23 @@ export interface paths {
     head?: never
     /** Change current user password */
     patch: operations['UsersController_changePassword']
+    trace?: never
+  }
+  '/api/v1/users/me/sessions': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    /** Get last 10 active sessions for the current user */
+    get: operations['UsersController_getSessions']
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
     trace?: never
   }
   '/api/v1/users/me/stats/weekly-activity': {
@@ -2326,6 +2360,12 @@ export interface components {
       status: 'ACTIVE' | 'COMPLETED' | 'CANCELLED'
       /** @example 66.7 */
       progressPercentage: number
+      /** @example 8 */
+      completedLessons: number
+      /** @example 12 */
+      totalLessons: number
+      /** @example Programación */
+      categoryName: string | null
       /** Format: date-time */
       enrolledAt: string
     }
@@ -2410,6 +2450,11 @@ export interface components {
        * @example null
        */
       enrollmentPeriodEnd: string | null
+      /**
+       * @description Sum of all lesson durations in seconds
+       * @example 14400
+       */
+      totalDuration: number
       /** Format: date-time */
       createdAt: string
       /** Format: date-time */
@@ -2469,6 +2514,11 @@ export interface components {
        * @example null
        */
       enrollmentPeriodEnd: string | null
+      /**
+       * @description Sum of all lesson durations in seconds
+       * @example 14400
+       */
+      totalDuration: number
       /** Format: date-time */
       createdAt: string
       /** Format: date-time */
@@ -2477,11 +2527,6 @@ export interface components {
       lessonsCount: number
       /** @example 340 */
       enrollmentsCount: number
-      /**
-       * @description Sum of all lesson durations in seconds
-       * @example 14400
-       */
-      totalDuration: number
     }
     UpdateCourseDto: {
       /** @example Introduction to TypeScript */
@@ -2703,6 +2748,10 @@ export interface components {
       location?: string | null
       /** @example null */
       bio?: string | null
+      /** @example es */
+      preferredLanguage: string
+      /** @example dark */
+      preferredTheme: string
       /** Format: date-time */
       createdAt: string
       /** Format: date-time */
@@ -2727,6 +2776,16 @@ export interface components {
       location?: string
       /** @example Full-stack developer passionate about education. */
       bio?: string
+      /**
+       * @description BCP 47 language code e.g. "es", "en"
+       * @example es
+       */
+      preferredLanguage?: string
+      /**
+       * @description "light", "dark", or "system"
+       * @example dark
+       */
+      preferredTheme?: string
     }
     ChangePasswordDto: {
       /** @example CurrentPassword1 */
@@ -2737,6 +2796,18 @@ export interface components {
     DeleteAccountDto: {
       /** @description Current password to confirm account deletion */
       password: string
+    }
+    SessionResponseDto: {
+      /** @example clxyz123 */
+      id: string
+      /** @example 203.0.113.5 */
+      ipAddress: string | null
+      /** @example Mozilla/5.0 */
+      userAgent: string | null
+      /** Format: date-time */
+      createdAt: string
+      /** @example true */
+      isCurrent: boolean
     }
     WeeklyActivityDayDto: {
       /** @example 2026-06-13 */
@@ -4219,6 +4290,24 @@ export interface components {
 }
 export type $defs = Record<string, never>
 export interface operations {
+  HealthController_getVersion: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description Current API version */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content?: never
+      }
+    }
+  }
   HealthController_check: {
     parameters: {
       query?: never
@@ -5942,6 +6031,32 @@ export interface operations {
         content?: never
       }
       /** @description Current password is incorrect */
+      401: {
+        headers: {
+          [name: string]: unknown
+        }
+        content?: never
+      }
+    }
+  }
+  UsersController_getSessions: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['SessionResponseDto'][]
+        }
+      }
+      /** @description Missing or invalid access token */
       401: {
         headers: {
           [name: string]: unknown
