@@ -2,9 +2,10 @@
 
 import { BookOpen, CheckCircle2, CalendarDays } from 'lucide-react'
 import type { LucideIcon } from 'lucide-react'
+import { useSession } from 'next-auth/react'
+import { useMyActiveEnrollments } from '@/hooks/queries/enrollments'
 
 interface StatsCardsProps {
-  activeEnrollments: number
   completedLessons: number
   upcomingEvents: number
 }
@@ -45,33 +46,33 @@ const STAT_CONFIGS: StatConfig[] = [
   },
 ]
 
-export function StatsCards({
-  activeEnrollments,
-  completedLessons,
-  upcomingEvents,
-}: StatsCardsProps) {
+export function StatsCards({ completedLessons, upcomingEvents }: StatsCardsProps) {
+  const { data: session } = useSession()
+  const { data: enrollmentData } = useMyActiveEnrollments(session?.user?.id)
+  const activeEnrollments = enrollmentData?.meta?.total ?? 0
+
   const values = [activeEnrollments, completedLessons, upcomingEvents]
   const badges = [`+${activeEnrollments}`, `+${completedLessons} sem.`, 'esta sem.']
 
   return (
-    <div className="grid grid-cols-1 gap-[18px] sm:grid-cols-3">
+    <div className="grid grid-cols-1 gap-4.5 sm:grid-cols-3">
       {STAT_CONFIGS.map((cfg, i) => {
         const Icon = cfg.icon
         return (
           <div
             key={cfg.label}
-            className="border-nexus-border bg-nexus-card flex flex-col gap-[14px] rounded-[18px] border p-5"
+            className="border-nexus-border bg-nexus-card flex flex-col gap-3.5 rounded-[18px] border p-5"
             style={{ boxShadow: 'var(--nexus-card-shadow)' }}
           >
             <div className="flex items-center justify-between">
               <div
-                className="flex h-[46px] w-[46px] shrink-0 items-center justify-center rounded-[13px]"
+                className="flex h-11.5 w-11.5 shrink-0 items-center justify-center rounded-[13px]"
                 style={{ background: cfg.iconBg, color: cfg.iconColor }}
               >
                 <Icon className="h-6 w-6" aria-hidden="true" />
               </div>
               <span
-                className="rounded-full px-[10px] py-1 text-xs font-bold"
+                className="rounded-full px-2.5 py-1 text-xs font-bold"
                 style={{ color: cfg.badgeColor, background: cfg.badgeBg }}
               >
                 {badges[i]}
@@ -84,7 +85,7 @@ export function StatsCards({
               >
                 {values[i]}
               </p>
-              <p className="text-nexus-muted mt-[5px] text-[14px]">{cfg.label}</p>
+              <p className="text-nexus-muted mt-1.25 text-[14px]">{cfg.label}</p>
             </div>
           </div>
         )

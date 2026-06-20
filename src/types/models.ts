@@ -182,21 +182,20 @@ export interface EnrollmentDetail extends Enrollment {
 }
 
 // Flat shape returned by GET /enrollments (user's own list).
-// Nested `progress` and `course` objects are NOT included in this endpoint —
-// only the fields below are guaranteed.
+// Matches UserEnrollmentItemDto from GET /users/{userId}/enrollments.
+// Note: primary key is enrollmentId, not id.
 export interface UserEnrollmentItem {
-  id: string
-  userId: string
+  enrollmentId: string
   courseId: string
-  status: EnrollmentStatus
-  enrollmentType: EnrollmentType
-  enrolledAt: string
-  completedAt: string | null
-  updatedAt: string
   courseTitle: string
   coverUrl: string | null
+  enrollmentType: EnrollmentType
+  status: EnrollmentStatus
   progressPercentage: number
-  // TODO: categoryName not yet available in list response — omit until added to backend DTO
+  completedLessons: number
+  totalLessons: number
+  categoryName: string | null
+  enrolledAt: string
 }
 
 // ─── Quiz ─────────────────────────────────────────────────────────────────────

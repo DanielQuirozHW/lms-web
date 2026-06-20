@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect, startTransition } from 'react'
 import { usePathname } from 'next/navigation'
 import { useSession } from 'next-auth/react'
 import { Sidebar } from './Sidebar'
@@ -29,12 +29,12 @@ function useNavGroups(isPrivileged: boolean) {
 export function NavigationShell({ children }: NavigationShellProps) {
   const [mobileOpen, setMobileOpen] = useState(false)
   const [searchOpen, setSearchOpen] = useState(false)
-  // Lazy initializer: reads localStorage at client mount; falls back to false on SSR.
-  // No effect needed — avoids the extra render cycle from setState-in-effect.
-  const [isCollapsed, setIsCollapsed] = useState(
-    () =>
-      typeof window !== 'undefined' && localStorage.getItem('nexus-sidebar-collapsed') === 'true'
-  )
+  // Always start expanded to match SSR; read localStorage after hydration to avoid mismatch.
+  const [isCollapsed, setIsCollapsed] = useState(false)
+  useEffect(() => {
+    if (localStorage.getItem('nexus-sidebar-collapsed') === 'true')
+      startTransition(() => setIsCollapsed(true))
+  }, [])
   const { data: session } = useSession()
   const isPrivileged =
     session?.user?.roles?.some((r) => r === 'ADMIN' || r === 'INSTRUCTOR') ?? false

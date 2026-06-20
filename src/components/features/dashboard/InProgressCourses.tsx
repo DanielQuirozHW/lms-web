@@ -3,18 +3,20 @@
 import Image from 'next/image'
 import Link from 'next/link'
 import { BookOpen, ArrowRight } from 'lucide-react'
+import { useSession } from 'next-auth/react'
 import { EmptyState } from '@/components/shared/feedback/EmptyState'
-import type { UserEnrollmentItem } from '@/types/models'
+import { LoadingSpinner } from '@/components/shared/feedback/LoadingSpinner'
+import { useMyActiveEnrollments } from '@/hooks/queries/enrollments'
 import { cn } from '@/lib/utils'
 
-// Re-export so dashboard/page.tsx can import the type from one place.
-export type DashboardEnrollment = UserEnrollmentItem
+export function InProgressCourses() {
+  const { data: session } = useSession()
+  const userId = session?.user?.id
+  const { data, isLoading } = useMyActiveEnrollments(userId)
+  const enrollments = data?.data ?? []
 
-interface InProgressCoursesProps {
-  enrollments: DashboardEnrollment[]
-}
+  if (isLoading) return <LoadingSpinner rows={3} />
 
-export function InProgressCourses({ enrollments }: InProgressCoursesProps) {
   if (enrollments.length === 0) {
     return (
       <EmptyState
@@ -27,13 +29,13 @@ export function InProgressCourses({ enrollments }: InProgressCoursesProps) {
   }
 
   return (
-    <ul className="flex flex-col gap-[14px]" aria-label="Cursos en progreso">
+    <ul className="flex flex-col gap-3.5" aria-label="Cursos en progreso">
       {enrollments.map((enrollment) => {
         const pct = Math.round(enrollment.progressPercentage ?? 0)
 
         return (
           <li
-            key={enrollment.id}
+            key={enrollment.enrollmentId}
             className="border-nexus-border bg-nexus-card flex cursor-pointer items-center gap-4 rounded-[16px] border p-[15px] transition-all hover:-translate-y-0.5"
             style={{ boxShadow: 'var(--nexus-card-shadow)' }}
           >
@@ -61,11 +63,16 @@ export function InProgressCourses({ enrollments }: InProgressCoursesProps) {
             </div>
 
             {/* Info + progress */}
-            <div className="flex min-w-0 flex-1 flex-col gap-[9px]">
+            <div className="flex min-w-0 flex-1 flex-col gap-1.75">
+              {enrollment.categoryName && (
+                <span className="text-nexus-accent inline-block max-w-full truncate text-[11px] font-semibold tracking-wider uppercase">
+                  {enrollment.categoryName}
+                </span>
+              )}
               <p className="text-nexus-text truncate font-bold" style={{ fontSize: '15.5px' }}>
                 {enrollment.courseTitle}
               </p>
-              <div className="flex items-center gap-2.75">
+              <div className="flex items-center gap-2.5">
                 <div
                   className="h-2 flex-1 overflow-hidden rounded-full"
                   style={{ background: 'var(--nexus-border)' }}
@@ -90,12 +97,17 @@ export function InProgressCourses({ enrollments }: InProgressCoursesProps) {
                   {pct}%
                 </span>
               </div>
+              {enrollment.totalLessons > 0 && (
+                <p className="text-nexus-muted text-[11.5px]">
+                  {enrollment.completedLessons} / {enrollment.totalLessons} lecciones
+                </p>
+              )}
             </div>
 
             {/* CTA */}
             <Link
               href={`/courses/${enrollment.courseId}`}
-              className="inline-flex shrink-0 items-center gap-[7px] rounded-xl px-[17px] py-[11px] text-sm font-bold text-white transition-opacity hover:opacity-90"
+              className="inline-flex shrink-0 items-center gap-1.75 rounded-xl px-4.25 py-2.75 text-sm font-bold text-white transition-opacity hover:opacity-90"
               style={{
                 background: 'linear-gradient(135deg, #7c6cff, #6d5bf0)',
                 boxShadow: '0 10px 20px -10px rgba(109,91,240,0.7)',

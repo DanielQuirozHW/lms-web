@@ -9,10 +9,7 @@ import { LoadingSpinner } from '@/components/shared/feedback/LoadingSpinner'
 import { DashboardHero } from '@/components/features/dashboard/DashboardHero'
 import { WeeklyActivity } from '@/components/features/dashboard/WeeklyActivity'
 import { StatsCards } from '@/components/features/dashboard/StatsCards'
-import {
-  InProgressCourses,
-  type DashboardEnrollment,
-} from '@/components/features/dashboard/InProgressCourses'
+import { InProgressCourses } from '@/components/features/dashboard/InProgressCourses'
 import { UpcomingEvents } from '@/components/features/dashboard/UpcomingEvents'
 import { NotificationsSync } from '@/components/features/dashboard/NotificationsSync'
 
@@ -36,12 +33,7 @@ export default async function DashboardPage() {
   nextWeekDate.setDate(todayDate.getDate() + 7)
   const in7Days = nextWeekDate.toISOString().split('T')[0]
 
-  // Parallel data fetch — allSettled so one failed endpoint doesn't blank the page
-  const [enrollmentsResult, countResult, eventsResult] = await Promise.allSettled([
-    api.get<PaginatedData<DashboardEnrollment>>('/enrollments', {
-      params: { status: 'ACTIVE', limit: 4 },
-      headers,
-    }),
+  const [countResult, eventsResult] = await Promise.allSettled([
     api.get<{ count: number }>('/notifications/unread-count', { headers }),
     api.get<PaginatedData<CalendarEvent>>('/calendar', {
       params: { startDate: today, endDate: in7Days },
@@ -49,18 +41,12 @@ export default async function DashboardPage() {
     }),
   ])
 
-  const enrollments: DashboardEnrollment[] =
-    enrollmentsResult.status === 'fulfilled' ? (enrollmentsResult.value.data.data ?? []) : []
-
   const unreadCount: number =
     countResult.status === 'fulfilled' ? (countResult.value.data.count ?? 0) : 0
 
   const events: CalendarEvent[] =
     eventsResult.status === 'fulfilled' ? (eventsResult.value.data.data ?? []) : []
 
-  const activeEnrollments = enrollments.filter((e) => e.status === 'ACTIVE').length
-  // GET /enrollments list does not include completedLessons — use 0 as fallback
-  const completedLessons = 0
   const firstName = session?.user?.firstName ?? session?.user?.name?.split(' ')[0] ?? 'Usuario'
 
   const rawDayLabel = todayDate.toLocaleDateString('es-ES', {
@@ -78,17 +64,13 @@ export default async function DashboardPage() {
       {/* Hero banner */}
       <DashboardHero
         firstName={firstName}
-        activeEnrollments={activeEnrollments}
-        completedLessons={completedLessons}
+        activeEnrollments={0}
+        completedLessons={0}
         dayLabel={dayLabel}
       />
 
-      {/* Stat cards */}
-      <StatsCards
-        activeEnrollments={activeEnrollments}
-        completedLessons={completedLessons}
-        upcomingEvents={events.length}
-      />
+      {/* Stat cards — activeEnrollments fetched client-side inside StatsCards */}
+      <StatsCards completedLessons={0} upcomingEvents={events.length} />
 
       {/* Two-column main section: 1.55fr / 1fr */}
       <div className="grid grid-cols-1 gap-[22px] lg:grid-cols-[1.55fr_1fr]">
@@ -103,7 +85,7 @@ export default async function DashboardPage() {
             </Link>
           </div>
           <Suspense fallback={<LoadingSpinner rows={3} />}>
-            <InProgressCourses enrollments={enrollments} />
+            <InProgressCourses />
           </Suspense>
         </div>
 

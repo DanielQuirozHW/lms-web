@@ -1,6 +1,6 @@
 import { useQuery } from '@tanstack/react-query'
 import api from '@/lib/api'
-import type { EnrollmentDetail, CourseStatus } from '@/types/models'
+import type { EnrollmentDetail, CourseStatus, UserEnrollmentItem } from '@/types/models'
 import type { PaginatedData } from '@/types/api'
 
 // Extends EnrollmentDetail with student info the API may embed in list responses
@@ -30,6 +30,7 @@ export const enrollmentKeys = {
   userList: (userId: string) => [...enrollmentKeys.all, 'user', userId] as const,
   detail: (enrollmentId: string) => [...enrollmentKeys.all, 'detail', enrollmentId] as const,
   myList: () => [...enrollmentKeys.all, 'my'] as const,
+  myActive: (userId: string | undefined) => [...enrollmentKeys.all, 'my-active', userId] as const,
 }
 
 export function useCourseEnrollments(courseId: string) {
@@ -53,6 +54,22 @@ export function useUserEnrollments(userId: string) {
         .then((r) => r.data),
     enabled: !!userId,
     staleTime: 60 * 1000,
+  })
+}
+
+export function useMyActiveEnrollments(userId: string | undefined) {
+  return useQuery({
+    queryKey: enrollmentKeys.myActive(userId),
+    queryFn: () =>
+      api
+        .get<PaginatedData<UserEnrollmentItem>>(`/users/${userId}/enrollments`, {
+          params: { status: 'ACTIVE', limit: 4 },
+        })
+        .then((r) => r.data),
+    enabled: !!userId,
+    staleTime: 2 * 60 * 1000,
+    throwOnError: false,
+    retry: false,
   })
 }
 

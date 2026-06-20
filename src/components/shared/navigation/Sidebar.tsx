@@ -358,6 +358,7 @@ export function Sidebar({
     <>
       {/* Desktop sidebar */}
       <aside
+        suppressHydrationWarning
         className={cn(
           'border-nexus-border bg-nexus-surface sticky top-0 hidden h-screen flex-col overflow-x-hidden border-r transition-[width] duration-200 ease-in-out lg:flex',
           isCollapsed ? 'w-[78px]' : 'w-[268px]'
