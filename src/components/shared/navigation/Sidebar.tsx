@@ -49,7 +49,7 @@ function NexusLogo({ collapsed, onToggle }: { collapsed: boolean; onToggle?: () 
     <div
       className={cn(
         'border-nexus-border flex shrink-0 items-center border-b transition-all duration-200',
-        collapsed ? 'h-16 flex-col justify-center gap-2 px-0' : 'h-16 gap-3 px-4'
+        collapsed ? 'h-16 flex-col items-center justify-center gap-2 px-0' : 'h-16 gap-3 px-4'
       )}
     >
       <Link
@@ -118,22 +118,24 @@ function NavGroups({
 
   return (
     <TooltipProvider delay={400}>
-      <div className={cn('flex flex-col gap-1 py-3', collapsed ? 'px-2' : 'px-3')}>
+      {/* px-0 when collapsed so items fill full width and icon sits at center */}
+      <div className={cn('flex flex-col gap-1 py-3', collapsed ? 'px-0' : 'px-3')}>
         {navGroups.map((group, gi) => (
           <div key={gi} className={cn('flex flex-col gap-0.5', gi > 0 && 'mt-5')}>
+            {/* Section label — completely hidden when collapsed */}
             {group.label && !collapsed && (
               <p className="text-nexus-faint px-3 pb-1.5 text-[10px] font-semibold tracking-widest uppercase select-none">
                 {group.label}
               </p>
             )}
+
             {group.items.map((item) => {
               const Icon = item.icon
               const active = isActive(item, pathname)
               const count = badgeCount(item)
 
-              const baseClass = cn(
-                'relative flex items-center gap-2.5 rounded-xl text-sm font-medium transition-all duration-150',
-                collapsed ? 'h-10 w-10 justify-center' : 'h-10 px-3',
+              const sharedClass = cn(
+                'relative flex w-full items-center rounded-xl text-sm font-medium transition-all duration-200',
                 active
                   ? 'text-white'
                   : 'text-nexus-muted hover:bg-nexus-nav-hover hover:text-nexus-nav-hover-fg'
@@ -147,9 +149,14 @@ function NavGroups({
                 : undefined
 
               if (collapsed) {
+                // TooltipTrigger renders a <button>; Link is absolute-inset-0 so it covers
+                // the full hit area without creating invalid <button><a> nesting issues.
                 return (
                   <Tooltip key={item.href}>
-                    <TooltipTrigger className={baseClass} style={activeStyle}>
+                    <TooltipTrigger
+                      className={cn(sharedClass, 'h-10 justify-center')}
+                      style={activeStyle}
+                    >
                       <Link
                         href={item.href}
                         onClick={onNavigate}
@@ -157,11 +164,15 @@ function NavGroups({
                         tabIndex={-1}
                         aria-label={item.label}
                       >
-                        <Icon className="h-4.5 w-4.5 shrink-0" aria-hidden="true" />
+                        {count > 0 ? (
+                          <span className="relative">
+                            <Icon className="h-4.5 w-4.5 shrink-0" aria-hidden="true" />
+                            <span className="bg-nexus-danger pointer-events-none absolute -top-1 -right-1 h-2 w-2 rounded-full" />
+                          </span>
+                        ) : (
+                          <Icon className="h-4.5 w-4.5 shrink-0" aria-hidden="true" />
+                        )}
                       </Link>
-                      {count > 0 && (
-                        <span className="bg-nexus-danger pointer-events-none absolute top-1 right-1 h-2 w-2 rounded-full" />
-                      )}
                     </TooltipTrigger>
                     <TooltipContent side="right">{item.label}</TooltipContent>
                   </Tooltip>
@@ -173,7 +184,7 @@ function NavGroups({
                   key={item.href}
                   href={item.href}
                   onClick={onNavigate}
-                  className={baseClass}
+                  className={cn(sharedClass, 'h-10 gap-2.5 px-3')}
                   style={activeStyle}
                 >
                   <Icon className="h-4.5 w-4.5 shrink-0" aria-hidden="true" />
@@ -226,7 +237,8 @@ function UserFooter({ collapsed }: { collapsed: boolean }) {
   if (collapsed) {
     return (
       <TooltipProvider delay={400}>
-        <div className="border-nexus-border flex justify-center border-t px-2 py-3">
+        {/* px-0 + flex justify-center = avatar perfectly centered in 78px */}
+        <div className="border-nexus-border flex justify-center border-t px-0 py-3">
           <Tooltip>
             <TooltipTrigger className="cursor-default">{avatarEl}</TooltipTrigger>
             <TooltipContent side="right">{fullName}</TooltipContent>
