@@ -5,8 +5,14 @@ import { Star, Users, BookOpen } from 'lucide-react'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { cn } from '@/lib/utils'
 import { formatPrice } from '@/lib/utils'
-import type { CourseDetail } from '@/types/models'
+import type { CourseDetail, CourseLevel } from '@/types/models'
 import type { RatingSummary } from '@/types/models'
+
+const LEVEL_LABELS: Record<CourseLevel, string> = {
+  BEGINNER: 'Principiante',
+  INTERMEDIATE: 'Intermedio',
+  ADVANCED: 'Avanzado',
+}
 
 // Extends CourseDetail with fields the API may embed in course detail responses
 export interface CourseDetailFull extends CourseDetail {
@@ -80,13 +86,30 @@ function CourseInfo({
 
   return (
     <div className="space-y-3">
-      {/* Category badge */}
-      {course.category && (
-        <span
-          className={cn('inline-block rounded-full px-2.5 py-0.5 text-xs font-semibold', badgeBg)}
-        >
-          {course.category.name}
-        </span>
+      {/* Category + level row */}
+      {(course.category || course.level) && (
+        <div className="flex flex-wrap items-center gap-2">
+          {course.category && (
+            <span
+              className={cn(
+                'inline-block rounded-full px-2.5 py-0.5 text-xs font-semibold',
+                badgeBg
+              )}
+            >
+              {course.category.name}
+            </span>
+          )}
+          {course.level && (
+            <span
+              className={cn(
+                'text-xs font-semibold tracking-wide uppercase',
+                dark ? 'text-white/65' : 'text-nexus-muted'
+              )}
+            >
+              Nivel {LEVEL_LABELS[course.level]}
+            </span>
+          )}
+        </div>
       )}
 
       {/* Title */}

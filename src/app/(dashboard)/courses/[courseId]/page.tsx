@@ -15,8 +15,15 @@ import { Breadcrumbs } from '@/components/shared/navigation/Breadcrumbs'
 import { CourseHero, type CourseDetailFull } from '@/components/features/courses/CourseHero'
 import { CourseModules } from '@/components/features/courses/CourseModules'
 import { EnrollButton } from '@/components/features/courses/EnrollButton'
-import { Star, BookOpen, Users } from 'lucide-react'
-import { formatPrice } from '@/lib/utils'
+import { Star, BookOpen, Users, Check, Clock, BarChart2 } from 'lucide-react'
+import { formatPrice, formatDuration } from '@/lib/utils'
+import type { CourseLevel } from '@/types/models'
+
+const LEVEL_LABELS: Record<CourseLevel, string> = {
+  BEGINNER: 'Principiante',
+  INTERMEDIATE: 'Intermedio',
+  ADVANCED: 'Avanzado',
+}
 
 interface PageProps {
   params: Promise<{ courseId: string }>
@@ -120,6 +127,29 @@ export default async function CourseDetailPage({ params }: PageProps) {
             </div>
           )}
 
+          {/* What you'll learn */}
+          {course.whatYouWillLearn && course.whatYouWillLearn.length > 0 && (
+            <div className="mb-6">
+              <h2 className="text-nexus-text mb-3 text-lg font-semibold">Lo que vas a aprender</h2>
+              <div
+                className="border-nexus-border bg-nexus-card rounded-2xl border p-5"
+                style={{ boxShadow: 'var(--nexus-card-shadow)' }}
+              >
+                <ul className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                  {course.whatYouWillLearn.map((item, i) => (
+                    <li key={i} className="text-nexus-muted flex items-start gap-2.5 text-sm">
+                      <Check
+                        className="mt-0.5 h-4 w-4 shrink-0 text-green-600"
+                        aria-hidden="true"
+                      />
+                      <span>{item}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            </div>
+          )}
+
           <h2 id="modules-heading" className="text-nexus-text mb-3 text-lg font-semibold">
             Contenido del curso
           </h2>
@@ -193,6 +223,28 @@ export default async function CourseDetailPage({ params }: PageProps) {
                       {rating.averageScore.toFixed(1)}
                     </span>{' '}
                     promedio ({rating.totalRatings} valoraciones)
+                  </span>
+                </li>
+              )}
+              {course.level && (
+                <li className="text-nexus-muted flex items-center gap-2">
+                  <BarChart2 className="text-nexus-accent h-4 w-4 shrink-0" aria-hidden="true" />
+                  <span>
+                    Nivel{' '}
+                    <span className="text-nexus-text font-semibold">
+                      {LEVEL_LABELS[course.level]}
+                    </span>
+                  </span>
+                </li>
+              )}
+              {course.totalDuration > 0 && (
+                <li className="text-nexus-muted flex items-center gap-2">
+                  <Clock className="text-nexus-accent h-4 w-4 shrink-0" aria-hidden="true" />
+                  <span>
+                    <span className="text-nexus-text font-semibold">
+                      {formatDuration(course.totalDuration)}
+                    </span>{' '}
+                    duración total
                   </span>
                 </li>
               )}

@@ -89,9 +89,14 @@ export interface EnrollmentCode {
   createdAt: string
 }
 
+export type CourseLevel = 'BEGINNER' | 'INTERMEDIATE' | 'ADVANCED'
+
 export interface CourseDetail extends Course {
   lessonsCount: number
   enrollmentsCount: number
+  level: CourseLevel | null
+  whatYouWillLearn: string[]
+  totalDuration: number
 }
 
 // ─── Module ───────────────────────────────────────────────────────────────────
