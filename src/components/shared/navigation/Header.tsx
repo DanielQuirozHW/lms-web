@@ -1,19 +1,12 @@
 'use client'
 
+import { useRef, useEffect, useState } from 'react'
 import { usePathname, useRouter } from 'next/navigation'
 import { Award, LogOut, Menu, Search, Settings, Sun, Moon, User } from 'lucide-react'
 import { useSession, signOut } from 'next-auth/react'
 import { useTheme } from 'next-themes'
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuGroup,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu'
 import { NotificationsBell } from '@/components/features/notifications/NotificationsBell'
+import { HeaderSearch } from '@/components/shared/search/HeaderSearch'
 import { cn } from '@/lib/utils'
 
 const PAGE_TITLES: Record<string, string> = {
@@ -53,11 +46,19 @@ interface HeaderProps {
 const ICONBTN =
   'flex h-10.5 w-10.5 shrink-0 cursor-pointer items-center justify-center rounded-[13px] border-none bg-nexus-iconbtn text-nexus-iconbtn-fg transition-colors duration-150 hover:bg-nexus-iconbtn-hover hover:text-nexus-iconbtn-hover-fg focus-visible:outline-none'
 
+const AVATAR_MENU_ITEMS = [
+  { icon: User, label: 'Perfil', href: '/profile' },
+  { icon: Settings, label: 'Configuración', href: '/profile' },
+  { icon: Award, label: 'Mis certificados', href: '/certificates' },
+] as const
+
 export function Header({ onMobileMenuOpen, onSearchOpen, className }: HeaderProps) {
   const router = useRouter()
   const pathname = usePathname()
   const { data: session } = useSession()
   const { theme, setTheme } = useTheme()
+  const [avatarOpen, setAvatarOpen] = useState(false)
+  const avatarRef = useRef<HTMLDivElement>(null)
 
   const user = session?.user
   const firstName = user?.firstName ?? user?.name?.split(' ')[0] ?? ''
@@ -66,7 +67,20 @@ export function Header({ onMobileMenuOpen, onSearchOpen, className }: HeaderProp
   const initials = [firstName[0], lastName[0]].filter(Boolean).join('').toUpperCase() || 'U'
   const pageTitle = getPageTitle(pathname)
 
+  // Close avatar menu on outside click
+  useEffect(() => {
+    if (!avatarOpen) return
+    function onMouseDown(e: MouseEvent) {
+      if (avatarRef.current && !avatarRef.current.contains(e.target as Node)) {
+        setAvatarOpen(false)
+      }
+    }
+    document.addEventListener('mousedown', onMouseDown)
+    return () => document.removeEventListener('mousedown', onMouseDown)
+  }, [avatarOpen])
+
   async function handleLogout() {
+    setAvatarOpen(false)
     try {
       await fetch('/api/auth/logout', { method: 'POST' })
     } catch {
@@ -95,7 +109,7 @@ export function Header({ onMobileMenuOpen, onSearchOpen, className }: HeaderProp
       {/* Page title (desktop) / centred logo (mobile) */}
       <div className="flex min-w-0 flex-1 items-center">
         {pageTitle && (
-          <h2 className="text-nexus-text hidden text-[20px] font-extrabold tracking-tight lg:block">
+          <h2 className="text-nexus-text hidden text-[20px] font-extrabold tracking-[-0.02em] lg:block">
             {pageTitle}
           </h2>
         )}
@@ -107,19 +121,8 @@ export function Header({ onMobileMenuOpen, onSearchOpen, className }: HeaderProp
         <div className="hidden flex-1 lg:block" />
       </div>
 
-      {/* Inline search box — desktop only */}
-      <button
-        type="button"
-        onClick={onSearchOpen}
-        className="bg-nexus-search-bg text-nexus-muted hover:border-nexus-border hidden h-[42px] w-[280px] shrink-0 cursor-text items-center gap-[9px] rounded-[13px] border border-transparent px-[14px] text-sm transition-colors duration-150 lg:flex"
-        aria-label="Buscar cursos (Ctrl+K)"
-      >
-        <Search className="h-[19px] w-[19px] shrink-0" aria-hidden="true" />
-        <span className="flex-1 text-left">Buscar cursos…</span>
-        <kbd className="border-nexus-border bg-nexus-surface rounded border px-1.5 py-0.5 font-mono text-[11px] font-bold">
-          ⌘K
-        </kbd>
-      </button>
+      {/* Desktop inline search */}
+      <HeaderSearch />
 
       {/* Right actions */}
       <div className="flex shrink-0 items-center gap-2">
@@ -153,12 +156,16 @@ export function Header({ onMobileMenuOpen, onSearchOpen, className }: HeaderProp
         {/* Notification bell */}
         <NotificationsBell />
 
-        {/* Avatar dropdown */}
-        <DropdownMenu>
-          <DropdownMenuTrigger
+        {/* Avatar dropdown — plain div, no shadcn */}
+        <div ref={avatarRef} className="relative">
+          <button
+            type="button"
+            onClick={() => setAvatarOpen((v) => !v)}
             className="flex h-10.5 w-10.5 shrink-0 cursor-pointer items-center justify-center overflow-hidden rounded-[13px] border-none text-[13px] font-bold text-white focus-visible:outline-none"
             style={{ background: 'var(--nexus-brand-gradient)' }}
-            aria-label="User menu"
+            aria-label="Menú de usuario"
+            aria-expanded={avatarOpen}
+            aria-haspopup="menu"
           >
             {user?.avatarUrl ? (
               // eslint-disable-next-line @next/next/no-img-element
@@ -166,13 +173,19 @@ export function Header({ onMobileMenuOpen, onSearchOpen, className }: HeaderProp
             ) : (
               initials
             )}
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end" className="w-[268px]">
-            {/* User header */}
-            <DropdownMenuGroup>
-              <DropdownMenuLabel className="flex items-center gap-3 py-[18px]">
+          </button>
+
+          {avatarOpen && (
+            <div
+              className="bg-nexus-card border-nexus-border absolute top-[calc(100%+12px)] right-0 z-50 w-[268px] overflow-hidden rounded-[18px] border"
+              style={{ boxShadow: 'var(--nexus-menu-shadow)' }}
+              role="menu"
+              aria-label="Menú de usuario"
+            >
+              {/* User header */}
+              <div className="border-nexus-border flex items-center gap-3 border-b px-[18px] py-[18px]">
                 <div
-                  className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl text-[15px] font-bold text-white"
+                  className="flex h-11 w-11 shrink-0 items-center justify-center rounded-[12px] text-[15px] font-bold text-white"
                   style={{ background: 'var(--nexus-brand-gradient)' }}
                   aria-hidden="true"
                 >
@@ -186,28 +199,42 @@ export function Header({ onMobileMenuOpen, onSearchOpen, className }: HeaderProp
                     </p>
                   )}
                 </div>
-              </DropdownMenuLabel>
-            </DropdownMenuGroup>
-            <DropdownMenuSeparator />
-            <DropdownMenuItem onClick={() => router.push('/profile')}>
-              <User className="h-[18px] w-[18px]" />
-              Perfil
-            </DropdownMenuItem>
-            <DropdownMenuItem onClick={() => router.push('/profile')}>
-              <Settings className="h-[18px] w-[18px]" />
-              Configuración
-            </DropdownMenuItem>
-            <DropdownMenuItem onClick={() => router.push('/certificates')}>
-              <Award className="h-[18px] w-[18px]" />
-              Mis certificados
-            </DropdownMenuItem>
-            <DropdownMenuSeparator />
-            <DropdownMenuItem variant="destructive" onClick={handleLogout}>
-              <LogOut className="h-[18px] w-[18px]" />
-              Cerrar sesión
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
+              </div>
+
+              {/* Menu items */}
+              <div className="p-2">
+                {AVATAR_MENU_ITEMS.map(({ icon: Icon, label, href }) => (
+                  <button
+                    key={label}
+                    type="button"
+                    role="menuitem"
+                    onClick={() => {
+                      setAvatarOpen(false)
+                      router.push(href)
+                    }}
+                    className="text-nexus-text hover:bg-nexus-menu-hover flex w-full items-center gap-3 rounded-[11px] px-[14px] py-[11px] text-left text-[14px] font-semibold transition-colors"
+                  >
+                    <Icon className="h-[18px] w-[18px]" aria-hidden="true" />
+                    {label}
+                  </button>
+                ))}
+              </div>
+
+              {/* Danger section */}
+              <div className="border-nexus-border border-t p-2">
+                <button
+                  type="button"
+                  role="menuitem"
+                  onClick={handleLogout}
+                  className="text-nexus-danger hover:bg-nexus-danger-bg flex w-full items-center gap-3 rounded-[11px] px-[14px] py-[11px] text-left text-[14px] font-semibold transition-colors"
+                >
+                  <LogOut className="h-[18px] w-[18px]" aria-hidden="true" />
+                  Cerrar sesión
+                </button>
+              </div>
+            </div>
+          )}
+        </div>
       </div>
     </header>
   )

@@ -37,6 +37,8 @@
   --color-nexus-usercard-border: var(--nexus-usercard-border);
   --color-nexus-user-email: var(--nexus-user-email);
   --color-nexus-unread-row: var(--nexus-unread-row);
+  --color-nexus-menu-hover: var(--nexus-menu-hover);
+  --color-nexus-danger-bg: var(--nexus-danger-bg);
   /* ─────────────────────────────────────────────────────────────────────────── */
   --color-background: var(--background);
   --color-foreground: var(--foreground);
@@ -125,6 +127,10 @@
   --nexus-orange: #ea8c0c;
   --nexus-orange-bg: #fef1e2;
   --nexus-card-shadow: rgba(31, 30, 46, 0.4) 0px 12px 26px -20px;
+  /* ─── Dropdown menu tokens — light ──────────────────────────────────────── */
+  --nexus-menu-shadow: 0 22px 50px -20px rgba(31, 30, 46, 0.4);
+  --nexus-menu-hover: #f4f3fb;
+  --nexus-danger-bg: #fdecec;
   /* ─── shadcn/ui — light mode ──────────────────────────────────────────────── */
   --background: #f5f6fc;
   --foreground: #16172a;
@@ -204,6 +210,10 @@
   --nexus-orange: #f5b14d;
   --nexus-orange-bg: rgba(234, 140, 12, 0.14);
   --nexus-card-shadow: none;
+  /* ─── Dropdown menu tokens — dark ───────────────────────────────────────── */
+  --nexus-menu-shadow: 0 22px 50px -24px rgba(0, 0, 0, 0.7);
+  --nexus-menu-hover: #1e2039;
+  --nexus-danger-bg: rgba(229, 72, 77, 0.12);
   /* ─── shadcn/ui — dark mode ───────────────────────────────────────────────── */
   --background: #0e0f1c;
   --foreground: #edeef6;

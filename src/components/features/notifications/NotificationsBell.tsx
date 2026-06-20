@@ -8,6 +8,7 @@ import {
   BellOff,
   BookOpen,
   CheckCircle2,
+  Clock,
   Megaphone,
   MessageSquare,
   Play,
@@ -36,15 +37,18 @@ const TYPE_ICON: Record<NotificationType, LucideIcon> = {
   ANNOUNCEMENT: Megaphone,
 }
 
+// Arbitrary-value Tailwind classes — matches reference color palette, dark-mode aware
 const TYPE_STYLE: Record<NotificationType, string> = {
-  ENROLLMENT: 'bg-green-100 text-green-600 dark:bg-green-900/20 dark:text-green-400',
+  ENROLLMENT: 'bg-[#E8F7EE] text-[#10B981] dark:bg-[rgba(34,197,94,0.14)] dark:text-[#34D89E]',
   NEW_LESSON: 'bg-nexus-accent-muted text-nexus-accent',
-  FORUM_REPLY: 'bg-blue-100 text-blue-600 dark:bg-blue-900/20 dark:text-blue-400',
-  ASSIGNMENT_GRADED: 'bg-green-100 text-green-600 dark:bg-green-900/20 dark:text-green-400',
-  QUIZ_PASSED: 'bg-amber-100 text-amber-600 dark:bg-amber-900/20 dark:text-amber-400',
-  QUIZ_FAILED: 'bg-red-100 text-red-600 dark:bg-red-900/20 dark:text-red-400',
-  COURSE_COMPLETED: 'bg-amber-100 text-amber-600 dark:bg-amber-900/20 dark:text-amber-400',
-  ANNOUNCEMENT: 'bg-blue-100 text-blue-600 dark:bg-blue-900/20 dark:text-blue-400',
+  FORUM_REPLY: 'bg-[#E4F5FD] text-[#0E9FD9] dark:bg-[rgba(14,159,217,0.16)] dark:text-[#46C2F0]',
+  ASSIGNMENT_GRADED:
+    'bg-[#E8F7EE] text-[#10B981] dark:bg-[rgba(34,197,94,0.14)] dark:text-[#34D89E]',
+  QUIZ_PASSED: 'bg-[#FEF1E2] text-[#E8920C] dark:bg-[rgba(234,140,12,0.16)] dark:text-[#F5B14D]',
+  QUIZ_FAILED: 'bg-[#FDECEA] text-[#E5484D] dark:bg-[rgba(229,72,77,0.12)] dark:text-[#FF6B6F]',
+  COURSE_COMPLETED:
+    'bg-[#FEF1E2] text-[#E8920C] dark:bg-[rgba(234,140,12,0.16)] dark:text-[#F5B14D]',
+  ANNOUNCEMENT: 'bg-[#EFEDFE] text-[#6D5BF0] dark:bg-[rgba(124,108,255,0.16)] dark:text-[#A99CFF]',
 }
 
 export function NotificationsBell() {
@@ -91,20 +95,21 @@ export function NotificationsBell() {
       {/* Dropdown panel */}
       {open && (
         <div
-          className="bg-nexus-card border-nexus-border absolute top-[calc(100%+12px)] right-0 z-50 flex w-[360px] flex-col overflow-hidden rounded-[18px] border shadow-xl shadow-black/10 dark:shadow-black/30"
+          className="bg-nexus-card border-nexus-border absolute top-[calc(100%+12px)] right-0 z-50 w-[360px] overflow-hidden rounded-[18px] border"
+          style={{ boxShadow: 'var(--nexus-menu-shadow)' }}
           role="dialog"
           aria-label="Panel de notificaciones"
         >
-          {/* Panel header */}
-          <div className="border-nexus-border flex items-center justify-between border-b px-4 py-3">
-            <div className="flex items-center gap-2">
-              <span className="text-nexus-text text-sm font-bold">Notificaciones</span>
+          {/* Header */}
+          <div className="border-nexus-border flex items-center justify-between border-b px-[18px] py-4">
+            <div className="flex items-center gap-[9px]">
+              <span className="text-nexus-text text-[15px] font-extrabold">Notificaciones</span>
               {unreadCount > 0 && (
                 <span
-                  className="flex h-5 min-w-5 items-center justify-center rounded-full px-1.5 text-[10px] font-semibold text-white"
-                  style={{ background: 'var(--nexus-nav-active-gradient)' }}
+                  className="flex h-5 min-w-5 items-center justify-center rounded-full px-2 text-[11px] font-bold text-white"
+                  style={{ background: 'linear-gradient(135deg,#7C6CFF,#6D5BF0)' }}
                 >
-                  {unreadCount > 99 ? '99+' : unreadCount}
+                  {unreadCount > 99 ? '99+' : unreadCount} nueva{unreadCount !== 1 ? 's' : ''}
                 </span>
               )}
             </div>
@@ -113,7 +118,7 @@ export function NotificationsBell() {
                 type="button"
                 onClick={() => markAllRead.mutate()}
                 disabled={markAllRead.isPending}
-                className="text-nexus-accent hover:text-nexus-accent-hover text-xs font-medium transition-colors disabled:opacity-50"
+                className="text-nexus-accent text-[12.5px] font-bold transition-opacity hover:underline disabled:opacity-50"
               >
                 Marcar leídas
               </button>
@@ -121,7 +126,7 @@ export function NotificationsBell() {
           </div>
 
           {/* Notification rows */}
-          <div className="max-h-[360px] overflow-y-auto">
+          <div className="max-h-[340px] overflow-y-auto">
             {isLoading ? (
               <div className="flex items-center justify-center py-8">
                 <div className="border-nexus-accent h-6 w-6 animate-spin rounded-full border-2 border-t-transparent" />
@@ -140,15 +145,15 @@ export function NotificationsBell() {
             )}
           </div>
 
-          {/* Footer */}
-          <div className="border-nexus-border border-t px-4 py-2.5">
+          {/* Footer — ghost bordered button */}
+          <div className="px-[18px] py-3">
             <button
               type="button"
               onClick={() => {
                 setOpen(false)
                 router.push('/notifications')
               }}
-              className="text-nexus-accent hover:text-nexus-accent-hover w-full py-1 text-center text-sm font-medium transition-colors"
+              className="border-nexus-border text-nexus-text hover:bg-nexus-menu-hover w-full rounded-[11px] border bg-transparent px-[11px] py-[11px] text-[13.5px] font-bold transition-colors"
             >
               Ver todas las notificaciones
             </button>
@@ -178,7 +183,7 @@ function NotificationRow({
   return (
     <li
       className={cn(
-        'hover:bg-nexus-border/40 flex cursor-pointer items-start gap-3 px-4 py-3 transition-colors',
+        'border-nexus-border hover:bg-nexus-menu-hover flex cursor-pointer items-start gap-3 border-b px-[18px] py-[13px] transition-colors',
         !n.isRead && 'bg-nexus-unread-row'
       )}
       role="button"
@@ -188,25 +193,36 @@ function NotificationRow({
         if (e.key === 'Enter' || e.key === ' ') handleActivate()
       }}
     >
+      {/* Icon container — 38×38, border-radius 11 */}
       <div
         className={cn(
-          'mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-lg',
+          'flex h-[38px] w-[38px] shrink-0 items-center justify-center rounded-[11px]',
           iconStyle
         )}
       >
-        <Icon className="h-4 w-4" aria-hidden="true" />
+        <Icon className="h-[18px] w-[18px]" aria-hidden="true" />
       </div>
 
+      {/* Text */}
       <div className="min-w-0 flex-1">
-        <p className="text-nexus-text line-clamp-1 text-[13px] font-semibold">{n.title}</p>
-        <p className="text-nexus-muted mt-0.5 line-clamp-2 text-xs">{n.body}</p>
-        <time dateTime={n.createdAt} className="text-nexus-faint mt-1 block text-[11px]">
-          {formatRelativeTime(n.createdAt)}
-        </time>
+        <p className="text-nexus-text text-[13.5px] leading-[1.45]" style={{ lineHeight: 1.45 }}>
+          {n.title}
+        </p>
+        {n.body && n.body !== n.title && (
+          <p className="text-nexus-muted mt-0.5 line-clamp-1 text-xs">{n.body}</p>
+        )}
+        <div className="text-nexus-muted mt-[3px] flex items-center gap-[5px] text-[12px]">
+          <Clock className="h-3 w-3 shrink-0" aria-hidden="true" />
+          <time dateTime={n.createdAt}>{formatRelativeTime(n.createdAt)}</time>
+        </div>
       </div>
 
+      {/* Unread dot */}
       {!n.isRead && (
-        <div className="bg-nexus-accent mt-1.5 h-2 w-2 shrink-0 rounded-full" aria-hidden="true" />
+        <div
+          className="bg-nexus-accent mt-[6px] h-2 w-2 shrink-0 rounded-full"
+          aria-hidden="true"
+        />
       )}
     </li>
   )
