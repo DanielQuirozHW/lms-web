@@ -39,6 +39,7 @@ export function InProgressCourses({ enrollments }: InProgressCoursesProps) {
         const course = enrollment.course
         const pct = Math.round(enrollment.progress?.progressPercentage ?? 0)
         const completedLessons = enrollment.progress?.completedLessons ?? 0
+        const totalLessons = enrollment.progress?.totalLessons ?? 0
 
         return (
           <li
@@ -73,10 +74,15 @@ export function InProgressCourses({ enrollments }: InProgressCoursesProps) {
 
             {/* Info + progress */}
             <div className="flex min-w-0 flex-1 flex-col gap-[9px]">
+              {totalLessons > 0 && (
+                <p className="text-nexus-muted text-xs font-medium">
+                  {completedLessons} / {totalLessons} lecciones
+                </p>
+              )}
               <p className="text-nexus-text truncate font-bold" style={{ fontSize: '15.5px' }}>
                 {course?.title ?? 'Curso sin título'}
               </p>
-              <div className="flex items-center gap-[11px]">
+              <div className="flex items-center gap-2.75">
                 <div
                   className="h-2 flex-1 overflow-hidden rounded-full"
                   style={{ background: 'var(--nexus-border)' }}
@@ -101,9 +107,6 @@ export function InProgressCourses({ enrollments }: InProgressCoursesProps) {
                   {pct}%
                 </span>
               </div>
-              {completedLessons > 0 && (
-                <p className="text-nexus-muted text-xs">{completedLessons} lecciones completadas</p>
-              )}
             </div>
 
             {/* CTA */}
