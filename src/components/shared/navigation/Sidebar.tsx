@@ -49,7 +49,7 @@ function NexusLogo({ collapsed, onToggle }: { collapsed: boolean; onToggle?: () 
     <div
       className={cn(
         'border-nexus-border flex shrink-0 items-center border-b transition-all duration-200',
-        collapsed ? 'h-16 flex-col items-center justify-center gap-2 px-0' : 'h-16 gap-3 px-4'
+        collapsed ? 'h-24 flex-col items-center justify-center gap-2 px-0' : 'h-16 gap-3 px-4'
       )}
     >
       <Link
@@ -118,10 +118,16 @@ function NavGroups({
 
   return (
     <TooltipProvider delay={400}>
-      {/* px-0 when collapsed so items fill full width and icon sits at center */}
-      <div className={cn('flex flex-col gap-1 py-3', collapsed ? 'px-0' : 'px-3')}>
+      <div className={cn('flex flex-col gap-1 py-4', collapsed ? 'px-4' : 'px-3')}>
         {navGroups.map((group, gi) => (
-          <div key={gi} className={cn('flex flex-col gap-0.5', gi > 0 && 'mt-5')}>
+          <div
+            key={gi}
+            className={cn(
+              'flex flex-col',
+              collapsed ? 'gap-[5px]' : 'gap-0.5',
+              gi > 0 && (collapsed ? 'mt-3' : 'mt-5')
+            )}
+          >
             {/* Section label — completely hidden when collapsed */}
             {group.label && !collapsed && (
               <p className="text-nexus-faint px-3 pb-1.5 text-[10px] font-semibold tracking-widest uppercase select-none">
@@ -135,7 +141,8 @@ function NavGroups({
               const count = badgeCount(item)
 
               const sharedClass = cn(
-                'relative flex w-full items-center rounded-xl text-sm font-medium transition-all duration-200',
+                'relative flex w-full items-center text-sm font-medium transition-all duration-200',
+                collapsed ? 'rounded-[14px]' : 'rounded-xl',
                 active
                   ? 'text-white'
                   : 'text-nexus-muted hover:bg-nexus-nav-hover hover:text-nexus-nav-hover-fg'
@@ -154,23 +161,23 @@ function NavGroups({
                 return (
                   <Tooltip key={item.href}>
                     <TooltipTrigger
-                      className={cn(sharedClass, 'h-10 justify-center')}
+                      className={cn(sharedClass, 'h-[46px] justify-center rounded-[14px]')}
                       style={activeStyle}
                     >
                       <Link
                         href={item.href}
                         onClick={onNavigate}
-                        className="absolute inset-0 flex items-center justify-center rounded-xl"
+                        className="absolute inset-0 flex items-center justify-center rounded-[14px]"
                         tabIndex={-1}
                         aria-label={item.label}
                       >
                         {count > 0 ? (
                           <span className="relative">
-                            <Icon className="h-4.5 w-4.5 shrink-0" aria-hidden="true" />
+                            <Icon className="h-5 w-5 shrink-0" aria-hidden="true" />
                             <span className="bg-nexus-danger pointer-events-none absolute -top-1 -right-1 h-2 w-2 rounded-full" />
                           </span>
                         ) : (
-                          <Icon className="h-4.5 w-4.5 shrink-0" aria-hidden="true" />
+                          <Icon className="h-5 w-5 shrink-0" aria-hidden="true" />
                         )}
                       </Link>
                     </TooltipTrigger>
@@ -187,7 +194,7 @@ function NavGroups({
                   className={cn(sharedClass, 'h-10 gap-2.5 px-3')}
                   style={activeStyle}
                 >
-                  <Icon className="h-4.5 w-4.5 shrink-0" aria-hidden="true" />
+                  <Icon className="h-5 w-5 shrink-0" aria-hidden="true" />
                   <span className="flex-1 truncate">{item.label}</span>
                   {count > 0 && (
                     <span
@@ -221,7 +228,10 @@ function UserFooter({ collapsed }: { collapsed: boolean }) {
 
   const avatarEl = (
     <div
-      className="flex h-8 w-8 shrink-0 items-center justify-center overflow-hidden rounded-lg text-xs font-bold text-white"
+      className={cn(
+        'flex shrink-0 items-center justify-center overflow-hidden text-xs font-bold text-white',
+        collapsed ? 'h-10 w-10 rounded-[12px]' : 'h-8 w-8 rounded-lg'
+      )}
       style={{ background: 'var(--nexus-brand-gradient)' }}
       aria-hidden="true"
     >
@@ -237,8 +247,7 @@ function UserFooter({ collapsed }: { collapsed: boolean }) {
   if (collapsed) {
     return (
       <TooltipProvider delay={400}>
-        {/* px-0 + flex justify-center = avatar perfectly centered in 78px */}
-        <div className="border-nexus-border flex justify-center border-t px-0 py-3">
+        <div className="border-nexus-border flex justify-center border-t px-0 py-4">
           <Tooltip>
             <TooltipTrigger className="cursor-default">{avatarEl}</TooltipTrigger>
             <TooltipContent side="right">{fullName}</TooltipContent>
