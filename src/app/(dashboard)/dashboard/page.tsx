@@ -59,10 +59,8 @@ export default async function DashboardPage() {
     eventsResult.status === 'fulfilled' ? (eventsResult.value.data.data ?? []) : []
 
   const activeEnrollments = enrollments.filter((e) => e.status === 'ACTIVE').length
-  const completedLessons = enrollments.reduce(
-    (sum, e) => sum + (e.progress?.completedLessons ?? 0),
-    0
-  )
+  // GET /enrollments list does not include completedLessons — use 0 as fallback
+  const completedLessons = 0
   const firstName = session?.user?.firstName ?? session?.user?.name?.split(' ')[0] ?? 'Usuario'
 
   const rawDayLabel = todayDate.toLocaleDateString('es-ES', {
