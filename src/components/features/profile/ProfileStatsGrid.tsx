@@ -85,8 +85,8 @@ export function ProfileStatsGrid() {
         icon={Flame}
         iconBg="rgba(242,100,60,.14)"
         iconColor="#F2643C"
-        value={streak}
-        label="Racha actual (días)"
+        value={streak > 0 ? `${streak} días` : '0 días'}
+        label="Racha actual"
         loading={streakLoading}
       />
     </div>

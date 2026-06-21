@@ -11,7 +11,6 @@ import {
   Award,
   Megaphone,
   Activity,
-  Clock,
 } from 'lucide-react'
 import { useNotifications } from '@/hooks/queries/notifications'
 import { formatRelativeTime } from '@/lib/utils'
@@ -29,14 +28,14 @@ const TYPE_ICON: Record<NotificationType, LucideIcon> = {
 }
 
 const TYPE_STYLE: Record<NotificationType, { bg: string; color: string }> = {
-  ENROLLMENT: { bg: 'rgba(16,185,129,.12)', color: '#10B981' },
-  NEW_LESSON: { bg: 'rgba(124,108,255,.14)', color: 'var(--nexus-accent)' },
-  FORUM_REPLY: { bg: 'rgba(14,159,217,.14)', color: '#0E9FD9' },
-  ASSIGNMENT_GRADED: { bg: 'rgba(16,185,129,.12)', color: '#10B981' },
-  QUIZ_PASSED: { bg: 'rgba(234,140,12,.12)', color: '#EA8C0C' },
+  ENROLLMENT: { bg: 'var(--nexus-green-bg)', color: 'var(--nexus-green)' },
+  NEW_LESSON: { bg: 'var(--chip-0-bg)', color: 'var(--chip-0-color)' },
+  FORUM_REPLY: { bg: 'var(--chip-2-bg)', color: 'var(--chip-2-color)' },
+  ASSIGNMENT_GRADED: { bg: 'var(--nexus-green-bg)', color: 'var(--nexus-green)' },
+  QUIZ_PASSED: { bg: 'var(--chip-1-bg)', color: 'var(--chip-1-color)' },
   QUIZ_FAILED: { bg: 'rgba(229,72,77,.12)', color: '#E5484D' },
-  COURSE_COMPLETED: { bg: 'rgba(234,140,12,.12)', color: '#EA8C0C' },
-  ANNOUNCEMENT: { bg: 'rgba(124,108,255,.14)', color: '#6D5BF0' },
+  COURSE_COMPLETED: { bg: 'var(--chip-1-bg)', color: 'var(--chip-1-color)' },
+  ANNOUNCEMENT: { bg: 'var(--chip-0-bg)', color: 'var(--chip-0-color)' },
 }
 
 export function ProfileRecentActivity() {
@@ -45,20 +44,23 @@ export function ProfileRecentActivity() {
 
   return (
     <div
-      className="bg-nexus-card border-nexus-border flex flex-col gap-4 rounded-[22px] border p-5"
-      style={{ boxShadow: '0 1px 6px rgba(0,0,0,.04)' }}
+      className="bg-nexus-card border-nexus-border rounded-[18px] border p-[22px]"
+      style={{ boxShadow: 'var(--nexus-card-shadow)' }}
     >
-      <div>
-        <h2 className="text-nexus-text text-[16px] font-extrabold">Actividad reciente</h2>
-        <p className="text-nexus-muted mt-0.5 text-[13px]">Tus últimas acciones en la plataforma</p>
+      <div style={{ fontWeight: 800, fontSize: 16, color: 'var(--nexus-text)', marginBottom: 6 }}>
+        Actividad reciente
       </div>
 
       {isLoading ? (
-        <div className="space-y-3">
+        <div>
           {[...Array(4)].map((_, i) => (
-            <div key={i} className="flex animate-pulse items-center gap-3">
-              <div className="bg-nexus-border h-10 w-10 shrink-0 rounded-[11px]" />
-              <div className="flex-1 space-y-1.5">
+            <div
+              key={i}
+              className="flex animate-pulse items-start gap-[13px]"
+              style={{ padding: '13px 0', borderBottom: '1px solid var(--nexus-border)' }}
+            >
+              <div className="bg-nexus-border h-9 w-9 shrink-0 rounded-[10px]" />
+              <div className="flex-1 space-y-1.5 pt-0.5">
                 <div className="bg-nexus-border h-3.5 w-3/4 rounded" />
                 <div className="bg-nexus-border h-3 w-1/3 rounded" />
               </div>
@@ -68,38 +70,61 @@ export function ProfileRecentActivity() {
       ) : notifications.length === 0 ? (
         <div className="flex flex-col items-center gap-2 py-6">
           <Activity className="text-nexus-faint h-8 w-8" aria-hidden="true" />
-          <p className="text-nexus-muted text-sm">Sin actividad reciente</p>
+          <p className="text-nexus-faint text-sm">Sin actividad reciente</p>
         </div>
       ) : (
-        <ul className="space-y-3">
-          {notifications.map((n) => {
+        <div>
+          {notifications.map((n, idx) => {
             const Icon = TYPE_ICON[n.type]
             const style = TYPE_STYLE[n.type]
+            const isLast = idx === notifications.length - 1
             return (
-              <li key={n.id} className="flex items-start gap-3">
-                <div
-                  className="flex h-10 w-10 shrink-0 items-center justify-center rounded-[11px]"
-                  style={{ background: style.bg }}
+              <div
+                key={n.id}
+                style={{
+                  display: 'flex',
+                  gap: 13,
+                  alignItems: 'flex-start',
+                  padding: '13px 0',
+                  borderBottom: isLast ? 'none' : '1px solid var(--nexus-border)',
+                }}
+              >
+                <span
+                  style={{
+                    width: 36,
+                    height: 36,
+                    borderRadius: 10,
+                    flexShrink: 0,
+                    background: style.bg,
+                    color: style.color,
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                  }}
                 >
                   <Icon
-                    className="h-[18px] w-[18px]"
-                    style={{ color: style.color }}
+                    style={{ width: 17, height: 17, display: 'block', flexShrink: 0 }}
                     aria-hidden="true"
                   />
-                </div>
-                <div className="min-w-0 flex-1 pt-0.5">
-                  <p className="text-nexus-text line-clamp-2 text-[13.5px] leading-snug">
+                </span>
+                <div style={{ flex: 1, minWidth: 0, paddingTop: 1 }}>
+                  <div
+                    style={{
+                      fontSize: 14,
+                      color: 'var(--nexus-text)',
+                      lineHeight: 1.4,
+                    }}
+                  >
                     {n.title}
-                  </p>
-                  <div className="text-nexus-muted mt-1 flex items-center gap-1 text-[12px]">
-                    <Clock className="h-3 w-3 shrink-0" aria-hidden="true" />
+                  </div>
+                  <div style={{ fontSize: 12, color: 'var(--nexus-faint)', marginTop: 2 }}>
                     <time dateTime={n.createdAt}>{formatRelativeTime(n.createdAt)}</time>
                   </div>
                 </div>
-              </li>
+              </div>
             )
           })}
-        </ul>
+        </div>
       )}
     </div>
   )

@@ -1,5 +1,5 @@
 import Link from 'next/link'
-import { Pencil, Settings, ShieldCheck, Calendar, Mail } from 'lucide-react'
+import { Pencil, Settings, Calendar, Mail } from 'lucide-react'
 import type { User, UserRole } from '@/types/models'
 
 const ROLE_LABEL: Record<UserRole, string> = {
@@ -24,97 +24,204 @@ interface ProfileIdentityCardProps {
 }
 
 export function ProfileIdentityCard({ user, initials, fullName }: ProfileIdentityCardProps) {
+  const roleLabel = user.roles.map((r) => ROLE_LABEL[r] ?? r).join(' · ')
+
   return (
     <div
       className="bg-nexus-card border-nexus-border overflow-hidden rounded-[22px] border"
-      style={{ boxShadow: '0 2px 12px rgba(0,0,0,.06)' }}
+      style={{ boxShadow: 'var(--nexus-card-shadow)' }}
     >
       {/* Gradient banner */}
       <div
         className="relative h-32 w-full"
-        style={{ background: 'linear-gradient(125deg,#7C6CFF 0%,#5b4fd4 50%,#4338ca 100%)' }}
+        style={{ background: 'linear-gradient(125deg,#6D5BF0 0%,#8B5BF0 55%,#B05BE0 100%)' }}
       >
+        {/* Decorative circles */}
+        <div
+          className="pointer-events-none absolute rounded-full"
+          style={{
+            right: 170,
+            top: -50,
+            width: 180,
+            height: 180,
+            background: 'rgba(255,255,255,.08)',
+          }}
+        />
+        <div
+          className="pointer-events-none absolute rounded-full"
+          style={{
+            right: -30,
+            bottom: -70,
+            width: 170,
+            height: 170,
+            background: 'rgba(255,255,255,.07)',
+          }}
+        />
+
         {/* Action buttons */}
-        <div className="absolute top-4 right-4 flex gap-2">
+        <div className="absolute top-4 right-4 flex gap-2.5">
           <Link
-            href="/settings"
-            className="flex h-8 w-8 items-center justify-center rounded-[10px] bg-white/20 text-white backdrop-blur-sm transition-colors hover:bg-white/30"
-            aria-label="Editar perfil"
+            href="/profile/edit"
+            className="flex items-center gap-1.5 text-white no-underline transition-colors hover:opacity-90"
+            style={{
+              fontSize: 13.5,
+              fontWeight: 700,
+              background: 'rgba(255,255,255,.16)',
+              backdropFilter: 'blur(6px)',
+              padding: '9px 15px',
+              borderRadius: 11,
+              border: '1px solid rgba(255,255,255,.22)',
+            }}
           >
-            <Pencil className="h-[15px] w-[15px]" aria-hidden="true" />
+            <Pencil
+              style={{ width: 16, height: 16, display: 'block', flexShrink: 0 }}
+              aria-hidden="true"
+            />
+            Editar perfil
           </Link>
           <Link
             href="/settings"
-            className="flex h-8 w-8 items-center justify-center rounded-[10px] bg-white/20 text-white backdrop-blur-sm transition-colors hover:bg-white/30"
+            className="flex items-center justify-center text-white no-underline transition-colors hover:opacity-90"
+            style={{
+              width: 38,
+              height: 38,
+              background: 'rgba(255,255,255,.16)',
+              backdropFilter: 'blur(6px)',
+              borderRadius: 11,
+              border: '1px solid rgba(255,255,255,.22)',
+            }}
             aria-label="Configuración"
           >
-            <Settings className="h-[15px] w-[15px]" aria-hidden="true" />
+            <Settings
+              style={{ width: 19, height: 19, display: 'block', flexShrink: 0 }}
+              aria-hidden="true"
+            />
           </Link>
         </div>
       </div>
 
-      {/* Avatar + info */}
-      <div className="px-6 pb-6">
-        {/* Avatar overlapping banner */}
-        <div className="mb-3" style={{ marginTop: '-54px' }}>
+      {/* Avatar + info row */}
+      <div style={{ padding: '0 30px 28px', display: 'flex', gap: 22, alignItems: 'flex-start' }}>
+        {/* Avatar */}
+        <div style={{ position: 'relative', flexShrink: 0, marginTop: -54 }}>
           <div
-            className="flex h-[108px] w-[108px] items-center justify-center overflow-hidden rounded-[28px] border-4 text-[32px] font-extrabold text-white"
             style={{
-              background: 'linear-gradient(135deg,#7C6CFF,#5b4fd4)',
-              borderColor: 'var(--nexus-card)',
+              width: 108,
+              height: 108,
+              borderRadius: 28,
+              background: 'linear-gradient(135deg,#7C6CFF,#6D5BF0)',
+              color: '#fff',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              fontWeight: 800,
+              fontSize: 38,
+              border: '5px solid var(--nexus-card)',
+              boxShadow: 'var(--nexus-card-shadow)',
+              overflow: 'hidden',
             }}
           >
             {user.avatarUrl ? (
               // eslint-disable-next-line @next/next/no-img-element
-              <img src={user.avatarUrl} alt={fullName} className="h-full w-full object-cover" />
+              <img
+                src={user.avatarUrl}
+                alt={fullName}
+                style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+              />
             ) : (
               initials
             )}
           </div>
         </div>
 
-        {/* Name + verified */}
-        <div className="flex flex-wrap items-center gap-2">
-          <h1 className="text-nexus-text text-[22px] font-extrabold tracking-[-0.02em]">
-            {fullName}
-          </h1>
-          {user.isVerified && (
-            <span
-              className="flex items-center gap-1 rounded-full px-2.5 py-0.5 text-[12px] font-bold"
-              style={{ background: 'rgba(124,108,255,.14)', color: 'var(--nexus-accent)' }}
+        {/* Info */}
+        <div style={{ flex: 1, minWidth: 0, paddingTop: 18 }}>
+          {/* Name + verified badge */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
+            <h1
+              style={{
+                margin: 0,
+                fontWeight: 800,
+                fontSize: 26,
+                letterSpacing: '-0.02em',
+                color: 'var(--nexus-text)',
+              }}
             >
-              <ShieldCheck className="h-3.5 w-3.5" aria-hidden="true" />
-              Verificado
-            </span>
-          )}
-        </div>
-
-        {/* Roles */}
-        {user.roles.length > 0 && (
-          <div className="mt-2 flex flex-wrap gap-1.5">
-            {user.roles.map((role) => (
+              {fullName}
+            </h1>
+            {user.isVerified && (
               <span
-                key={role}
-                className="border-nexus-border text-nexus-muted rounded-full border px-2.5 py-0.5 text-[12px] font-semibold"
+                title="Cuenta verificada"
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 5,
+                  fontSize: 12.5,
+                  fontWeight: 700,
+                  color: 'var(--nexus-accent)',
+                  background: 'var(--chip-0-bg)',
+                  padding: '4px 10px 4px 7px',
+                  borderRadius: 99,
+                }}
               >
-                {ROLE_LABEL[role] ?? role}
+                <span style={{ display: 'flex', color: 'var(--nexus-accent)' }}>
+                  <svg
+                    width="16"
+                    height="16"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="1.5"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    style={{ display: 'block', flexShrink: 0 }}
+                    aria-hidden="true"
+                  >
+                    <path d="M12 2l2.4 1.8 3 .2 .9 2.9 2.4 1.8-.9 2.9.9 2.9-2.4 1.8-.9 2.9-3 .2L12 22l-2.4-1.8-3-.2-.9-2.9L3.3 15.5l.9-2.9-.9-2.9 2.4-1.8.9-2.9 3-.2z" />
+                    <path d="M9 12l2 2 4-4" stroke="white" strokeWidth="1.5" />
+                  </svg>
+                </span>
+                Verificado
               </span>
-            ))}
+            )}
           </div>
-        )}
 
-        {/* Meta */}
-        <div className="mt-4 flex flex-wrap gap-x-5 gap-y-2">
-          <span className="text-nexus-muted flex items-center gap-1.5 text-[13px]">
-            <Mail className="h-3.75 w-3.75 shrink-0" aria-hidden="true" />
-            {user.email}
-          </span>
-          {user.createdAt && (
-            <span className="text-nexus-muted flex items-center gap-1.5 text-[13px]">
-              <Calendar className="h-3.75 w-3.75 shrink-0" aria-hidden="true" />
-              Miembro desde {formatMemberSince(user.createdAt)}
-            </span>
+          {/* Role line */}
+          {roleLabel && (
+            <div style={{ fontSize: 14.5, color: 'var(--nexus-muted)', marginTop: 6 }}>
+              {roleLabel}
+            </div>
           )}
+
+          {/* Meta row */}
+          <div
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: 18,
+              marginTop: 11,
+              fontSize: 13,
+              color: 'var(--nexus-faint)',
+              flexWrap: 'wrap',
+            }}
+          >
+            {user.createdAt && (
+              <span style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                <Calendar
+                  style={{ width: 15, height: 15, display: 'block', flexShrink: 0 }}
+                  aria-hidden="true"
+                />
+                Miembro desde {formatMemberSince(user.createdAt)}
+              </span>
+            )}
+            <span style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+              <Mail
+                style={{ width: 15, height: 15, display: 'block', flexShrink: 0 }}
+                aria-hidden="true"
+              />
+              {user.email}
+            </span>
+          </div>
         </div>
       </div>
     </div>
