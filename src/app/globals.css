@@ -142,6 +142,14 @@
   --nexus-menu-shadow: 0 22px 50px -20px rgba(31, 30, 46, 0.4);
   --nexus-menu-hover: #f4f3fb;
   --nexus-danger-bg: #fdecec;
+  /* ─── Settings subnav + field tokens — light ─────────────────────────────── */
+  --sub-active-bg: #f3f2fe;
+  --sub-active-color: #5b4bdc;
+  --subnav-hover: #f7f7fc;
+  --field-bg: #f8f8fc;
+  --field-border: #e4e4ef;
+  --switch-off: #d6d7e2;
+  --btn-outline-border: #e3e3ee;
   /* ─── shadcn/ui — light mode ──────────────────────────────────────────────── */
   --background: #f5f6fc;
   --foreground: #16172a;
@@ -236,6 +244,14 @@
   --nexus-menu-shadow: 0 22px 50px -24px rgba(0, 0, 0, 0.7);
   --nexus-menu-hover: #1e2039;
   --nexus-danger-bg: rgba(229, 72, 77, 0.12);
+  /* ─── Settings subnav + field tokens — dark ──────────────────────────────── */
+  --sub-active-bg: rgba(124, 108, 255, 0.16);
+  --sub-active-color: #c9c2ff;
+  --subnav-hover: #1e2039;
+  --field-bg: #12131f;
+  --field-border: #2a2c49;
+  --switch-off: #34364f;
+  --btn-outline-border: #33365a;
   /* ─── shadcn/ui — dark mode ───────────────────────────────────────────────── */
   --background: #0e0f1c;
   --foreground: #edeef6;

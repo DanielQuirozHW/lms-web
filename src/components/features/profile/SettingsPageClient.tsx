@@ -1,9 +1,19 @@
 'use client'
 
-import { useRef, useEffect, useState } from 'react'
+import React, { useRef, useEffect, useState } from 'react'
 import { signOut } from 'next-auth/react'
 import { useTheme } from 'next-themes'
-import { User, Lock, Bell, Sliders, Shield, TriangleAlert, Monitor, LogOut } from 'lucide-react'
+import {
+  User,
+  Lock,
+  Bell,
+  Sliders,
+  Shield,
+  TriangleAlert,
+  Monitor,
+  LogOut,
+  Download,
+} from 'lucide-react'
 import type { LucideIcon } from 'lucide-react'
 import { ProfileForm } from '@/components/features/profile/ProfileForm'
 import { PasswordForm } from '@/components/features/profile/PasswordForm'
@@ -78,7 +88,7 @@ function Toggle({
       onClick={() => onChange(!checked)}
       className="relative inline-flex h-[22px] w-[40px] shrink-0 cursor-pointer items-center rounded-full transition-colors duration-200 focus-visible:ring-2 focus-visible:ring-offset-1 focus-visible:outline-none"
       style={{
-        background: checked ? 'linear-gradient(135deg,#7C6CFF,#5b4fd4)' : 'var(--nexus-border)',
+        background: checked ? 'linear-gradient(135deg,#7C6CFF,#5b4fd4)' : 'var(--switch-off)',
       }}
     >
       <span
@@ -190,6 +200,8 @@ export function SettingsPageClient({ user }: SettingsPageClientProps) {
   )
 
   // ─── Privacy toggles (UI-only) ───────────────────────────────────────────────
+  const [twoFaEnabled, setTwoFaEnabled] = useState(false)
+
   const [privacy, setPrivacy] = useState({
     publicProfile: true,
     shareProgress: true,
@@ -233,22 +245,45 @@ export function SettingsPageClient({ user }: SettingsPageClientProps) {
                   key={id}
                   type="button"
                   onClick={() => scrollToSection(id)}
-                  className="flex w-full items-center gap-3 rounded-[11px] px-[14px] py-[11px] text-left text-[14px] font-semibold transition-colors"
+                  className="relative flex w-full items-center gap-3 rounded-[11px] px-[14px] py-[11px] text-left text-[14px] font-semibold transition-colors"
                   style={{
                     background: isActive
                       ? danger
                         ? 'rgba(229,72,77,.10)'
-                        : 'var(--nexus-accent-muted)'
+                        : 'var(--sub-active-bg)'
                       : 'transparent',
                     color: isActive
                       ? danger
                         ? '#E5484D'
-                        : 'var(--nexus-accent)'
+                        : 'var(--sub-active-color)'
                       : danger
                         ? '#E5484D'
                         : 'var(--nexus-text)',
                   }}
+                  onMouseEnter={(e) => {
+                    if (!isActive)
+                      e.currentTarget.style.background = danger
+                        ? 'rgba(229,72,77,.06)'
+                        : 'var(--subnav-hover)'
+                  }}
+                  onMouseLeave={(e) => {
+                    if (!isActive) e.currentTarget.style.background = 'transparent'
+                  }}
                 >
+                  {isActive && !danger && (
+                    <span
+                      aria-hidden="true"
+                      className="absolute"
+                      style={{
+                        left: 0,
+                        top: '15%',
+                        bottom: '15%',
+                        width: 3,
+                        borderRadius: '0 2px 2px 0',
+                        background: 'var(--sub-active-color)',
+                      }}
+                    />
+                  )}
                   <Icon className="h-[17px] w-[17px] shrink-0" aria-hidden="true" />
                   {label}
                 </button>
@@ -278,6 +313,25 @@ export function SettingsPageClient({ user }: SettingsPageClientProps) {
           >
             <div className="space-y-8">
               <PasswordForm />
+
+              {/* 2FA toggle (UI-only) */}
+              <div className="border-nexus-border border-t pt-6">
+                <div className="flex items-center justify-between gap-4">
+                  <div>
+                    <p className="text-nexus-text text-[13.5px] font-semibold">
+                      Autenticación en dos factores
+                    </p>
+                    <p className="text-nexus-muted text-[12.5px]">
+                      Añade una capa extra de seguridad a tu cuenta
+                    </p>
+                  </div>
+                  <Toggle
+                    checked={twoFaEnabled}
+                    onChange={setTwoFaEnabled}
+                    label="Autenticación en dos factores"
+                  />
+                </div>
+              </div>
 
               {/* Sessions stub */}
               <div className="border-nexus-border border-t pt-6">
@@ -367,30 +421,212 @@ export function SettingsPageClient({ user }: SettingsPageClientProps) {
               {/* Theme */}
               <div>
                 <p className="text-nexus-text mb-3 text-[14px] font-bold">Tema</p>
-                <div className="flex gap-2">
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 12 }}>
                   {(
                     [
-                      { value: 'light', label: 'Claro' },
-                      { value: 'dark', label: 'Oscuro' },
-                      { value: 'system', label: 'Sistema' },
-                    ] as const
-                  ).map(({ value, label }) => {
+                      {
+                        value: 'light',
+                        label: 'Claro',
+                        preview: (
+                          <div
+                            style={{
+                              height: 52,
+                              borderRadius: 8,
+                              background: '#EDEEF6',
+                              padding: '9px 11px',
+                              display: 'flex',
+                              flexDirection: 'column',
+                              gap: 5,
+                            }}
+                          >
+                            <div
+                              style={{
+                                height: 8,
+                                width: '55%',
+                                borderRadius: 3,
+                                background: 'rgba(22,23,42,.25)',
+                              }}
+                            />
+                            <div
+                              style={{
+                                height: 6,
+                                width: '38%',
+                                borderRadius: 2,
+                                background: 'rgba(109,91,240,.45)',
+                              }}
+                            />
+                            <div
+                              style={{
+                                height: 5,
+                                width: '68%',
+                                borderRadius: 2,
+                                background: 'rgba(22,23,42,.10)',
+                              }}
+                            />
+                          </div>
+                        ),
+                      },
+                      {
+                        value: 'dark',
+                        label: 'Oscuro',
+                        preview: (
+                          <div
+                            style={{
+                              height: 52,
+                              borderRadius: 8,
+                              background: '#0E0F1C',
+                              padding: '9px 11px',
+                              display: 'flex',
+                              flexDirection: 'column',
+                              gap: 5,
+                            }}
+                          >
+                            <div
+                              style={{
+                                height: 8,
+                                width: '55%',
+                                borderRadius: 3,
+                                background: 'rgba(237,238,246,.25)',
+                              }}
+                            />
+                            <div
+                              style={{
+                                height: 6,
+                                width: '38%',
+                                borderRadius: 2,
+                                background: 'rgba(139,124,255,.45)',
+                              }}
+                            />
+                            <div
+                              style={{
+                                height: 5,
+                                width: '68%',
+                                borderRadius: 2,
+                                background: 'rgba(237,238,246,.10)',
+                              }}
+                            />
+                          </div>
+                        ),
+                      },
+                      {
+                        value: 'system',
+                        label: 'Sistema',
+                        preview: (
+                          <div
+                            style={{
+                              height: 52,
+                              borderRadius: 8,
+                              overflow: 'hidden',
+                              display: 'flex',
+                            }}
+                          >
+                            <div
+                              style={{
+                                flex: 1,
+                                background: '#EDEEF6',
+                                padding: '9px 8px',
+                                display: 'flex',
+                                flexDirection: 'column',
+                                gap: 5,
+                              }}
+                            >
+                              <div
+                                style={{
+                                  height: 7,
+                                  borderRadius: 2,
+                                  background: 'rgba(22,23,42,.2)',
+                                }}
+                              />
+                              <div
+                                style={{
+                                  height: 5,
+                                  borderRadius: 2,
+                                  background: 'rgba(109,91,240,.4)',
+                                }}
+                              />
+                              <div
+                                style={{
+                                  height: 4,
+                                  borderRadius: 2,
+                                  background: 'rgba(22,23,42,.1)',
+                                }}
+                              />
+                            </div>
+                            <div
+                              style={{
+                                flex: 1,
+                                background: '#0E0F1C',
+                                padding: '9px 8px',
+                                display: 'flex',
+                                flexDirection: 'column',
+                                gap: 5,
+                              }}
+                            >
+                              <div
+                                style={{
+                                  height: 7,
+                                  borderRadius: 2,
+                                  background: 'rgba(237,238,246,.2)',
+                                }}
+                              />
+                              <div
+                                style={{
+                                  height: 5,
+                                  borderRadius: 2,
+                                  background: 'rgba(139,124,255,.4)',
+                                }}
+                              />
+                              <div
+                                style={{
+                                  height: 4,
+                                  borderRadius: 2,
+                                  background: 'rgba(237,238,246,.1)',
+                                }}
+                              />
+                            </div>
+                          </div>
+                        ),
+                      },
+                    ] as { value: string; label: string; preview: React.ReactNode }[]
+                  ).map(({ value, label, preview }) => {
                     const isActive = theme === value
                     return (
                       <button
                         key={value}
                         type="button"
                         onClick={() => setTheme(value)}
-                        className="rounded-[11px] border px-4 py-2 text-[13.5px] font-semibold transition-colors"
+                        className="flex flex-col gap-2.5 rounded-[14px] p-3 text-left transition-all duration-150"
                         style={{
-                          background: isActive
-                            ? 'linear-gradient(135deg,#7C6CFF,#5b4fd4)'
-                            : 'var(--nexus-bg)',
-                          color: isActive ? '#fff' : 'var(--nexus-text)',
-                          borderColor: isActive ? 'transparent' : 'var(--nexus-border)',
+                          border: isActive
+                            ? '2px solid var(--nexus-accent)'
+                            : '2px solid var(--nexus-border)',
+                          background: isActive ? 'var(--nexus-accent-muted)' : 'var(--nexus-bg)',
                         }}
                       >
-                        {label}
+                        {preview}
+                        <div className="flex items-center justify-between">
+                          <span
+                            style={{
+                              fontSize: 13.5,
+                              fontWeight: 600,
+                              color: isActive ? 'var(--nexus-accent)' : 'var(--nexus-text)',
+                            }}
+                          >
+                            {label}
+                          </span>
+                          {isActive && (
+                            <span
+                              aria-hidden="true"
+                              style={{
+                                width: 8,
+                                height: 8,
+                                borderRadius: 99,
+                                background: 'var(--nexus-accent)',
+                                flexShrink: 0,
+                              }}
+                            />
+                          )}
+                        </div>
                       </button>
                     )
                   })}
@@ -452,6 +688,30 @@ export function SettingsPageClient({ user }: SettingsPageClientProps) {
                   />
                 </div>
               ))}
+
+              {/* Export data placeholder */}
+              <div className="border-nexus-border mt-4 border-t pt-4">
+                <p className="text-nexus-text mb-1 text-[13.5px] font-semibold">
+                  Exportar mis datos
+                </p>
+                <p className="text-nexus-muted mb-3 text-[12.5px]">
+                  Descarga una copia de toda tu información almacenada en la plataforma
+                </p>
+                <button
+                  type="button"
+                  disabled
+                  className="flex cursor-not-allowed items-center gap-2 rounded-[11px] border px-4 py-2 text-[13.5px] font-semibold opacity-50"
+                  style={{
+                    borderColor: 'var(--btn-outline-border)',
+                    color: 'var(--nexus-text)',
+                    background: 'transparent',
+                  }}
+                >
+                  <Download className="h-4 w-4" aria-hidden="true" />
+                  Solicitar exportación
+                </button>
+                <p className="text-nexus-faint mt-1.5 text-[12px]">Disponible próximamente</p>
+              </div>
             </div>
           </Section>
 
