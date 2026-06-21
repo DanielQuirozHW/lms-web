@@ -1,11 +1,10 @@
 'use client'
 
-import { useState, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
-import { Camera, Loader2 } from 'lucide-react'
+import { Camera, Loader2, Mail, Phone, Cake, MapPin } from 'lucide-react'
 import { toast } from 'sonner'
 import {
   Form,
@@ -17,13 +16,17 @@ import {
 } from '@/components/ui/form'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { useUpdateProfileMutation, useUploadAvatarMutation } from '@/hooks/mutations/users'
 import type { User } from '@/types/models'
+import { useRef, useState } from 'react'
 
 const schema = z.object({
   firstName: z.string().min(2, 'El nombre debe tener al menos 2 caracteres'),
   lastName: z.string().min(2, 'El apellido debe tener al menos 2 caracteres'),
+  phone: z.string().max(20).optional().or(z.literal('')),
+  birthDate: z.string().optional().or(z.literal('')),
+  location: z.string().max(100).optional().or(z.literal('')),
+  bio: z.string().max(200, 'Máximo 200 caracteres').optional().or(z.literal('')),
 })
 
 type FormValues = z.infer<typeof schema>
@@ -31,6 +34,12 @@ type FormValues = z.infer<typeof schema>
 interface ProfileFormProps {
   user: User
 }
+
+const FIELD_STYLE = {
+  background: 'var(--field-bg)',
+  borderColor: 'var(--field-border)',
+  color: 'var(--nexus-text)',
+} as const
 
 export function ProfileForm({ user }: ProfileFormProps) {
   const router = useRouter()
@@ -46,6 +55,10 @@ export function ProfileForm({ user }: ProfileFormProps) {
     defaultValues: {
       firstName: user.firstName,
       lastName: user.lastName,
+      phone: '',
+      birthDate: '',
+      location: '',
+      bio: '',
     },
   })
 
@@ -93,24 +106,26 @@ export function ProfileForm({ user }: ProfileFormProps) {
       },
     })
 
-    // Reset so the same file can be re-selected if needed
     e.target.value = ''
   }
 
   function onSubmit(values: FormValues) {
-    updateProfile(values, {
-      onSuccess: () => {
-        toast.success('Perfil actualizado')
-        form.reset(values) // clear dirty state
-        router.refresh()
-      },
-      onError: () => toast.error('No se pudo actualizar el perfil'),
-    })
+    updateProfile(
+      { firstName: values.firstName, lastName: values.lastName },
+      {
+        onSuccess: () => {
+          toast.success('Perfil actualizado')
+          form.reset(values)
+          router.refresh()
+        },
+        onError: () => toast.error('No se pudo actualizar el perfil'),
+      }
+    )
   }
 
   return (
     <div className="space-y-6">
-      {/* Avatar editor */}
+      {/* Avatar */}
       <div className="flex items-center gap-4">
         <button
           type="button"
@@ -119,22 +134,38 @@ export function ProfileForm({ user }: ProfileFormProps) {
           aria-label="Cambiar foto de perfil"
           className="group relative cursor-pointer focus-visible:outline-none"
         >
-          <Avatar className="size-20">
+          <div
+            style={{
+              width: 74,
+              height: 74,
+              borderRadius: 20,
+              overflow: 'hidden',
+              background: 'var(--nexus-accent-muted)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              fontSize: 26,
+              fontWeight: 800,
+              color: 'var(--nexus-accent)',
+            }}
+          >
             {isUploading ? (
-              <div className="bg-nexus-card flex size-full items-center justify-center rounded-full">
-                <Loader2 className="text-nexus-accent h-6 w-6 animate-spin" aria-hidden="true" />
-              </div>
+              <Loader2 className="text-nexus-accent h-6 w-6 animate-spin" aria-hidden="true" />
+            ) : avatarUrl ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img
+                src={avatarUrl}
+                alt="Foto de perfil"
+                style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+              />
             ) : (
-              <>
-                <AvatarImage src={avatarUrl ?? undefined} alt="Foto de perfil" />
-                <AvatarFallback className="bg-nexus-accent/20 text-nexus-accent text-xl">
-                  {initials}
-                </AvatarFallback>
-              </>
+              initials
             )}
-          </Avatar>
-          {/* Hover overlay */}
-          <div className="absolute inset-0 flex items-center justify-center rounded-full bg-black/50 opacity-0 transition-opacity group-hover:opacity-100">
+          </div>
+          <div
+            className="absolute inset-0 flex items-center justify-center opacity-0 transition-opacity group-hover:opacity-100"
+            style={{ background: 'rgba(0,0,0,.45)', borderRadius: 20 }}
+          >
             <Camera className="h-5 w-5 text-white" aria-hidden="true" />
           </div>
         </button>
@@ -144,7 +175,6 @@ export function ProfileForm({ user }: ProfileFormProps) {
         </div>
       </div>
 
-      {/* Hidden file input */}
       <input
         ref={fileInputRef}
         type="file"
@@ -154,9 +184,10 @@ export function ProfileForm({ user }: ProfileFormProps) {
         aria-hidden="true"
       />
 
-      {/* Name fields */}
+      {/* Form fields */}
       <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4" noValidate>
+          {/* Nombre + Apellido */}
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <FormField
               control={form.control}
@@ -167,7 +198,8 @@ export function ProfileForm({ user }: ProfileFormProps) {
                   <FormControl>
                     <Input
                       autoComplete="given-name"
-                      className="border-nexus-border bg-nexus-bg text-nexus-text focus-visible:ring-nexus-accent/50"
+                      className="focus-visible:ring-nexus-accent/50 h-12 rounded-[12px]"
+                      style={FIELD_STYLE}
                       {...field}
                     />
                   </FormControl>
@@ -184,7 +216,8 @@ export function ProfileForm({ user }: ProfileFormProps) {
                   <FormControl>
                     <Input
                       autoComplete="family-name"
-                      className="border-nexus-border bg-nexus-bg text-nexus-text focus-visible:ring-nexus-accent/50"
+                      className="focus-visible:ring-nexus-accent/50 h-12 rounded-[12px]"
+                      style={FIELD_STYLE}
                       {...field}
                     />
                   </FormControl>
@@ -194,7 +227,142 @@ export function ProfileForm({ user }: ProfileFormProps) {
             />
           </div>
 
-          <div className="flex justify-end">
+          {/* Email — read-only */}
+          <div>
+            <p className="text-nexus-text mb-1.5 text-sm font-medium">Email</p>
+            <div
+              className="relative flex h-12 items-center rounded-[12px] border"
+              style={{
+                background: 'var(--field-bg)',
+                borderColor: 'var(--field-border)',
+                opacity: 0.7,
+              }}
+            >
+              <Mail
+                aria-hidden="true"
+                className="text-nexus-faint absolute shrink-0"
+                style={{ left: 14, width: 16, height: 16 }}
+              />
+              <span
+                className="text-nexus-muted pl-10 text-sm"
+                style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}
+              >
+                {user.email}
+              </span>
+            </div>
+          </div>
+
+          {/* Teléfono + Fecha de nacimiento */}
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+            <FormField
+              control={form.control}
+              name="phone"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel className="text-nexus-text font-medium">Teléfono</FormLabel>
+                  <FormControl>
+                    <div className="relative">
+                      <Phone
+                        aria-hidden="true"
+                        className="text-nexus-faint absolute top-1/2 shrink-0 -translate-y-1/2"
+                        style={{ left: 14, width: 16, height: 16 }}
+                      />
+                      <Input
+                        type="tel"
+                        autoComplete="tel"
+                        placeholder="+52 555 123 4567"
+                        className="focus-visible:ring-nexus-accent/50 h-12 rounded-[12px] pl-10"
+                        style={FIELD_STYLE}
+                        {...field}
+                      />
+                    </div>
+                  </FormControl>
+                  <FormMessage className="text-xs" />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="birthDate"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel className="text-nexus-text font-medium">Fecha de nacimiento</FormLabel>
+                  <FormControl>
+                    <div className="relative">
+                      <Cake
+                        aria-hidden="true"
+                        className="text-nexus-faint absolute top-1/2 shrink-0 -translate-y-1/2"
+                        style={{ left: 14, width: 16, height: 16 }}
+                      />
+                      <Input
+                        type="date"
+                        className="focus-visible:ring-nexus-accent/50 h-12 rounded-[12px] pl-10"
+                        style={FIELD_STYLE}
+                        {...field}
+                      />
+                    </div>
+                  </FormControl>
+                  <FormMessage className="text-xs" />
+                </FormItem>
+              )}
+            />
+          </div>
+
+          {/* Ubicación */}
+          <FormField
+            control={form.control}
+            name="location"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel className="text-nexus-text font-medium">Ubicación</FormLabel>
+                <FormControl>
+                  <div className="relative">
+                    <MapPin
+                      aria-hidden="true"
+                      className="text-nexus-faint absolute top-1/2 shrink-0 -translate-y-1/2"
+                      style={{ left: 14, width: 16, height: 16 }}
+                    />
+                    <Input
+                      type="text"
+                      autoComplete="address-level2"
+                      placeholder="Ciudad, País"
+                      className="focus-visible:ring-nexus-accent/50 h-12 rounded-[12px] pl-10"
+                      style={FIELD_STYLE}
+                      {...field}
+                    />
+                  </div>
+                </FormControl>
+                <FormMessage className="text-xs" />
+              </FormItem>
+            )}
+          />
+
+          {/* Biografía */}
+          <FormField
+            control={form.control}
+            name="bio"
+            render={({ field }) => (
+              <FormItem>
+                <div className="flex items-center justify-between">
+                  <FormLabel className="text-nexus-text font-medium">Biografía</FormLabel>
+                  <span className="text-nexus-faint text-xs">{(field.value ?? '').length}/200</span>
+                </div>
+                <FormControl>
+                  <textarea
+                    rows={3}
+                    maxLength={200}
+                    placeholder="Cuéntanos un poco sobre ti..."
+                    className="focus-visible:ring-nexus-accent/50 w-full resize-none rounded-[12px] border px-4 py-3 text-sm transition-colors outline-none focus-visible:ring-2"
+                    style={FIELD_STYLE}
+                    {...field}
+                  />
+                </FormControl>
+                <FormMessage className="text-xs" />
+              </FormItem>
+            )}
+          />
+
+          <div className="flex justify-end pt-1">
             <Button
               type="submit"
               disabled={!form.formState.isDirty || isSaving}

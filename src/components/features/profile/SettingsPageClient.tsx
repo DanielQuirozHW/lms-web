@@ -165,10 +165,14 @@ export function SettingsPageClient({ user }: SettingsPageClientProps) {
   const { theme, setTheme } = useTheme()
   const [activeSection, setActiveSection] = useState('cuenta')
   const sectionsRef = useRef<HTMLDivElement>(null)
+  const scrollingRef = useRef(false)
+  const scrollTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
-  // Track active section on scroll
+  // Track active section on scroll — disabled for 800ms after a click to prevent
+  // the scroll observer from fighting the programmatic smooth scroll.
   useEffect(() => {
     function onScroll() {
+      if (scrollingRef.current) return
       const ids = NAV_ITEMS.map((i) => i.id)
       for (let i = ids.length - 1; i >= 0; i--) {
         const el = document.getElementById(ids[i])
@@ -188,6 +192,11 @@ export function SettingsPageClient({ user }: SettingsPageClientProps) {
 
   function scrollToSection(id: string) {
     setActiveSection(id)
+    scrollingRef.current = true
+    if (scrollTimerRef.current) clearTimeout(scrollTimerRef.current)
+    scrollTimerRef.current = setTimeout(() => {
+      scrollingRef.current = false
+    }, 800)
     document.getElementById(id)?.scrollIntoView({ behavior: 'smooth' })
   }
 
