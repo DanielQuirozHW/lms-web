@@ -1,12 +1,7 @@
-'use client'
-
-import Image from 'next/image'
-import { Star, Users, BookOpen } from 'lucide-react'
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
-import { cn } from '@/lib/utils'
-import { formatPrice } from '@/lib/utils'
-import type { CourseDetail, CourseLevel } from '@/types/models'
-import type { RatingSummary } from '@/types/models'
+import { Star, BookOpen, Users, Clock, Award } from 'lucide-react'
+import type { CourseDetail, CourseLevel, RatingSummary } from '@/types/models'
+import { formatDuration, formatPrice } from '@/lib/utils'
+import { isMarketplace } from '@/lib/config'
 
 const LEVEL_LABELS: Record<CourseLevel, string> = {
   BEGINNER: 'Principiante',
@@ -34,182 +29,164 @@ interface CourseHeroProps {
   rating: RatingSummary | null
 }
 
-function StarRating({ summary }: { summary: RatingSummary }) {
-  // Normalise to 0–5
+function StarRow({ summary }: { summary: RatingSummary }) {
   const score5 =
     summary.scale === 'STARS_5'
       ? summary.averageScore
       : summary.scale === 'NUMERIC_10'
         ? summary.averageScore / 2
         : summary.averageScore / 20
-
   const filled = Math.round(score5)
 
   return (
-    <div className="flex items-center gap-1.5">
-      <div className="flex" aria-hidden="true">
+    <span className="flex items-center gap-2">
+      <span className="flex gap-0.5" aria-hidden="true">
         {[1, 2, 3, 4, 5].map((i) => (
           <Star
             key={i}
-            className={cn(
-              'h-4 w-4',
-              i <= filled ? 'fill-amber-400 text-amber-400' : 'fill-none text-amber-400/40'
-            )}
+            className={`h-4 w-4 ${i <= filled ? 'fill-amber-400 text-amber-400' : 'fill-white/20 text-white/20'}`}
           />
         ))}
-      </div>
-      <span className="text-sm font-semibold text-white/90">{summary.averageScore.toFixed(1)}</span>
-      <span className="text-xs text-white/60">({summary.totalRatings})</span>
-    </div>
-  )
-}
-
-function CourseInfo({
-  course,
-  rating,
-  dark,
-}: {
-  course: CourseDetailFull
-  rating: RatingSummary | null
-  dark?: boolean
-}) {
-  const textPrimary = dark ? 'text-white' : 'text-nexus-text'
-  const textMuted = dark ? 'text-white/70' : 'text-nexus-muted'
-  const badgeBg = dark ? 'bg-nexus-accent/80 text-white' : 'bg-nexus-accent/15 text-nexus-accent'
-
-  const instructorName = course.instructor
-    ? `${course.instructor.firstName} ${course.instructor.lastName}`
-    : null
-  const initials = course.instructor
-    ? `${course.instructor.firstName[0]}${course.instructor.lastName[0]}`.toUpperCase()
-    : '?'
-
-  return (
-    <div className="space-y-3">
-      {/* Category + level row */}
-      {(course.category || course.level) && (
-        <div className="flex flex-wrap items-center gap-2">
-          {course.category && (
-            <span
-              className={cn(
-                'inline-block rounded-full px-2.5 py-0.5 text-xs font-semibold',
-                badgeBg
-              )}
-            >
-              {course.category.name}
-            </span>
-          )}
-          {course.level && (
-            <span
-              className={cn(
-                'text-xs font-semibold tracking-wide uppercase',
-                dark ? 'text-white/65' : 'text-nexus-muted'
-              )}
-            >
-              Nivel {LEVEL_LABELS[course.level]}
-            </span>
-          )}
-        </div>
-      )}
-
-      {/* Title */}
-      <h1 className={cn('text-2xl leading-tight font-bold md:text-3xl', textPrimary)}>
-        {course.title}
-      </h1>
-
-      {/* Instructor */}
-      {instructorName && (
-        <div className="flex items-center gap-2">
-          <Avatar className="h-7 w-7">
-            <AvatarImage src={course.instructor?.avatarUrl ?? undefined} alt={instructorName} />
-            <AvatarFallback className="bg-nexus-accent/20 text-nexus-accent text-xs">
-              {initials}
-            </AvatarFallback>
-          </Avatar>
-          <span className={cn('text-sm', textMuted)}>{instructorName}</span>
-        </div>
-      )}
-
-      {/* Rating */}
-      {rating &&
-        (dark ? (
-          <StarRating summary={rating} />
-        ) : (
-          <div className="flex items-center gap-1.5">
-            <div className="flex">
-              {[1, 2, 3, 4, 5].map((i) => {
-                const filled = Math.round(rating.averageScore)
-                return (
-                  <Star
-                    key={i}
-                    className={cn(
-                      'h-4 w-4',
-                      i <= filled ? 'fill-amber-400 text-amber-400' : 'fill-none text-amber-400/40'
-                    )}
-                    aria-hidden="true"
-                  />
-                )
-              })}
-            </div>
-            <span className="text-nexus-text text-sm font-semibold">
-              {rating.averageScore.toFixed(1)}
-            </span>
-            <span className="text-nexus-muted text-xs">({rating.totalRatings})</span>
-          </div>
-        ))}
-
-      {/* Stats row */}
-      <div className={cn('flex items-center gap-4 text-xs', textMuted)}>
-        <span className="flex items-center gap-1">
-          <BookOpen className="h-3.5 w-3.5" aria-hidden="true" />
-          {course.lessonsCount} lecciones
-        </span>
-        <span className="flex items-center gap-1">
-          <Users className="h-3.5 w-3.5" aria-hidden="true" />
-          {course.enrollmentsCount} estudiantes
-        </span>
-      </div>
-
-      {/* Price */}
-      <p
-        className={cn(
-          'text-xl font-bold',
-          course.price === null ? 'text-nexus-success' : dark ? 'text-white' : 'text-nexus-text'
-        )}
-      >
-        {course.price === null ? 'Gratis' : formatPrice(course.price)}
-      </p>
-    </div>
+      </span>
+      <span className="text-[15px] leading-none font-extrabold">
+        {summary.averageScore.toFixed(1)}
+      </span>
+      <span className="text-[13.5px] opacity-80">({summary.totalRatings} reseñas)</span>
+    </span>
   )
 }
 
 export function CourseHero({ course, rating }: CourseHeroProps) {
+  const isFree = course.enrollmentType === 'FREE' || course.price === null || course.price === 0
+  const showPriceRow = rating != null || isMarketplace
+
   return (
-    <div>
-      {/* Cover image with gradient overlay */}
-      <div className="bg-nexus-card relative h-48 w-full overflow-hidden md:h-64">
-        {course.coverUrl && (
-          <Image
-            src={course.coverUrl}
-            alt={course.title}
-            fill
-            sizes="100vw"
-            className="object-cover"
-            priority
-          />
+    <div
+      className="relative overflow-hidden rounded-[22px] px-8 py-8 text-white md:px-[34px]"
+      style={{
+        background: 'linear-gradient(125deg,#6D5BF0 0%,#8B5BF0 55%,#B05BE0 100%)',
+        boxShadow: 'rgba(109,91,240,.6) 0px 22px 44px -22px',
+      }}
+    >
+      {/* Decorative circles */}
+      <div
+        aria-hidden="true"
+        style={{
+          position: 'absolute',
+          right: 170,
+          top: -70,
+          width: 260,
+          height: 260,
+          borderRadius: '50%',
+          background: 'rgba(255,255,255,.07)',
+          pointerEvents: 'none',
+        }}
+      />
+      <div
+        aria-hidden="true"
+        style={{
+          position: 'absolute',
+          right: -50,
+          bottom: -110,
+          width: 240,
+          height: 240,
+          borderRadius: '50%',
+          background: 'rgba(255,255,255,.06)',
+          pointerEvents: 'none',
+        }}
+      />
+
+      {/* Content */}
+      <div className="relative max-w-2xl">
+        {/* Category + level row */}
+        {(course.category || course.level) && (
+          <div className="mb-3.5 flex flex-wrap items-center gap-2.5">
+            {course.category && (
+              <span
+                className="rounded-full px-[11px] py-[5px] text-[12px] font-bold tracking-[.1em] uppercase"
+                style={{ background: 'rgba(255,255,255,.18)' }}
+              >
+                {course.category.name}
+              </span>
+            )}
+            {course.level && (
+              <span className="text-[12px] font-semibold tracking-[.08em] uppercase opacity-85">
+                Nivel {LEVEL_LABELS[course.level]}
+              </span>
+            )}
+          </div>
         )}
-        {/* Gradient: stronger at bottom where text lives */}
-        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-transparent" />
 
-        {/* Desktop: info over gradient */}
-        <div className="absolute right-0 bottom-0 left-0 hidden p-6 md:block">
-          <CourseInfo course={course} rating={rating} dark />
+        {/* Title */}
+        <h1
+          className="mb-3.5 leading-[1.05] font-extrabold tracking-[-0.03em]"
+          style={{ fontSize: 'clamp(24px, 4vw, 38px)' }}
+        >
+          {course.title}
+        </h1>
+
+        {/* Rating + price row */}
+        {showPriceRow && (
+          <div className="mb-4 flex flex-wrap items-center gap-3">
+            {rating && <StarRow summary={rating} />}
+            {rating && isMarketplace && (
+              <span
+                className="h-1 w-1 rounded-full"
+                style={{ background: 'rgba(255,255,255,.5)' }}
+                aria-hidden="true"
+              />
+            )}
+            {isMarketplace &&
+              (isFree ? (
+                <span
+                  className="rounded-full bg-white px-3 py-[5px] text-[13px] font-extrabold tracking-[.04em] uppercase"
+                  style={{ color: '#0E9F6E' }}
+                >
+                  Gratis
+                </span>
+              ) : (
+                <span className="text-base font-extrabold">{formatPrice(course.price ?? 0)}</span>
+              ))}
+          </div>
+        )}
+
+        {/* Meta chips */}
+        <div className="flex flex-wrap gap-2.5">
+          {course.lessonsCount > 0 && (
+            <span
+              className="flex items-center gap-[7px] rounded-full px-[13px] py-[7px] text-[13.5px] font-semibold"
+              style={{ background: 'rgba(255,255,255,.16)' }}
+            >
+              <BookOpen className="h-[15px] w-[15px]" aria-hidden="true" />
+              {course.lessonsCount} lecciones
+            </span>
+          )}
+          {course.enrollmentsCount > 0 && (
+            <span
+              className="flex items-center gap-[7px] rounded-full px-[13px] py-[7px] text-[13.5px] font-semibold"
+              style={{ background: 'rgba(255,255,255,.16)' }}
+            >
+              <Users className="h-[15px] w-[15px]" aria-hidden="true" />
+              {course.enrollmentsCount} estudiantes
+            </span>
+          )}
+          {course.totalDuration > 0 && (
+            <span
+              className="flex items-center gap-[7px] rounded-full px-[13px] py-[7px] text-[13.5px] font-semibold"
+              style={{ background: 'rgba(255,255,255,.16)' }}
+            >
+              <Clock className="h-[15px] w-[15px]" aria-hidden="true" />
+              {formatDuration(course.totalDuration)}
+            </span>
+          )}
+          <span
+            className="flex items-center gap-[7px] rounded-full px-[13px] py-[7px] text-[13.5px] font-semibold"
+            style={{ background: 'rgba(255,255,255,.16)' }}
+          >
+            <Award className="h-[15px] w-[15px]" aria-hidden="true" />
+            Certificado
+          </span>
         </div>
-      </div>
-
-      {/* Mobile: info below image */}
-      <div className="p-4 md:hidden">
-        <CourseInfo course={course} rating={rating} />
       </div>
     </div>
   )

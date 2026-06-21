@@ -48,8 +48,8 @@ function NexusLogo({ collapsed, onToggle }: { collapsed: boolean; onToggle?: () 
   return (
     <div
       className={cn(
-        'border-nexus-border flex shrink-0 items-center border-b transition-all duration-200',
-        collapsed ? 'h-24 flex-col items-center justify-center gap-2 px-0' : 'h-16 gap-3 px-4'
+        'border-nexus-border flex h-24 shrink-0 items-center border-b transition-[padding,gap] duration-200',
+        collapsed ? 'flex-col justify-center gap-2 px-0' : 'gap-3 px-4'
       )}
     >
       <Link
@@ -130,7 +130,7 @@ function NavGroups({
           >
             {/* Section label — completely hidden when collapsed */}
             {group.label && !collapsed && (
-              <p className="text-nexus-faint px-3 pb-1.5 text-[10px] font-semibold tracking-widest uppercase select-none">
+              <p className="text-nexus-faint px-[14px] pb-1.5 text-[11px] font-bold tracking-[.13em] uppercase select-none">
                 {group.label}
               </p>
             )}
@@ -141,7 +141,8 @@ function NavGroups({
               const count = badgeCount(item)
 
               const sharedClass = cn(
-                'relative flex w-full items-center text-sm font-medium transition-all duration-200',
+                'relative flex w-full items-center text-[14.5px] transition-all duration-200',
+                active ? 'font-bold' : 'font-semibold',
                 collapsed ? 'rounded-[14px]' : 'rounded-xl',
                 active
                   ? 'text-white'
@@ -191,7 +192,7 @@ function NavGroups({
                   key={item.href}
                   href={item.href}
                   onClick={onNavigate}
-                  className={cn(sharedClass, 'h-10 gap-2.5 px-3')}
+                  className={cn(sharedClass, 'h-10 gap-3 px-[14px]')}
                   style={activeStyle}
                 >
                   <Icon className="h-5 w-5 shrink-0" aria-hidden="true" />
