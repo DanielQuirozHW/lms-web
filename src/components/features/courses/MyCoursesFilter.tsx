@@ -38,7 +38,6 @@ export function MyCoursesFilter({ counts }: MyCoursesFilterProps) {
   function handleTab(value: string) {
     const params = new URLSearchParams()
     if (value) params.set('status', value)
-    // Reset pagination on tab change
     const qs = params.toString()
     router.push(qs ? `/my-courses?${qs}` : '/my-courses')
   }
@@ -47,7 +46,8 @@ export function MyCoursesFilter({ counts }: MyCoursesFilterProps) {
     <div
       role="tablist"
       aria-label="Filtrar cursos por estado"
-      className="border-nexus-border flex gap-0 overflow-x-auto border-b"
+      className="flex items-center gap-1 overflow-x-auto rounded-[14px] p-1"
+      style={{ background: 'var(--nexus-bg)' }}
     >
       {TABS.map(({ label, value }) => {
         const isActive = activeStatus === value
@@ -61,25 +61,24 @@ export function MyCoursesFilter({ counts }: MyCoursesFilterProps) {
             onClick={() => handleTab(value)}
             aria-selected={isActive}
             className={cn(
-              'shrink-0 border-b-2 px-4 py-2.5 text-sm font-medium transition-colors',
+              'flex shrink-0 items-center gap-1.5 rounded-[11px] px-3.5 py-2.25 text-[13.5px] font-bold whitespace-nowrap transition-all duration-200',
               isActive
-                ? 'border-nexus-accent text-nexus-accent'
-                : 'text-nexus-muted hover:text-nexus-text border-transparent'
+                ? 'bg-nexus-card text-nexus-accent'
+                : 'text-nexus-muted hover:text-nexus-text'
             )}
+            style={isActive ? { boxShadow: 'rgba(31,30,46,.16) 0px 4px 12px -6px' } : undefined}
           >
             {label}
-            {count > 0 && (
-              <span
-                className={cn(
-                  'ml-1.5 rounded-full px-1.5 py-0.5 text-[10px] font-semibold',
-                  isActive
-                    ? 'bg-nexus-accent/15 text-nexus-accent'
-                    : 'bg-nexus-card text-nexus-muted'
-                )}
-              >
-                {count}
-              </span>
-            )}
+            <span
+              className="flex min-w-[18px] items-center justify-center rounded-full px-[5px] text-[11px] font-extrabold"
+              style={{
+                height: 18,
+                background: isActive ? 'var(--nexus-accent-muted)' : 'var(--nexus-border)',
+                color: isActive ? 'var(--nexus-accent)' : 'var(--nexus-muted)',
+              }}
+            >
+              {count}
+            </span>
           </button>
         )
       })}

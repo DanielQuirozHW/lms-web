@@ -1,13 +1,11 @@
 import type { Metadata } from 'next'
 import { Suspense } from 'react'
-import Link from 'next/link'
-import { ChevronLeft, ChevronRight, BookOpen } from 'lucide-react'
+import { redirect } from 'next/navigation'
+import { BookOpen } from 'lucide-react'
 import { auth } from '@/lib/auth'
 import api from '@/lib/api'
 import type { PaginatedData } from '@/types/api'
-import type { EnrollmentDetail, EnrollmentStatus, Enrollment } from '@/types/models'
-import type { CatalogCourse } from '@/types/models'
-import { buttonVariants } from '@/components/ui/button'
+import type { EnrollmentStatus, UserEnrollmentItem } from '@/types/models'
 import { LoadingSpinner } from '@/components/shared/feedback/LoadingSpinner'
 import { EmptyState } from '@/components/shared/feedback/EmptyState'
 import { MyCoursesFilter } from '@/components/features/courses/MyCoursesFilter'
@@ -23,36 +21,40 @@ export const metadata: Metadata = {
   },
 }
 
-const LIMIT = 9
-
 const VALID_STATUSES: EnrollmentStatus[] = ['ACTIVE', 'COMPLETED', 'CANCELLED']
-
-const emptyMessages: Record<string, { title: string; description: string }> = {
-  '': {
-    title: 'No tenés cursos inscritos',
-    description: 'Explorá el catálogo y comenzá a aprender',
-  },
-  ACTIVE: {
-    title: 'No tenés cursos en progreso',
-    description: 'Inscribite en un curso para comenzar',
-  },
-  COMPLETED: {
-    title: 'No tenés cursos completados',
-    description: '¡Terminá un curso para verlo acá!',
-  },
-  CANCELLED: {
-    title: 'No tenés cursos cancelados',
-    description: 'Todo en orden por acá',
-  },
-}
-
-interface EnrolledCourseItem {
-  enrollment: EnrollmentDetail
-  course: CatalogCourse
-}
+const ITEMS_LIMIT = 50
 
 interface PageProps {
-  searchParams: Promise<{ status?: string; page?: string }>
+  searchParams: Promise<{ status?: string }>
+}
+
+function SectionHeader({
+  title,
+  count,
+  dotColor,
+}: {
+  title: string
+  count: number
+  dotColor: string
+}) {
+  return (
+    <div className="flex items-center gap-2.5">
+      <span
+        className="h-2.5 w-2.5 shrink-0 rounded-full"
+        style={{ background: dotColor, boxShadow: `0 0 0 4px ${dotColor}33` }}
+        aria-hidden="true"
+      />
+      <h2 className="text-nexus-text font-extrabold tracking-tight" style={{ fontSize: 17 }}>
+        {title}
+      </h2>
+      <span
+        className="text-nexus-faint rounded-full px-2 py-0.5 text-[12px] font-extrabold"
+        style={{ background: 'var(--nexus-border)' }}
+      >
+        {count}
+      </span>
+    </div>
+  )
 }
 
 export default async function MyCoursesPage({ searchParams }: PageProps) {
@@ -60,197 +62,173 @@ export default async function MyCoursesPage({ searchParams }: PageProps) {
   const status = VALID_STATUSES.includes(params.status as EnrollmentStatus)
     ? (params.status as EnrollmentStatus)
     : undefined
-  const page = Math.max(1, parseInt(params.page ?? '1', 10) || 1)
 
   const session = await auth()
+  const userId = session?.user?.id
+  if (!userId) redirect('/login')
+
   const token = session?.accessToken
   const headers = token ? { Authorization: `Bearer ${token}` } : {}
-  const BASE_URL = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:3000/api/v1'
-  const authHeaders: Record<string, string> = {
-    'Content-Type': 'application/json',
-    ...(token ? { Authorization: `Bearer ${token}` } : {}),
-  }
 
-  // 5 parallel requests: 4 lightweight count queries + main paginated enrollments
-  const [allRes, activeRes, completedRes, cancelledRes, enrollmentsRes] = await Promise.allSettled([
-    api.get<PaginatedData<Enrollment>>('/enrollments', {
-      params: { limit: 1 },
+  // Fetch all three status groups in parallel
+  const [activeRes, completedRes, cancelledRes] = await Promise.allSettled([
+    api.get<PaginatedData<UserEnrollmentItem>>(`/users/${userId}/enrollments`, {
+      params: { status: 'ACTIVE', limit: ITEMS_LIMIT },
       headers,
     }),
-    api.get<PaginatedData<Enrollment>>('/enrollments', {
-      params: { limit: 1, status: 'ACTIVE' },
+    api.get<PaginatedData<UserEnrollmentItem>>(`/users/${userId}/enrollments`, {
+      params: { status: 'COMPLETED', limit: ITEMS_LIMIT },
       headers,
     }),
-    api.get<PaginatedData<Enrollment>>('/enrollments', {
-      params: { limit: 1, status: 'COMPLETED' },
-      headers,
-    }),
-    api.get<PaginatedData<Enrollment>>('/enrollments', {
-      params: { limit: 1, status: 'CANCELLED' },
-      headers,
-    }),
-    api.get<PaginatedData<EnrollmentDetail>>('/enrollments', {
-      params: { page, limit: LIMIT, ...(status && { status }) },
+    api.get<PaginatedData<UserEnrollmentItem>>(`/users/${userId}/enrollments`, {
+      params: { status: 'CANCELLED', limit: ITEMS_LIMIT },
       headers,
     }),
   ])
 
+  const activeItems = activeRes.status === 'fulfilled' ? activeRes.value.data.data : []
+  const completedItems = completedRes.status === 'fulfilled' ? completedRes.value.data.data : []
+  const cancelledItems = cancelledRes.status === 'fulfilled' ? cancelledRes.value.data.data : []
+
   const counts = {
-    all: allRes.status === 'fulfilled' ? allRes.value.data.meta.total : 0,
+    all:
+      (activeRes.status === 'fulfilled' ? activeRes.value.data.meta.total : 0) +
+      (completedRes.status === 'fulfilled' ? completedRes.value.data.meta.total : 0) +
+      (cancelledRes.status === 'fulfilled' ? cancelledRes.value.data.meta.total : 0),
     active: activeRes.status === 'fulfilled' ? activeRes.value.data.meta.total : 0,
     completed: completedRes.status === 'fulfilled' ? completedRes.value.data.meta.total : 0,
     cancelled: cancelledRes.status === 'fulfilled' ? cancelledRes.value.data.meta.total : 0,
   }
 
-  const enrollmentsData = enrollmentsRes.status === 'fulfilled' ? enrollmentsRes.value.data : null
-  const enrollments: EnrollmentDetail[] = enrollmentsData?.data ?? []
-  const meta = enrollmentsData?.meta ?? {
-    total: 0,
-    page: 1,
-    limit: LIMIT,
-    totalPages: 1,
-  }
-
-  // Fetch course details and progress summaries in parallel
-  const [courseResults, summaryResults] = await Promise.all([
-    Promise.allSettled(
-      enrollments.map((enrollment) =>
-        api.get<CatalogCourse>(`/courses/${enrollment.courseId}`, { headers }).then((r) => r.data)
-      )
-    ),
-    Promise.allSettled(
-      enrollments.map((e) =>
-        fetch(`${BASE_URL}/enrollments/${e.id}/progress-summary`, {
-          headers: authHeaders,
-          cache: 'no-store',
-        }).then(async (r) => {
-          if (!r.ok) return null
-          return (await r.json()) as { data: { progressPercentage: number } }
-        })
-      )
-    ),
-  ])
-
-  const progressMap = new Map<string, number>()
-  summaryResults.forEach((result, i) => {
-    const id = enrollments[i]?.id
-    if (!id) return
-    if (result.status === 'fulfilled' && result.value) {
-      progressMap.set(id, result.value.data?.progressPercentage ?? 0)
-    }
-  })
-
-  const items: EnrolledCourseItem[] = enrollments
-    .map((enrollment, i) => {
-      const result = courseResults[i]
-      if (!result || result.status !== 'fulfilled') return null
-      const progressPercentage =
-        progressMap.get(enrollment.id) ?? enrollment.progress.progressPercentage
-      return {
-        enrollment: { ...enrollment, progress: { ...enrollment.progress, progressPercentage } },
-        course: result.value,
-      }
-    })
-    .filter((item): item is EnrolledCourseItem => item !== null)
-
-  // Pagination link helpers
-  const baseParams = new URLSearchParams()
-  if (status) baseParams.set('status', status)
-
-  const prevParams = new URLSearchParams(baseParams)
-  prevParams.set('page', String(page - 1))
-
-  const nextParams = new URLSearchParams(baseParams)
-  nextParams.set('page', String(page + 1))
-
-  const empty = emptyMessages[status ?? ''] ?? emptyMessages['']
+  const filteredItems =
+    status === 'ACTIVE'
+      ? activeItems
+      : status === 'COMPLETED'
+        ? completedItems
+        : status === 'CANCELLED'
+          ? cancelledItems
+          : []
 
   return (
-    <div className="space-y-6">
+    <div className="flex flex-col gap-6">
+      {/* Page header */}
       <div>
-        <h1 className="text-nexus-text text-2xl font-bold">Mis cursos</h1>
-        <p className="text-nexus-muted mt-1 text-sm">
-          {meta.total} curso{meta.total !== 1 && 's'} inscrito{meta.total !== 1 && 's'}
-        </p>
+        <h1 className="text-nexus-text font-extrabold tracking-tight" style={{ fontSize: 24 }}>
+          Mis cursos
+        </h1>
+        {(counts.active > 0 || counts.completed > 0) && (
+          <div className="mt-2.5 flex flex-wrap items-center gap-2">
+            {counts.active > 0 && (
+              <span
+                className="rounded-full px-3 py-1 text-[12px] font-bold"
+                style={{ background: 'var(--nexus-accent-muted)', color: 'var(--nexus-accent)' }}
+              >
+                {counts.active} en progreso
+              </span>
+            )}
+            {counts.completed > 0 && (
+              <span
+                className="rounded-full px-3 py-1 text-[12px] font-bold"
+                style={{ background: 'rgba(16,185,129,.12)', color: '#10B981' }}
+              >
+                {counts.completed} completados
+              </span>
+            )}
+          </div>
+        )}
       </div>
 
-      {/* Filter tabs — uses useSearchParams, needs Suspense */}
+      {/* Filter tabs */}
       <Suspense fallback={<LoadingSpinner rows={1} />}>
         <MyCoursesFilter counts={counts} />
       </Suspense>
 
-      {/* Course grid or empty state */}
+      {/* Content */}
       <Suspense fallback={<LoadingSpinner rows={3} />}>
-        {items.length === 0 ? (
+        {!status ? (
+          counts.all === 0 ? (
+            <EmptyState
+              icon={BookOpen}
+              title="No tenés cursos inscritos"
+              description="Explorá el catálogo y comenzá a aprender"
+              className="border-nexus-border"
+              action={{ label: 'Explorar cursos', href: '/courses' }}
+            />
+          ) : (
+            <div className="flex flex-col gap-8">
+              {activeItems.length > 0 && (
+                <section className="flex flex-col gap-4">
+                  <SectionHeader
+                    title="En progreso"
+                    count={counts.active}
+                    dotColor="var(--nexus-accent)"
+                  />
+                  <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                    {activeItems.map((item, i) => (
+                      <MyCourseCard key={item.enrollmentId} item={item} index={i} />
+                    ))}
+                  </div>
+                </section>
+              )}
+
+              {completedItems.length > 0 && (
+                <section className="flex flex-col gap-4">
+                  <SectionHeader title="Completados" count={counts.completed} dotColor="#10B981" />
+                  <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                    {completedItems.map((item, i) => (
+                      <MyCourseCard
+                        key={item.enrollmentId}
+                        item={item}
+                        index={activeItems.length + i}
+                      />
+                    ))}
+                  </div>
+                </section>
+              )}
+
+              {cancelledItems.length > 0 && (
+                <section className="flex flex-col gap-4">
+                  <SectionHeader title="Cancelados" count={counts.cancelled} dotColor="#9395AC" />
+                  <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                    {cancelledItems.map((item, i) => (
+                      <MyCourseCard
+                        key={item.enrollmentId}
+                        item={item}
+                        index={activeItems.length + completedItems.length + i}
+                      />
+                    ))}
+                  </div>
+                </section>
+              )}
+            </div>
+          )
+        ) : filteredItems.length === 0 ? (
           <EmptyState
             icon={BookOpen}
-            title={empty.title}
-            description={empty.description}
+            title={
+              status === 'ACTIVE'
+                ? 'No tenés cursos en progreso'
+                : status === 'COMPLETED'
+                  ? 'No tenés cursos completados'
+                  : 'No tenés cursos cancelados'
+            }
+            description={
+              status === 'ACTIVE'
+                ? 'Inscribite en un curso para comenzar'
+                : status === 'COMPLETED'
+                  ? '¡Terminá un curso para verlo acá!'
+                  : 'Todo en orden por acá'
+            }
             className="border-nexus-border"
-            {...(!status && {
-              action: { label: 'Explorar cursos', href: '/courses' },
-            })}
           />
         ) : (
-          <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
-            {items.map(({ enrollment, course }) => (
-              <MyCourseCard key={enrollment.id} enrollment={enrollment} course={course} />
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            {filteredItems.map((item, i) => (
+              <MyCourseCard key={item.enrollmentId} item={item} index={i} />
             ))}
           </div>
         )}
       </Suspense>
-
-      {/* Server-rendered pagination — no client JS required */}
-      {meta.totalPages > 1 && (
-        <nav className="flex items-center justify-center gap-3" aria-label="Paginación">
-          {page > 1 ? (
-            <Link
-              href={`/my-courses?${prevParams.toString()}`}
-              className={buttonVariants({ variant: 'outline', size: 'sm' })}
-              aria-label="Página anterior"
-            >
-              <ChevronLeft className="h-4 w-4" aria-hidden="true" />
-            </Link>
-          ) : (
-            <span
-              aria-disabled="true"
-              className={buttonVariants({
-                variant: 'outline',
-                size: 'sm',
-                className: 'pointer-events-none opacity-50',
-              })}
-            >
-              <ChevronLeft className="h-4 w-4" aria-hidden="true" />
-            </span>
-          )}
-
-          <span className="text-nexus-muted text-sm">
-            Página <span className="text-nexus-text font-semibold">{page}</span> de{' '}
-            <span className="text-nexus-text font-semibold">{meta.totalPages}</span>
-          </span>
-
-          {page < meta.totalPages ? (
-            <Link
-              href={`/my-courses?${nextParams.toString()}`}
-              className={buttonVariants({ variant: 'outline', size: 'sm' })}
-              aria-label="Página siguiente"
-            >
-              <ChevronRight className="h-4 w-4" aria-hidden="true" />
-            </Link>
-          ) : (
-            <span
-              aria-disabled="true"
-              className={buttonVariants({
-                variant: 'outline',
-                size: 'sm',
-                className: 'pointer-events-none opacity-50',
-              })}
-            >
-              <ChevronRight className="h-4 w-4" aria-hidden="true" />
-            </span>
-          )}
-        </nav>
-      )}
     </div>
   )
 }
