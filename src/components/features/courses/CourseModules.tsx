@@ -48,7 +48,7 @@ function LessonRow({
     <>
       {/* Type icon container */}
       <span
-        className="flex h-9.5 w-9.5 shrink-0 items-center justify-center rounded-[11px]"
+        className="flex h-9.5 w-9.5 shrink-0 items-center justify-center rounded-[10px]"
         style={iconContainerStyle}
         aria-hidden="true"
       >
@@ -58,14 +58,14 @@ function LessonRow({
       {/* Title + subtitle */}
       <div className="min-w-0 flex-1">
         <div
-          className={cn('truncate text-[14.5px] leading-snug font-semibold', {
+          className={cn('truncate text-sm leading-snug font-semibold', {
             'text-nexus-muted': isLocked,
             'text-nexus-text': !isLocked,
           })}
         >
           {lesson.title}
         </div>
-        <div className="text-nexus-faint mt-0.5 text-[12.5px]">
+        <div className="text-nexus-faint mt-0.5 text-xs">
           {lessonTypeLabel[lesson.type]}
           {lesson.duration != null && lesson.duration > 0
             ? ` · ${formatDuration(lesson.duration)}`
@@ -87,18 +87,18 @@ function LessonRow({
     </>
   )
 
-  const rowClass =
-    'flex items-center gap-[14px] border-b border-nexus-border px-[18px] py-[13px] last:border-b-0'
+  const rowBase = 'flex h-13 items-center gap-3.5 px-4.5'
+  const borderClass = 'border-b border-nexus-border last:border-b-0'
 
   if (isLocked) {
-    return <li className={rowClass}>{rowContent}</li>
+    return <li className={cn(rowBase, borderClass)}>{rowContent}</li>
   }
 
   return (
-    <li>
+    <li className={borderClass}>
       <Link
         href={href}
-        className={cn(rowClass, 'block transition-colors', 'hover:bg-nexus-nav-hover')}
+        className={cn(rowBase, 'hover:bg-nexus-nav-hover w-full transition-colors')}
       >
         {rowContent}
       </Link>

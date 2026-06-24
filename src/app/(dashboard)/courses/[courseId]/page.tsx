@@ -310,6 +310,19 @@ export default async function CourseDetailPage({ params }: PageProps) {
                   </span>
                 </div>
 
+                {/* Duración total */}
+                {course.totalDuration > 0 && (
+                  <div className="border-nexus-border flex items-center gap-3 border-b py-2.75">
+                    <span className="text-nexus-accent flex w-5 justify-center">
+                      <Clock className="h-4.5 w-4.5" aria-hidden="true" />
+                    </span>
+                    <span className="text-nexus-muted flex-1 text-[13.5px]">Duración total</span>
+                    <span className="text-nexus-text text-[13.5px] font-bold">
+                      {formatDuration(course.totalDuration)}
+                    </span>
+                  </div>
+                )}
+
                 {/* Estudiantes */}
                 <div className="border-nexus-border flex items-center gap-3 border-b py-2.75">
                   <span className="text-nexus-accent flex w-5 justify-center">
@@ -349,19 +362,6 @@ export default async function CourseDetailPage({ params }: PageProps) {
                   </div>
                 )}
 
-                {/* Duración total */}
-                {course.totalDuration > 0 && (
-                  <div className="border-nexus-border flex items-center gap-3 border-b py-2.75">
-                    <span className="text-nexus-accent flex w-5 justify-center">
-                      <Clock className="h-4.5 w-4.5" aria-hidden="true" />
-                    </span>
-                    <span className="text-nexus-muted flex-1 text-[13.5px]">Duración total</span>
-                    <span className="text-nexus-text text-[13.5px] font-bold">
-                      {formatDuration(course.totalDuration)}
-                    </span>
-                  </div>
-                )}
-
                 {/* Certificado al finalizar */}
                 <div className="flex items-center gap-3 py-2.75">
                   <span className="text-nexus-accent flex w-5 justify-center">
@@ -386,7 +386,7 @@ export default async function CourseDetailPage({ params }: PageProps) {
               >
                 {/* Avatar */}
                 <div
-                  className="flex h-11 w-11 shrink-0 items-center justify-center rounded-[12px] text-[15px] font-extrabold text-white"
+                  className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl text-sm font-extrabold text-white"
                   style={{ background: 'var(--nexus-brand-gradient)' }}
                   aria-hidden="true"
                 >
@@ -395,7 +395,7 @@ export default async function CourseDetailPage({ params }: PageProps) {
                     <img
                       src={course.instructor.avatarUrl}
                       alt={instructorName}
-                      className="h-full w-full rounded-[12px] object-cover"
+                      className="h-full w-full rounded-xl object-cover"
                     />
                   ) : (
                     instructorInitials
@@ -403,8 +403,10 @@ export default async function CourseDetailPage({ params }: PageProps) {
                 </div>
 
                 <div>
-                  <p className="text-nexus-faint text-[12px]">Instructor</p>
-                  <p className="text-nexus-text text-[14.5px] font-bold">{instructorName}</p>
+                  <p className="text-nexus-faint text-[11px] font-semibold tracking-wider uppercase">
+                    Instructor
+                  </p>
+                  <p className="text-nexus-text text-sm font-bold">{instructorName}</p>
                 </div>
               </div>
             )}
