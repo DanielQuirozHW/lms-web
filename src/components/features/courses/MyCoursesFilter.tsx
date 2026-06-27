@@ -36,8 +36,12 @@ export function MyCoursesFilter({ counts }: MyCoursesFilterProps) {
   }
 
   function handleTab(value: string) {
-    const params = new URLSearchParams()
-    if (value) params.set('status', value)
+    const params = new URLSearchParams(searchParams.toString())
+    if (value) {
+      params.set('status', value)
+    } else {
+      params.delete('status')
+    }
     const qs = params.toString()
     router.push(qs ? `/my-courses?${qs}` : '/my-courses')
   }
@@ -46,8 +50,8 @@ export function MyCoursesFilter({ counts }: MyCoursesFilterProps) {
     <div
       role="tablist"
       aria-label="Filtrar cursos por estado"
-      className="flex items-center gap-1 overflow-x-auto rounded-[14px] p-1"
-      style={{ background: 'var(--nexus-bg)' }}
+      className="flex items-center overflow-x-auto rounded-[14px]"
+      style={{ background: 'var(--nexus-search-bg)', padding: 4, gap: 3 }}
     >
       {TABS.map(({ label, value }) => {
         const isActive = activeStatus === value
@@ -61,20 +65,28 @@ export function MyCoursesFilter({ counts }: MyCoursesFilterProps) {
             onClick={() => handleTab(value)}
             aria-selected={isActive}
             className={cn(
-              'flex shrink-0 items-center gap-1.5 rounded-[11px] px-3.5 py-2.25 text-[13.5px] font-bold whitespace-nowrap transition-all duration-200',
+              'flex shrink-0 items-center rounded-[11px] font-bold whitespace-nowrap transition-all duration-200',
               isActive
                 ? 'bg-nexus-card text-nexus-accent'
-                : 'text-nexus-muted hover:text-nexus-text'
+                : 'text-nexus-muted hover:text-nexus-text bg-transparent'
             )}
-            style={isActive ? { boxShadow: 'rgba(31,30,46,.16) 0px 4px 12px -6px' } : undefined}
+            style={{
+              gap: 7,
+              padding: '9px 15px',
+              fontSize: 13.5,
+              boxShadow: isActive ? 'rgba(31,30,46,.16) 0px 4px 12px -6px' : undefined,
+            }}
           >
             {label}
             <span
-              className="flex min-w-[18px] items-center justify-center rounded-full px-[5px] text-[11px] font-extrabold"
+              className="flex items-center justify-center rounded-full font-extrabold"
               style={{
+                minWidth: 18,
                 height: 18,
-                background: isActive ? 'var(--nexus-accent-muted)' : 'var(--nexus-border)',
-                color: isActive ? 'var(--nexus-accent)' : 'var(--nexus-muted)',
+                padding: '0 5px',
+                fontSize: 11,
+                background: isActive ? 'var(--nexus-unread-row)' : 'var(--nexus-progress-track)',
+                color: isActive ? 'var(--nexus-accent)' : 'var(--nexus-faint)',
               }}
             >
               {count}

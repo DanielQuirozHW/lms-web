@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-import { ArrowRight, Award, Check, Loader2, RotateCcw } from 'lucide-react'
+import { ArrowRight, Award, BookOpen, Check, Loader2, RotateCcw } from 'lucide-react'
 import { toast } from 'sonner'
 import { cn } from '@/lib/utils'
 import { useEnrollMutation } from '@/hooks/mutations/enrollments'
@@ -47,6 +47,7 @@ export function MyCourseCard({ item, index }: MyCourseCardProps) {
   const pct = Math.round(item.progressPercentage ?? 0)
   const isCompleted = item.status === 'COMPLETED'
   const isCancelled = item.status === 'CANCELLED'
+  const isActive = item.status === 'ACTIVE'
   const continuePath = `/courses/${item.courseId}`
 
   function handleReenroll() {
@@ -70,8 +71,12 @@ export function MyCourseCard({ item, index }: MyCourseCardProps) {
 
   return (
     <article
-      className="border-nexus-border bg-nexus-card flex flex-col overflow-hidden rounded-[18px] border"
-      style={{ boxShadow: 'var(--nexus-card-shadow)' }}
+      className="bg-nexus-card flex flex-col overflow-hidden rounded-[18px]"
+      style={{
+        border: '1px solid var(--nexus-border)',
+        boxShadow: 'var(--nexus-card-shadow)',
+        cursor: 'pointer',
+      }}
     >
       {/* Gradient cover */}
       <div
@@ -108,10 +113,30 @@ export function MyCourseCard({ item, index }: MyCourseCardProps) {
             pointerEvents: 'none',
           }}
         />
+
+        {/* Large icon container */}
+        <span
+          style={{
+            position: 'absolute',
+            left: 16,
+            top: 16,
+            width: 46,
+            height: 46,
+            borderRadius: 13,
+            background: 'rgba(255,255,255,.18)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            color: '#fff',
+          }}
+        >
+          <BookOpen style={{ width: 22, height: 22 }} />
+        </span>
+
         {/* Category chip */}
         {item.categoryName && (
           <span
-            className="absolute bottom-[13px] left-4 inline-flex items-center rounded-full px-[11px] py-[5px] text-[11px] font-extrabold"
+            className="absolute bottom-[13px] left-4 inline-flex items-center gap-1.5 rounded-full px-[11px] py-[5px] text-[11px] font-extrabold"
             style={{ background: 'rgba(255,255,255,.92)', color: gradient.chipColor }}
           >
             {item.categoryName}
@@ -119,64 +144,118 @@ export function MyCourseCard({ item, index }: MyCourseCardProps) {
         )}
       </div>
 
-      {/* Progress bar */}
-      <div
-        className="h-2 shrink-0"
-        style={{ background: 'var(--nexus-border)' }}
-        role="progressbar"
-        aria-valuenow={pct}
-        aria-valuemin={0}
-        aria-valuemax={100}
-        aria-label={`Progreso: ${pct}%`}
-      >
-        <div
-          className="h-full transition-all duration-500"
-          style={{
-            width: `${pct}%`,
-            background: isCompleted ? '#10B981' : gradient.barBg,
-          }}
-        />
-      </div>
-
       {/* Body */}
-      <div className="flex flex-1 flex-col gap-3 p-4">
+      <div className="flex flex-1 flex-col" style={{ padding: '15px 16px 16px', gap: 12 }}>
         {/* Title */}
         <h3
-          className={cn('line-clamp-2 leading-snug font-bold', {
-            'text-nexus-muted': isCancelled,
+          className={cn('line-clamp-2 leading-[1.28] font-extrabold tracking-[-0.01em]', {
+            'text-nexus-faint': isCancelled,
             'text-nexus-text': !isCancelled,
           })}
-          style={{ fontSize: 15.5 }}
+          style={{ fontSize: 16, minHeight: 41 }}
         >
           {item.courseTitle}
         </h3>
 
-        {/* Category */}
-        {item.categoryName && (
-          <p className="text-nexus-muted -mt-1.5 truncate text-[12px]">{item.categoryName}</p>
+        {/* ACTIVE: progress section */}
+        {isActive && (
+          <div className="flex flex-col" style={{ gap: 7, marginTop: 1 }}>
+            <div
+              className="flex items-center justify-between font-semibold"
+              style={{ fontSize: 12, color: 'var(--nexus-muted)' }}
+            >
+              <span>
+                {item.completedLessons} / {item.totalLessons} lecciones
+              </span>
+              <span className="font-extrabold" style={{ color: 'var(--nexus-text)' }}>
+                {pct}%
+              </span>
+            </div>
+            <div
+              className="overflow-hidden"
+              style={{
+                height: 8,
+                borderRadius: 99,
+                background: 'var(--nexus-progress-track)',
+              }}
+              role="progressbar"
+              aria-valuenow={pct}
+              aria-valuemin={0}
+              aria-valuemax={100}
+              aria-label={`Progreso: ${pct}%`}
+            >
+              <div
+                className="h-full transition-all duration-500"
+                style={{
+                  width: `${pct}%`,
+                  borderRadius: 99,
+                  background: gradient.barBg,
+                }}
+              />
+            </div>
+          </div>
         )}
 
-        {/* Lesson count + percentage */}
-        <div className="flex items-center justify-between gap-2">
-          <span className="text-nexus-muted text-[12px] font-semibold">
-            {item.completedLessons} / {item.totalLessons} lecciones
-          </span>
-          <span
-            className="shrink-0 text-[12px] font-extrabold"
-            style={{ color: isCompleted ? '#10B981' : gradient.chipColor }}
-          >
-            {pct}%
-          </span>
-        </div>
+        {/* COMPLETED: status section */}
+        {isCompleted && (
+          <div className="flex flex-wrap items-center gap-2" style={{ marginTop: 1 }}>
+            <span
+              className="inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[12px] font-bold"
+              style={{ background: 'var(--nexus-green-bg)', color: 'var(--nexus-green)' }}
+            >
+              <Check className="h-3.5 w-3.5" aria-hidden="true" />
+              Completado
+            </span>
+          </div>
+        )}
+
+        {/* CANCELLED: status section */}
+        {isCancelled && (
+          <div className="flex flex-col" style={{ gap: 7, marginTop: 1 }}>
+            <div className="flex flex-wrap items-center gap-2">
+              <span
+                className="inline-flex items-center rounded-full px-2.5 py-1 text-[12px] font-bold"
+                style={{
+                  background: 'var(--nexus-progress-track)',
+                  color: 'var(--nexus-faint)',
+                }}
+              >
+                Cancelado
+              </span>
+            </div>
+            <span className="font-semibold" style={{ fontSize: 12, color: 'var(--nexus-muted)' }}>
+              Quedaste en {pct}%
+            </span>
+            <div
+              className="overflow-hidden"
+              style={{
+                height: 6,
+                borderRadius: 99,
+                background: 'var(--nexus-progress-track)',
+              }}
+            >
+              <div
+                style={{
+                  height: '100%',
+                  width: `${pct}%`,
+                  borderRadius: 99,
+                  background: 'var(--nexus-muted)',
+                  opacity: 0.6,
+                }}
+              />
+            </div>
+          </div>
+        )}
 
         <div className="flex-1" />
 
         {/* ACTIVE — Continuar */}
-        {item.status === 'ACTIVE' && (
+        {isActive && (
           <Link
             href={continuePath}
-            className="flex w-full items-center justify-center gap-2 rounded-xl py-3 text-[13.5px] font-bold text-white transition-opacity hover:opacity-90"
+            className="flex w-full items-center justify-center gap-2 rounded-[12px] text-[13.5px] font-bold text-white transition-opacity hover:opacity-90"
             style={{
+              padding: 11,
               background: 'linear-gradient(135deg,#7C6CFF,#6D5BF0)',
               boxShadow: '0 10px 20px -10px rgba(109,91,240,.7)',
             }}
@@ -186,16 +265,9 @@ export function MyCourseCard({ item, index }: MyCourseCardProps) {
           </Link>
         )}
 
-        {/* COMPLETED — badge + certificado */}
+        {/* COMPLETED — two buttons: cert + ghost repasar */}
         {isCompleted && (
-          <div className="flex flex-col gap-2">
-            <span
-              className="inline-flex w-fit items-center gap-1.5 rounded-full px-2.5 py-1 text-[11.5px] font-bold"
-              style={{ background: 'rgba(16,185,129,.12)', color: '#10B981' }}
-            >
-              <Check className="h-3.5 w-3.5" aria-hidden="true" />
-              Completado
-            </span>
+          <div className="flex gap-2">
             <button
               type="button"
               disabled={isGenerating}
@@ -205,8 +277,9 @@ export function MyCourseCard({ item, index }: MyCourseCardProps) {
                   { onSuccess: () => router.push('/certificates') }
                 )
               }
-              className="flex w-full items-center justify-center gap-2 rounded-xl py-3 text-[13.5px] font-bold text-white transition-opacity hover:opacity-90 disabled:opacity-60"
+              className="flex flex-1 items-center justify-center gap-[7px] rounded-[12px] text-[13px] font-bold text-white transition-opacity hover:opacity-90 disabled:opacity-60"
               style={{
+                padding: 11,
                 background: 'linear-gradient(135deg,#7C6CFF,#6D5BF0)',
                 boxShadow: '0 10px 20px -10px rgba(109,91,240,.7)',
               }}
@@ -218,6 +291,21 @@ export function MyCourseCard({ item, index }: MyCourseCardProps) {
               )}
               {isGenerating ? 'Generando...' : 'Ver certificado'}
             </button>
+            <Link
+              href={continuePath}
+              className="flex shrink-0 items-center justify-center rounded-[12px] transition-opacity hover:opacity-80"
+              style={{
+                width: 44,
+                padding: 11,
+                border: '1px solid var(--nexus-border)',
+                background: 'transparent',
+                color: 'var(--nexus-muted)',
+              }}
+              title="Repasar curso"
+              aria-label="Repasar curso"
+            >
+              <RotateCcw className="h-4 w-4" aria-hidden="true" />
+            </Link>
           </div>
         )}
 
@@ -227,8 +315,13 @@ export function MyCourseCard({ item, index }: MyCourseCardProps) {
             type="button"
             onClick={handleReenroll}
             disabled={isPending}
-            className="border-nexus-border hover:bg-nexus-nav-hover flex w-full items-center justify-center gap-2 rounded-xl border py-3 text-[13.5px] font-bold transition-colors disabled:opacity-60"
-            style={{ color: 'var(--nexus-accent)' }}
+            className="flex w-full items-center justify-center gap-2 rounded-[12px] text-[13.5px] font-bold transition-opacity hover:opacity-80 disabled:opacity-60"
+            style={{
+              padding: 11,
+              border: '1px solid var(--nexus-border)',
+              background: 'transparent',
+              color: 'var(--nexus-accent)',
+            }}
           >
             {isPending ? (
               <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
